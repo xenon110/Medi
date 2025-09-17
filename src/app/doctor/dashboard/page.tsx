@@ -55,14 +55,14 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribe();
-  }, [selectedPatient]);
+  }, [selectedPatient?.id]);
 
   const handleSelectPatient = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
       setSelectedPatient(patient);
       setCustomReportText(patient.report?.report || '');
-      setPrescriptionText('');
+      setPrescriptionText(patient.customReport?.prescription || '');
       setIsCustomizing(false);
     }
   };
@@ -180,7 +180,7 @@ export default function DoctorDashboard() {
                           className="min-h-[150px] text-base"
                         />
                       ) : (
-                        <p className="text-foreground/80">{selectedPatient.report?.report}</p>
+                        <p className="text-foreground/80">{selectedPatient.customReport?.report || selectedPatient.report?.report}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -191,6 +191,12 @@ export default function DoctorDashboard() {
                       <h3 className="font-semibold text-lg">Medical Recommendation</h3>
                       <p className="text-foreground/80">{selectedPatient.report?.medicalRecommendation}</p>
                     </div>
+                     {selectedPatient.status === 'customized' && selectedPatient.customReport?.prescription && (
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-lg">Prescription / Notes</h3>
+                            <p className="text-foreground/80 whitespace-pre-wrap">{selectedPatient.customReport.prescription}</p>
+                        </div>
+                    )}
                 </CardContent>
               </ScrollArea>
               <CardFooter className="p-4 border-t bg-card flex flex-col items-stretch gap-4">
@@ -215,17 +221,17 @@ export default function DoctorDashboard() {
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
                       <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
-                        {isSending ? <Loader2 className="animate-spin" /> : <Send className="mr-2" />} Send to Patient
+                        {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2" /> Send to Patient</>}
                       </Button>
                     </div>
                   </>
                 ) : (
                   <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={() => setIsCustomizing(true)} disabled={isSending}>
+                    <Button variant="secondary" onClick={() => setIsCustomizing(true)} disabled={isSending || selectedPatient.status !== 'pending'}>
                       <Pencil className="mr-2" /> Customize Report
                     </Button>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdatePatient('approved')} disabled={isSending}>
-                      {isSending ? <Loader2 className="animate-spin" /> : <Check className="mr-2" />} Approve & Send
+                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdatePatient('approved')} disabled={isSending || selectedPatient.status !== 'pending'}>
+                      {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Approve & Send</>}
                     </Button>
                   </div>
                 )}
