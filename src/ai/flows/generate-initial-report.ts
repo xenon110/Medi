@@ -26,7 +26,12 @@ const GenerateInitialReportInputSchema = z.object({
 export type GenerateInitialReportInput = z.infer<typeof GenerateInitialReportInputSchema>;
 
 const GenerateInitialReportOutputSchema = z.object({
-  report: z.string().describe('The generated medical report.'),
+  potentialConditions: z.array(z.object({
+    name: z.string().describe('The name of the potential skin condition.'),
+    likelihood: z.enum(['High', 'Medium', 'Low']).describe('The likelihood of this condition.'),
+    description: z.string().describe('A brief description of the condition.'),
+  })).describe('An array of potential skin conditions identified from the image and symptoms.'),
+  report: z.string().describe('A summary of the analysis and findings.'),
   homeRemedies: z.string().describe('Applicable home remedies, if any.'),
   medicalRecommendation: z.string().describe('General medical advice or dermatologist recommendation.'),
   doctorConsultationSuggestion: z.boolean().describe('Whether a doctor consultation is suggested.'),
@@ -43,27 +48,26 @@ const prompt = ai.definePrompt({
   name: 'generateInitialReportPrompt',
   input: {schema: GenerateInitialReportInputSchema},
   output: {schema: GenerateInitialReportOutputSchema},
-  prompt: `You are an AI assistant that generates initial medical reports based on a patient's skin condition image and symptom inputs.
+  prompt: `You are an AI medical assistant specializing in dermatology. Your task is to analyze a patient's skin condition based on an image and provided information.
 
-  The patient is from the following region: {{{region}}}.
-  The patient has the following skin tone: {{{skinTone}}}.
-  The patient is the following age: {{{age}}}.
-  The patient is the following gender: {{{gender}}}.
+  Patient Information:
+  - Age: {{{age}}}
+  - Gender: {{{gender}}}
+  - Region: {{{region}}}
+  - Skin Tone: {{{skinTone}}}
+  - Described Symptoms: {{{symptomInputs}}}
 
-  Analyze the image and consider the following symptoms:
-  {{symptomInputs}}
+  Image of the skin condition: {{media url=photoDataUri}}
 
-  Based on the analysis, generate a report covering potential issues, home remedies (if applicable; otherwise, state "No home remedy available for this condition."), general medical recommendations, and whether a doctor consultation is suggested.
+  Instructions:
+  1.  Carefully analyze the image and the patient's data.
+  2.  Identify a list of potential skin conditions. For each condition, provide its name, likelihood (High, Medium, or Low), and a brief description.
+  3.  Generate a comprehensive summary 'report' of your findings.
+  4.  Suggest relevant 'homeRemedies'. If none are appropriate, state "No specific home remedies are recommended. Please consult a healthcare professional."
+  5.  Provide a 'medicalRecommendation' for next steps.
+  6.  Set 'doctorConsultationSuggestion' to true if you recommend professional medical consultation, otherwise false.
 
-  Image: {{media url=photoDataUri}}
-
-  Format the output as a JSON object with the following keys:
-  - report: The generated medical report.
-  - homeRemedies: Applicable home remedies, if any.
-  - medicalRecommendation: General medical advice or dermatologist recommendation.
-  - doctorConsultationSuggestion: Whether a doctor consultation is suggested (true/false).
-
-  Make sure the output is a valid JSON object.
+  You must provide a structured JSON output.
   `,
 });
 
@@ -72,6 +76,7 @@ const generateInitialReportFlow = ai.defineFlow(
     name: 'generateInitialReportFlow',
     inputSchema: GenerateInitialReportInputSchema,
     outputSchema: GenerateInitialReportOutputSchema,
+    model: 'googleai/gemini-2.5-pro',
   },
   async input => {
     const {output} = await prompt(input);

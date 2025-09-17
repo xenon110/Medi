@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { validateImageUpload, ValidateImageUploadOutput } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs, AssistWithSymptomInputsOutput } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
+import { Badge } from '@/components/ui/badge';
 
 const patientDetailsSchema = z.object({
   region: z.string().min(1, 'Region is required.'),
@@ -269,9 +270,25 @@ export default function PatientDashboard() {
                     </div>
                      <CardDescription>This is AI-generated guidance and does not replace professional consultation.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <h3 className="font-bold text-lg">Potential Issues</h3>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <h3 className="font-bold text-lg mb-2">Potential Conditions</h3>
+                      <div className="space-y-4">
+                        {analysisResult.potentialConditions.map((condition, index) => (
+                           <div key={index} className="p-4 rounded-lg border bg-card">
+                             <div className="flex justify-between items-center mb-2">
+                               <h4 className="font-semibold text-base">{condition.name}</h4>
+                               <Badge variant={condition.likelihood === 'High' ? 'destructive' : condition.likelihood === 'Medium' ? 'secondary' : 'outline'}>
+                                 {condition.likelihood} Likelihood
+                               </Badge>
+                             </div>
+                             <p className="text-sm text-foreground/80">{condition.description}</p>
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+                     <div className="space-y-2">
+                        <h3 className="font-bold text-lg">Summary</h3>
                         <p className="text-foreground/80">{analysisResult.report}</p>
                     </div>
                     <div className="space-y-2">

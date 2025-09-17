@@ -21,7 +21,7 @@ const ValidateImageUploadInputSchema = z.object({
 export type ValidateImageUploadInput = z.infer<typeof ValidateImageUploadInputSchema>;
 
 const ValidateImageUploadOutputSchema = z.object({
-  isValid: z.boolean().describe('Whether the uploaded image is skin-related or not.'),
+  isValid: z.boolean().describe('Whether the uploaded image is a clear, close-up photograph of a human skin condition.'),
   reason: z.string().optional().describe('The reason why the image is not valid, if applicable.'),
 });
 export type ValidateImageUploadOutput = z.infer<typeof ValidateImageUploadOutputSchema>;
@@ -34,15 +34,18 @@ const prompt = ai.definePrompt({
   name: 'validateImageUploadPrompt',
   input: {schema: ValidateImageUploadInputSchema},
   output: {schema: ValidateImageUploadOutputSchema},
-  prompt: `You are an AI assistant that validates if an uploaded image is related to skin or not.
+  prompt: `You are an AI assistant that validates image uploads for a skin-health application. Your task is to determine if an image is a clear, close-up photograph of a human skin condition.
 
-  Analyze the image and determine if it is a skin-related image.
+  Analyze the provided image: {{media url=photoDataUri}}
 
-  Photo: {{media url=photoDataUri}}
+  Criteria for a valid image:
+  - The image must clearly show human skin.
+  - The image should be a close-up of a specific area.
+  - The image must not be of a generic object, animal, landscape, or anything other than human skin.
 
-  Respond with JSON object.
-  If the image is skin-related, set isValid to true.
-  If the image is not skin-related, set isValid to false and provide a reason in the reason field.
+  Respond with a JSON object.
+  - If the image meets the criteria, set 'isValid' to true.
+  - If the image does not meet the criteria, set 'isValid' to false and provide a concise 'reason' (e.g., "The image does not appear to show human skin," or "The image is too blurry to analyze.").
   `,
 });
 
