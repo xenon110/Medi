@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -48,10 +49,10 @@ export default function DoctorDashboard() {
         if (userDoc.exists() && userDoc.data().role === 'doctor') {
           setUser(currentUser);
         } else {
-          router.push('/login'); // Redirect if not a doctor
+          router.push('/login?role=doctor'); // Redirect if not a doctor
         }
       } else {
-        router.push('/login');
+        router.push('/login?role=doctor');
       }
     });
 
@@ -61,6 +62,7 @@ export default function DoctorDashboard() {
   useEffect(() => {
     if (!user) return; // Don't fetch patients if no user
 
+    setIsLoading(true);
     const q = query(collection(db, 'patients'), orderBy('createdAt', 'desc'));
     const unsubscribePatients = onSnapshot(q, (querySnapshot) => {
       const patientsData = querySnapshot.docs.map(doc => ({
@@ -68,20 +70,29 @@ export default function DoctorDashboard() {
         ...doc.data(),
       } as Patient));
       setPatients(patientsData);
+      
+      // Reselect patient if they are in the new list
       if (selectedPatient) {
         const updatedPatient = patientsData.find(p => p.id === selectedPatient.id);
-        if (updatedPatient) {
-          setSelectedPatient(updatedPatient);
-        }
+        setSelectedPatient(updatedPatient || null);
+      } else if (patientsData.length > 0) {
+        // handleSelectPatient(patientsData[0].id)
       }
+
+
       setIsLoading(false);
     }, (error) => {
       console.error("Error fetching patients:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch patient data.",
+      });
       setIsLoading(false);
     });
 
     return () => unsubscribePatients();
-  }, [user, selectedPatient?.id]);
+  }, [user, toast]);
 
   const handleSelectPatient = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -36,9 +37,20 @@ export function LandingPage() {
     return () => unsubscribe();
   }, []);
 
-  const getDashboardLink = () => {
-    if (!userRole) return '/login';
-    return userRole === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard';
+  const handlePatientClick = () => {
+    if (user && userRole === 'patient') {
+      router.push('/patient/dashboard');
+    } else {
+      router.push('/login?role=patient');
+    }
+  };
+
+  const handleDoctorClick = () => {
+    if (user && userRole === 'doctor') {
+      router.push('/doctor/dashboard');
+    } else {
+      router.push('/login?role=doctor');
+    }
   };
   
   return (
@@ -85,10 +97,8 @@ export function LandingPage() {
                 </CardDescription>
               </CardContent>
               <CardFooter className="justify-center">
-                <Button asChild size="lg" className="w-full md:w-auto" onClick={() => router.push(user && userRole === 'patient' ? '/patient/dashboard' : '/login?role=patient')}>
-                   <a>
-                    Go to Patient Dashboard <ArrowRight className="ml-2" />
-                  </a>
+                <Button size="lg" className="w-full md:w-auto" onClick={handlePatientClick}>
+                   Go to Patient Dashboard <ArrowRight className="ml-2" />
                 </Button>
               </CardFooter>
             </Card>
@@ -106,10 +116,8 @@ export function LandingPage() {
                 </CardDescription>
               </CardContent>
               <CardFooter className="justify-center">
-                <Button asChild size="lg" variant="secondary" className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => router.push(user && userRole === 'doctor' ? '/doctor/dashboard' : '/login?role=doctor')}>
-                  <a>
-                    Go to Doctor Dashboard <ArrowRight className="ml-2" />
-                  </a>
+                <Button size="lg" variant="secondary" className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleDoctorClick}>
+                  Go to Doctor Dashboard <ArrowRight className="ml-2" />
                 </Button>
               </CardFooter>
             </Card>
