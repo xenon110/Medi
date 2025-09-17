@@ -76,10 +76,7 @@ const generateInitialReportFlow = ai.defineFlow(
     outputSchema: GenerateInitialReportOutputSchema,
   },
   async input => {
-    const {output} = await ai.generate({
-      model: 'googleai/gemini-2.5-pro',
-      prompt: prompt.compile(input),
-    });
+    const {output} = await prompt(input);
     return output!;
   }
 );
