@@ -47,7 +47,11 @@ export default function DoctorDashboard() {
 
   const handleSelectPatient = (patient: Patient) => {
     setSelectedPatient(patient);
-    setReportText(patient.report.report);
+    if(patient.report && patient.report.report) {
+      setReportText(patient.report.report);
+    } else {
+      setReportText('');
+    }
     setIsCustomizing(false);
   };
 
@@ -95,10 +99,10 @@ export default function DoctorDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                            <AvatarFallback>{patient.name ? patient.name.charAt(0) : 'P'}</AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <span className="font-semibold">{patient.name}</span>
+                            <span className="font-semibold">{patient.name || 'Anonymous'}</span>
                             <span className="text-xs text-muted-foreground">Report received</span>
                           </div>
                         </div>
@@ -131,16 +135,16 @@ export default function DoctorDashboard() {
                           className="min-h-[150px] text-base"
                         />
                       ) : (
-                        <p className="text-foreground/80">{selectedPatient.report.report}</p>
+                        <p className="text-foreground/80">{selectedPatient.report?.report}</p>
                       )}
                     </div>
                     <div className="space-y-2">
                       <h3 className="font-semibold text-lg">Home Remedies</h3>
-                      <p className="text-foreground/80">{selectedPatient.report.homeRemedies}</p>
+                      <p className="text-foreground/80">{selectedPatient.report?.homeRemedies}</p>
                     </div>
                     <div className="space-y-2">
                       <h3 className="font-semibold text-lg">Medical Recommendation</h3>
-                      <p className="text-foreground/80">{selectedPatient.report.medicalRecommendation}</p>
+                      <p className="text-foreground/80">{selectedPatient.report?.medicalRecommendation}</p>
                     </div>
                 </CardContent>
               </ScrollArea>
