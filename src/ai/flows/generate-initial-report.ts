@@ -29,6 +29,7 @@ const GenerateInitialReportOutputSchema = z.object({
   potentialConditions: z.array(z.object({
     name: z.string().describe('The name of the potential skin condition.'),
     likelihood: z.enum(['High', 'Medium', 'Low']).describe('The likelihood of this condition.'),
+    confidence: z.number().min(0).max(1).describe('The confidence score from 0.0 to 1.0.'),
     description: z.string().describe('A brief description of the condition.'),
   })).describe('An array of potential skin conditions identified from the image and symptoms.'),
   report: z.string().describe('A summary of the analysis and findings.'),
@@ -48,24 +49,30 @@ const prompt = ai.definePrompt({
   name: 'generateInitialReportPrompt',
   input: {schema: GenerateInitialReportInputSchema},
   output: {schema: GenerateInitialReportOutputSchema},
-  prompt: `You are an AI medical assistant specializing in dermatology. Your task is to analyze a patient's skin condition based on an image and provided information.
+  prompt: `You are a world-class AI medical assistant specializing in dermatology, with access to a vast knowledge base of medical literature and case studies. Your primary task is to provide a highly accurate analysis of a patient's skin condition based on an image and supplementary information.
 
-  Patient Information:
+  **CRITICAL INSTRUCTIONS:**
+  1.  **Prioritize Visual Evidence:** Your analysis MUST be primarily driven by the visual information in the provided image. The patient's described symptoms are secondary and should be used to refine the diagnosis, but the visual characteristics of the skin condition are the most critical factor.
+  2.  **Differential Diagnosis:** Perform a differential diagnosis. Identify a list of potential skin conditions that match the visual evidence.
+  3.  **Be Critical and Cautious:** For each potential condition, provide:
+      - 'name': The medical name of the condition.
+      - 'likelihood': Your assessment of how likely this condition is (High, Medium, or Low).
+      - 'confidence': A numerical confidence score between 0.0 and 1.0 representing your certainty in this potential diagnosis based on the provided evidence. A score of 1.0 means you are highly confident.
+      - 'description': A concise medical description of the condition.
+  4.  **Comprehensive Report:** Generate a 'report' summarizing your analytical process, linking visual features from the image to your conclusions.
+  5.  **Actionable Recommendations:** Provide safe, relevant 'homeRemedies' and a clear 'medicalRecommendation'.
+  6.  **Consultation Flag:** Set 'doctorConsultationSuggestion' to true if there is any uncertainty or if the condition appears serious.
+  7.  **Disclaimer:** Frame your response as an AI assistant. Always emphasize that this is not a substitute for professional medical advice and a consultation with a qualified dermatologist is essential for an accurate diagnosis.
+
+  **Patient Information:**
   - Age: {{{age}}}
   - Gender: {{{gender}}}
   - Region: {{{region}}}
   - Skin Tone: {{{skinTone}}}
   - Described Symptoms: {{{symptomInputs}}}
 
-  Image of the skin condition: {{media url=photoDataUri}}
-
-  Instructions:
-  1.  Carefully analyze the image and the patient's data.
-  2.  Identify a list of potential skin conditions. For each condition, provide its name, likelihood (High, Medium, or Low), and a brief description.
-  3.  Generate a comprehensive summary 'report' of your findings.
-  4.  Suggest relevant 'homeRemedies'. If none are appropriate, state "No specific home remedies are recommended. Please consult a healthcare professional."
-  5.  Provide a 'medicalRecommendation' for next steps.
-  6.  Set 'doctorConsultationSuggestion' to true if you recommend professional medical consultation, otherwise false.
+  **Analyze this image:**
+  {{media url=photoDataUri}}
 
   You must provide a structured JSON output.
   `,

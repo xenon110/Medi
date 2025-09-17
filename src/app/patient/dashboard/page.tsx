@@ -23,6 +23,7 @@ import { validateImageUpload, ValidateImageUploadOutput } from '@/ai/flows/valid
 import { assistWithSymptomInputs, AssistWithSymptomInputsOutput } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 const patientDetailsSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
@@ -323,13 +324,20 @@ export default function PatientDashboard() {
                       <div className="space-y-4">
                         {analysisResult.potentialConditions.map((condition, index) => (
                            <div key={index} className="p-4 rounded-lg border bg-card">
-                             <div className="flex justify-between items-center mb-2">
+                             <div className="flex justify-between items-start mb-2">
                                <h4 className="font-semibold text-base">{condition.name}</h4>
                                <Badge variant={condition.likelihood === 'High' ? 'destructive' : condition.likelihood === 'Medium' ? 'secondary' : 'outline'}>
                                  {condition.likelihood} Likelihood
                                </Badge>
                              </div>
-                             <p className="text-sm text-foreground/80">{condition.description}</p>
+                             <p className="text-sm text-foreground/80 mb-2">{condition.description}</p>
+                             <div className="space-y-1">
+                                <Label className="text-xs font-medium">Confidence</Label>
+                                <div className="flex items-center gap-2">
+                                    <Progress value={condition.confidence * 100} className="w-full h-2" />
+                                    <span className="text-xs font-semibold text-muted-foreground">{(condition.confidence * 100).toFixed(0)}%</span>
+                                </div>
+                             </div>
                            </div>
                         ))}
                       </div>
