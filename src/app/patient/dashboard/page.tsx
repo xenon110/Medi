@@ -16,6 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 import { validateImageUpload, ValidateImageUploadOutput } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs, AssistWithSymptomInputsOutput } from '@/ai/flows/assist-with-symptom-inputs';
@@ -23,6 +25,7 @@ import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/g
 import { Badge } from '@/components/ui/badge';
 
 const patientDetailsSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
   region: z.string().min(1, 'Region is required.'),
   skinTone: z.string().min(1, 'Skin tone is required.'),
   age: z.coerce.number().min(1, 'Age is required.').max(120),
@@ -52,10 +55,11 @@ export default function PatientDashboard() {
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
 
   const [analysisResult, setAnalysisResult] = useState<GenerateInitialReportOutput | null>(null);
+  const [isSendingToDoctor, setIsSendingToDoctor] = useState(false);
 
   const form = useForm<PatientDetails>({
     resolver: zodResolver(patientDetailsSchema),
-    defaultValues: { region: 'India', gender: 'male', skinTone: 'Type IV' },
+    defaultValues: { name: '', region: 'India', gender: 'male', skinTone: 'Type IV' },
   });
 
   const onSubmitDetails: SubmitHandler<PatientDetails> = (data) => {
@@ -149,6 +153,42 @@ export default function PatientDashboard() {
     }
   };
 
+  const handleSendToDoctor = async () => {
+    if (!patientDetails || !analysisResult || !imageDataUri) return;
+    setIsSendingToDoctor(true);
+    try {
+      await addDoc(collection(db, 'patients'), {
+        ...patientDetails,
+        report: analysisResult,
+        image: imageDataUri, // For simplicity, storing as data URI. In production, use Firebase Storage.
+        createdAt: serverTimestamp(),
+        status: 'pending',
+      });
+      toast({
+        title: "Report Sent",
+        description: "Your report has been successfully sent to the doctor's dashboard.",
+      });
+      // Reset for new analysis
+      setStep('details');
+      setPatientDetails(null);
+      setImagePreview(null);
+      setImageDataUri(null);
+      setChatMessages([]);
+      setAnalysisResult(null);
+      form.reset();
+    } catch (error) {
+      console.error("Error sending to doctor:", error);
+      toast({
+        variant: "destructive",
+        title: "Submission Failed",
+        description: "Could not send your report to the doctor. Please try again.",
+      });
+    } finally {
+      setIsSendingToDoctor(false);
+    }
+  };
+
+
   const renderStep = () => {
     switch (step) {
       case 'details':
@@ -161,6 +201,13 @@ export default function PatientDashboard() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmitDetails)}>
                 <CardContent className="space-y-4">
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                   <FormField control={form.control} name="region" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Region</FormLabel>
@@ -236,7 +283,7 @@ export default function PatientDashboard() {
                 <CardContent className="flex flex-col items-center justify-center gap-4">
                   <div className="relative w-full max-w-sm aspect-square rounded-lg border-2 border-dashed flex items-center justify-center">
                     {imagePreview ? (
-                      <Image src={imagePreview} alt="Skin condition preview" layout="fill" objectFit="cover" className="rounded-lg" />
+                      <Image src={imagePreview} alt="Skin condition preview" fill objectFit="cover" className="rounded-lg" />
                     ) : (
                       <div className="text-center text-muted-foreground p-4">
                         <FileUp className="mx-auto h-12 w-12" />
@@ -312,7 +359,9 @@ export default function PatientDashboard() {
                     )}
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => setStep('upload')} className="w-full">Start New Analysis</Button>
-                      <Button className="w-full bg-accent hover:bg-accent/90">Send to Doctor</Button>
+                      <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleSendToDoctor} disabled={isSendingToDoctor}>
+                        {isSendingToDoctor ? <Loader2 className="animate-spin" /> : 'Send to Doctor'}
+                      </Button>
                     </div>
                   </CardFooter>
                 </Card>

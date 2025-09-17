@@ -1,46 +1,70 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Paperclip, Send, Check, Pencil } from 'lucide-react';
+import { Paperclip, Send, Check, Pencil, Loader2 } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
+import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
+import { Label } from '@/components/ui/label';
 
-const mockPatients = [
-  { id: 1, name: 'Anjali Sharma', time: '10:42 AM', report: {
-      report: 'The analysis suggests a possible case of mild eczema, characterized by red, inflamed, and itchy patches of skin. The condition appears localized and does not show signs of severe infection.',
-      homeRemedies: 'Apply a cold compress to the affected area. Use over-the-counter hydrocortisone cream. Keep the skin moisturized with a gentle, fragrance-free lotion.',
-      medicalRecommendation: 'While home remedies may provide relief, it is advisable to monitor the condition. If symptoms persist or worsen, consult a dermatologist.',
-      doctorConsultationSuggestion: true,
-  }},
-  { id: 2, name: 'Ben Carter', time: '9:15 AM', report: {
-    report: 'Initial analysis points towards Psoriasis, indicated by the presence of thick, red, scaly patches. The lesion appears well-demarcated.',
-    homeRemedies: 'No home remedy available for this condition. Medical consultation is strongly advised.',
-    medicalRecommendation: 'It is highly recommended to consult a dermatologist for a definitive diagnosis and a proper treatment plan. Avoid using any harsh soaps or chemicals on the affected area.',
-    doctorConsultationSuggestion: true,
-  }},
-  { id: 3, name: 'Chen Wei', time: 'Yesterday', report: {
-    report: 'The image shows signs of a common fungal infection, likely Tinea Corporis (ringworm). It presents as a circular rash that is red and itchy.',
-    homeRemedies: 'Over-the-counter antifungal creams can be effective. Keep the area clean and dry.',
-    medicalRecommendation: 'If the rash does not improve with OTC treatments within two weeks, see a doctor.',
-    doctorConsultationSuggestion: false,
-  }},
-];
-
-type Patient = typeof mockPatients[0];
+type Patient = {
+  id: string;
+  name: string;
+  report: GenerateInitialReportOutput;
+  createdAt: Timestamp;
+  [key: string]: any;
+};
 
 export default function DoctorDashboard() {
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [reportText, setReportText] = useState('');
+
+  useEffect(() => {
+    const q = query(collection(db, 'patients'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const patientsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Patient));
+      setPatients(patientsData);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching patients:", error);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSelectPatient = (patient: Patient) => {
     setSelectedPatient(patient);
     setReportText(patient.report.report);
     setIsCustomizing(false);
+  };
+
+  const formatTimestamp = (timestamp: Timestamp | null | undefined) => {
+    if (!timestamp) return 'N/A';
+    const date = timestamp.toDate();
+    const now = new Date();
+    const diffSeconds = Math.round((now.getTime() - date.getTime()) / 1000);
+    const diffMinutes = Math.round(diffSeconds / 60);
+    const diffHours = Math.round(diffMinutes / 60);
+    const diffDays = Math.round(diffHours / 24);
+
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (diffDays === 1) return 'Yesterday';
+    return date.toLocaleDateString();
   };
   
   return (
@@ -54,30 +78,36 @@ export default function DoctorDashboard() {
           </CardHeader>
           <ScrollArea className="flex-1">
             <CardContent className="p-2">
-              <div className="flex flex-col gap-2">
-                {mockPatients.map((patient) => (
-                  <button
-                    key={patient.id}
-                    onClick={() => handleSelectPatient(patient)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      selectedPatient?.id === patient.id ? 'bg-muted' : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                           <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-semibold">{patient.name}</span>
-                          <span className="text-xs text-muted-foreground">Report received</span>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-full">
+                  <Loader2 className="animate-spin" />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {patients.map((patient) => (
+                    <button
+                      key={patient.id}
+                      onClick={() => handleSelectPatient(patient)}
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        selectedPatient?.id === patient.id ? 'bg-muted' : 'hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="font-semibold">{patient.name}</span>
+                            <span className="text-xs text-muted-foreground">Report received</span>
+                          </div>
                         </div>
+                        <span className="text-xs text-muted-foreground">{formatTimestamp(patient.createdAt)}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">{patient.time}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </ScrollArea>
         </Card>
