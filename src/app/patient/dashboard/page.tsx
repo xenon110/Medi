@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
-import { AlertCircle, Bot, CheckCircle, ChevronRight, Download, FileUp, Loader2, MessageSquarePlus, Send, Sparkles, Stethoscope, User, X } from 'lucide-react';
+import { AlertCircle, Bot, CheckCircle, ChevronRight, Download, FileUp, Loader2, MessageSquarePlus, Send, Sparkles, Stethoscope, User, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -100,6 +100,16 @@ export default function PatientDashboard() {
         setIsImageValidating(false);
       }
     };
+  };
+
+  const handleReupload = () => {
+    setImagePreview(null);
+    setImageDataUri(null);
+    setImageValidationError(null);
+    const input = document.getElementById('image-upload') as HTMLInputElement;
+    if (input) {
+      input.value = '';
+    }
   };
 
   const handleSymptomSubmit = async () => {
@@ -391,10 +401,24 @@ export default function PatientDashboard() {
                                     <p>Click to upload or drag & drop</p>
                                 </div>
                             )}
-                            <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload'} />
+                            <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload' || !!imageValidationError} />
                         </div>
                         {isImageValidating && <div className="flex items-center text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Validating image...</div>}
-                        {imageValidationError && <Alert variant="destructive" className="animate-blink"><AlertCircle className="h-4 w-4" /><AlertTitle>Invalid Image</AlertTitle><AlertDescription>{imageValidationError}</AlertDescription></Alert>}
+                        {imageValidationError && (
+                          <Alert variant="destructive" className="animate-blink">
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertTitle>Invalid Image</AlertTitle>
+                              <AlertDescription>
+                                <div className="flex justify-between items-center">
+                                  <span>{imageValidationError}</span>
+                                  <Button variant="ghost" size="sm" onClick={handleReupload} className="h-auto p-1">
+                                    <RefreshCw className="mr-1 h-3 w-3" />
+                                    Re-upload
+                                  </Button>
+                                </div>
+                              </AlertDescription>
+                          </Alert>
+                        )}
                         {imageDataUri && !imageValidationError && <div className="flex items-center text-green-600"><CheckCircle className="mr-2 h-4 w-4" />Image is valid.</div>}
                     </CardContent>
                     <CardFooter className="flex-col items-stretch gap-4">
@@ -564,7 +588,5 @@ export default function PatientDashboard() {
     </div>
   );
 }
-
-    
 
     
