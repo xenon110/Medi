@@ -9,24 +9,30 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Paperclip, Send, Check, Pencil, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 type Patient = {
   id: string;
   name: string;
   report: GenerateInitialReportOutput;
   createdAt: Timestamp;
+  status: 'pending' | 'approved' | 'customized';
+  image?: string;
   [key: string]: any;
 };
 
 export default function DoctorDashboard() {
+  const { toast } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [reportText, setReportText] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [customReportText, setCustomReportText] = useState('');
+  const [prescriptionText, setPrescriptionText] = useState('');
 
   useEffect(() => {
     const q = query(collection(db, 'patients'), orderBy('createdAt', 'desc'));
@@ -36,6 +42,12 @@ export default function DoctorDashboard() {
         ...doc.data(),
       } as Patient));
       setPatients(patientsData);
+      if (selectedPatient) {
+        const updatedPatient = patientsData.find(p => p.id === selectedPatient.id);
+        if (updatedPatient) {
+          setSelectedPatient(updatedPatient);
+        }
+      }
       setIsLoading(false);
     }, (error) => {
       console.error("Error fetching patients:", error);
@@ -43,16 +55,49 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [selectedPatient]);
 
-  const handleSelectPatient = (patient: Patient) => {
-    setSelectedPatient(patient);
-    if(patient.report && patient.report.report) {
-      setReportText(patient.report.report);
-    } else {
-      setReportText('');
+  const handleSelectPatient = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    if (patient) {
+      setSelectedPatient(patient);
+      setCustomReportText(patient.report?.report || '');
+      setPrescriptionText('');
+      setIsCustomizing(false);
     }
-    setIsCustomizing(false);
+  };
+
+  const handleUpdatePatient = async (status: 'approved' | 'customized') => {
+    if (!selectedPatient) return;
+
+    setIsSending(true);
+    const patientRef = doc(db, 'patients', selectedPatient.id);
+
+    try {
+        const updateData: any = { status };
+        if (status === 'customized') {
+            updateData['customReport'] = {
+                report: customReportText,
+                prescription: prescriptionText,
+            };
+        }
+        await updateDoc(patientRef, updateData);
+
+        toast({
+            title: "Success",
+            description: `Patient report has been ${status}.`,
+        });
+        setIsCustomizing(false);
+    } catch (error) {
+        console.error("Error updating patient:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to update patient status.",
+        });
+    } finally {
+        setIsSending(false);
+    }
   };
 
   const formatTimestamp = (timestamp: Timestamp | null | undefined) => {
@@ -91,7 +136,7 @@ export default function DoctorDashboard() {
                   {patients.map((patient) => (
                     <button
                       key={patient.id}
-                      onClick={() => handleSelectPatient(patient)}
+                      onClick={() => handleSelectPatient(patient.id)}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
                         selectedPatient?.id === patient.id ? 'bg-muted' : 'hover:bg-muted/50'
                       }`}
@@ -103,7 +148,7 @@ export default function DoctorDashboard() {
                           </Avatar>
                           <div className="flex flex-col">
                             <span className="font-semibold">{patient.name || 'Anonymous'}</span>
-                            <span className="text-xs text-muted-foreground">Report received</span>
+                            <span className="text-xs text-muted-foreground capitalize">{patient.status}</span>
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground">{formatTimestamp(patient.createdAt)}</span>
@@ -130,8 +175,8 @@ export default function DoctorDashboard() {
                       <h3 className="font-semibold text-lg">Potential Issues</h3>
                       {isCustomizing ? (
                         <Textarea 
-                          value={reportText}
-                          onChange={(e) => setReportText(e.target.value)}
+                          value={customReportText}
+                          onChange={(e) => setCustomReportText(e.target.value)}
                           className="min-h-[150px] text-base"
                         />
                       ) : (
@@ -153,7 +198,12 @@ export default function DoctorDashboard() {
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="prescription-text">Medicine Recommendations / Notes</Label>
-                      <Textarea id="prescription-text" placeholder="e.g., Paracetamol 500mg twice a day..." />
+                      <Textarea 
+                        id="prescription-text" 
+                        placeholder="e.g., Paracetamol 500mg twice a day..." 
+                        value={prescriptionText}
+                        onChange={(e) => setPrescriptionText(e.target.value)}
+                      />
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex-1 space-y-2">
@@ -163,19 +213,19 @@ export default function DoctorDashboard() {
                       <Button variant="ghost" size="icon"><Paperclip /></Button>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsCustomizing(false)}>Cancel</Button>
-                      <Button>
-                        <Send className="mr-2" /> Send to Patient
+                      <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
+                      <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
+                        {isSending ? <Loader2 className="animate-spin" /> : <Send className="mr-2" />} Send to Patient
                       </Button>
                     </div>
                   </>
                 ) : (
                   <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={() => setIsCustomizing(true)}>
+                    <Button variant="secondary" onClick={() => setIsCustomizing(true)} disabled={isSending}>
                       <Pencil className="mr-2" /> Customize Report
                     </Button>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">
-                      <Check className="mr-2" /> Approve & Send
+                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdatePatient('approved')} disabled={isSending}>
+                      {isSending ? <Loader2 className="animate-spin" /> : <Check className="mr-2" />} Approve & Send
                     </Button>
                   </div>
                 )}

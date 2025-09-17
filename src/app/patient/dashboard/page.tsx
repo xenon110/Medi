@@ -22,6 +22,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { validateImageUpload, ValidateImageUploadOutput } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs, AssistWithSymptomInputsOutput } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
+import { translateReport, TranslateReportOutput } from '@/ai/flows/translate-report';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
@@ -57,6 +58,9 @@ export default function PatientDashboard() {
 
   const [analysisResult, setAnalysisResult] = useState<GenerateInitialReportOutput | null>(null);
   const [isSendingToDoctor, setIsSendingToDoctor] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const originalReportRef = useRef<GenerateInitialReportOutput | null>(null);
+
 
   const form = useForm<PatientDetails>({
     resolver: zodResolver(patientDetailsSchema),
@@ -142,6 +146,7 @@ export default function PatientDashboard() {
         ...patientDetails,
       });
       setAnalysisResult(result);
+      originalReportRef.current = result; // Save original English report
       setStep('result');
     } catch (error) {
       console.error(error);
@@ -153,14 +158,52 @@ export default function PatientDashboard() {
       setStep('upload'); // Go back to upload step on failure
     }
   };
+  
+  const handleLanguageChange = async (languageCode: string) => {
+    if (!originalReportRef.current) return;
+    
+    if (languageCode === 'en') {
+      setAnalysisResult(originalReportRef.current);
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const translatedReport: TranslateReportOutput = await translateReport({
+        report: originalReportRef.current,
+        language: languageCode,
+      });
+      // The translated report comes in a slightly different structure
+      setAnalysisResult({
+        ...originalReportRef.current, // Keep original confidence, etc.
+        potentialConditions: originalReportRef.current.potentialConditions.map((pc, index) => ({
+          ...pc,
+          name: translatedReport.potentialConditions[index]?.name || pc.name,
+          description: translatedReport.potentialConditions[index]?.description || pc.description,
+        })),
+        report: translatedReport.report,
+        homeRemedies: translatedReport.homeRemedies,
+        medicalRecommendation: translatedReport.medicalRecommendation,
+      });
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Translation Failed',
+        description: 'Could not translate the report. Please try again.',
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const handleSendToDoctor = async () => {
-    if (!patientDetails || !analysisResult || !imageDataUri) return;
+    if (!patientDetails || !originalReportRef.current || !imageDataUri) return;
     setIsSendingToDoctor(true);
     try {
       await addDoc(collection(db, 'patients'), {
         ...patientDetails,
-        report: analysisResult,
+        report: originalReportRef.current, // Always send the original English report
         image: imageDataUri, // For simplicity, storing as data URI. In production, use Firebase Storage.
         createdAt: serverTimestamp(),
         status: 'pending',
@@ -170,13 +213,7 @@ export default function PatientDashboard() {
         description: "Your report has been successfully sent to the doctor's dashboard.",
       });
       // Reset for new analysis
-      setStep('details');
-      setPatientDetails(null);
-      setImagePreview(null);
-      setImageDataUri(null);
-      setChatMessages([]);
-      setAnalysisResult(null);
-      form.reset();
+      handleReset();
     } catch (error) {
       console.error("Error sending to doctor:", error);
       toast({
@@ -187,6 +224,18 @@ export default function PatientDashboard() {
     } finally {
       setIsSendingToDoctor(false);
     }
+  };
+  
+  const handleReset = () => {
+    setStep('details');
+    setPatientDetails(null);
+    setImagePreview(null);
+    setImageDataUri(null);
+    setChatMessages([]);
+    setAnalysisResult(null);
+    originalReportRef.current = null;
+    setImageValidationError(null);
+    form.reset();
   };
 
 
@@ -291,7 +340,7 @@ export default function PatientDashboard() {
                         <p>Click to upload or drag & drop</p>
                       </div>
                     )}
-                    <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} />
+                    <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload'}/>
                   </div>
                    {isImageValidating && <div className="flex items-center text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Validating image...</div>}
                    {imageValidationError && <Alert variant="destructive" className="animate-blink"><AlertCircle className="h-4 w-4" /><AlertTitle>Invalid Image</AlertTitle><AlertDescription>{imageValidationError}</AlertDescription></Alert>}
@@ -302,11 +351,16 @@ export default function PatientDashboard() {
               {/* Analysis Result */}
               {step === 'analyzing' && <Card className="flex-1"><CardContent className="h-full flex flex-col items-center justify-center gap-4 p-6"><Loader2 className="h-16 w-16 animate-spin text-primary" /><p className="text-lg text-muted-foreground">AI is analyzing your data...</p><p className="text-sm text-muted-foreground/80">This may take a moment.</p></CardContent></Card>}
               {step === 'result' && analysisResult && (
-                <Card className="flex-1">
+                <Card className="flex-1 relative">
+                  {isTranslating && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex justify-between items-center">
                       <CardTitle className="font-headline text-2xl">AI Analysis Report</CardTitle>
-                      <Select defaultValue="en">
+                      <Select defaultValue="en" onValueChange={handleLanguageChange} disabled={isTranslating}>
                         <SelectTrigger className="w-[180px]"><SelectValue placeholder="Language" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="en">English</SelectItem>
@@ -366,7 +420,7 @@ export default function PatientDashboard() {
                         </Alert>
                     )}
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setStep('upload')} className="w-full">Start New Analysis</Button>
+                      <Button variant="outline" onClick={handleReset} className="w-full">Start New Analysis</Button>
                       <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleSendToDoctor} disabled={isSendingToDoctor}>
                         {isSendingToDoctor ? <Loader2 className="animate-spin" /> : 'Send to Doctor'}
                       </Button>
@@ -406,12 +460,13 @@ export default function PatientDashboard() {
                             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSymptomSubmit())}
                             rows={3}
                             className="pr-20"
+                            disabled={step !== 'upload'}
                         />
                         <Button 
                             size="icon" 
                             className="absolute bottom-2 right-2 h-10 w-10 bg-accent hover:bg-accent/90"
                             onClick={handleSymptomSubmit}
-                            disabled={isChatbotLoading || !symptomInput.trim()}
+                            disabled={isChatbotLoading || !symptomInput.trim() || step !== 'upload'}
                         >
                             {isChatbotLoading ? <Loader2 className="animate-spin"/> : <Send/>}
                         </Button>
@@ -428,7 +483,7 @@ export default function PatientDashboard() {
                             className="w-full" 
                             size="lg"
                             onClick={handleAnalyze}
-                            disabled={!imageDataUri || step === 'analyzing' || step === 'result'}
+                            disabled={!imageDataUri || step !== 'upload'}
                         >
                             <Sparkles className="mr-2" />
                             Analyze Now
