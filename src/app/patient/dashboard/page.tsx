@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
-import { AlertCircle, Bot, CheckCircle, ChevronRight, FileUp, Loader2, Send, Sparkles, User, X } from 'lucide-react';
+import { AlertCircle, Bot, CheckCircle, ChevronRight, FileUp, Loader2, MessageSquarePlus, Send, Sparkles, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -53,6 +53,7 @@ export default function PatientDashboard() {
   const [imageValidationError, setImageValidationError] = useState<string | null>(null);
   const [isImageValidating, setIsImageValidating] = useState(false);
   
+  const [showSymptomChat, setShowSymptomChat] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
@@ -236,6 +237,7 @@ export default function PatientDashboard() {
     setAnalysisResult(null);
     originalReportRef.current = null;
     setImageValidationError(null);
+    setShowSymptomChat(false);
     form.reset();
   };
 
@@ -326,28 +328,50 @@ export default function PatientDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
             {/* Center Panel: Upload & Result */}
             <div className="lg:col-span-2 flex flex-col gap-6">
-              {/* Image Upload */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>1. Upload Skin Image</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center gap-4">
-                  <div className="relative w-full max-w-sm aspect-square rounded-lg border-2 border-dashed flex items-center justify-center">
-                    {imagePreview ? (
-                      <Image src={imagePreview} alt="Skin condition preview" fill objectFit="cover" className="rounded-lg" />
-                    ) : (
-                      <div className="text-center text-muted-foreground p-4">
-                        <FileUp className="mx-auto h-12 w-12" />
-                        <p>Click to upload or drag & drop</p>
-                      </div>
-                    )}
-                    <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload'}/>
-                  </div>
-                   {isImageValidating && <div className="flex items-center text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Validating image...</div>}
-                   {imageValidationError && <Alert variant="destructive" className="animate-blink"><AlertCircle className="h-4 w-4" /><AlertTitle>Invalid Image</AlertTitle><AlertDescription>{imageValidationError}</AlertDescription></Alert>}
-                   {imageDataUri && !imageValidationError && <div className="flex items-center text-green-600"><CheckCircle className="mr-2 h-4 w-4" />Image is valid.</div>}
-                </CardContent>
-              </Card>
+              {/* Image Upload & Actions */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>1. Upload Skin Image</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center justify-center gap-4">
+                        <div className="relative w-full max-w-sm aspect-square rounded-lg border-2 border-dashed flex items-center justify-center">
+                            {imagePreview ? (
+                                <Image src={imagePreview} alt="Skin condition preview" fill objectFit="cover" className="rounded-lg" />
+                            ) : (
+                                <div className="text-center text-muted-foreground p-4">
+                                    <FileUp className="mx-auto h-12 w-12" />
+                                    <p>Click to upload or drag & drop</p>
+                                </div>
+                            )}
+                            <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload'} />
+                        </div>
+                        {isImageValidating && <div className="flex items-center text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Validating image...</div>}
+                        {imageValidationError && <Alert variant="destructive" className="animate-blink"><AlertCircle className="h-4 w-4" /><AlertTitle>Invalid Image</AlertTitle><AlertDescription>{imageValidationError}</AlertDescription></Alert>}
+                        {imageDataUri && !imageValidationError && <div className="flex items-center text-green-600"><CheckCircle className="mr-2 h-4 w-4" />Image is valid.</div>}
+                    </CardContent>
+                    <CardFooter className="flex-col items-stretch gap-4">
+                        <p className="text-sm text-muted-foreground text-center mb-2">Once you have uploaded a valid image, you can start the analysis or add optional symptoms.</p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                             <Button 
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setShowSymptomChat(prev => !prev)}
+                                disabled={step !== 'upload'}
+                            >
+                                <MessageSquarePlus className="mr-2" />
+                                {showSymptomChat ? 'Hide Symptoms' : 'Add Symptoms (Optional)'}
+                            </Button>
+                            <Button 
+                                className="w-full" 
+                                onClick={handleAnalyze}
+                                disabled={!imageDataUri || step !== 'upload'}
+                            >
+                                <Sparkles className="mr-2" />
+                                Analyze Now
+                            </Button>
+                        </div>
+                    </CardFooter>
+                </Card>
               
               {/* Analysis Result */}
               {step === 'analyzing' && <Card className="flex-1"><CardContent className="h-full flex flex-col items-center justify-center gap-4 p-6"><Loader2 className="h-16 w-16 animate-spin text-primary" /><p className="text-lg text-muted-foreground">AI is analyzing your data...</p><p className="text-sm text-muted-foreground/80">This may take a moment.</p></CardContent></Card>}
@@ -434,6 +458,7 @@ export default function PatientDashboard() {
             
             {/* Right Panel: Chat & Action */}
             <div className="lg:col-span-1 flex flex-col gap-6">
+                { showSymptomChat && (
                 <Card className="flex-1 flex flex-col">
                   <CardHeader>
                     <CardTitle>2. Describe Your Symptoms</CardTitle>
@@ -442,6 +467,12 @@ export default function PatientDashboard() {
                   <CardContent className="flex-1 flex flex-col gap-4">
                     <ScrollArea className="h-64 pr-4">
                         <div className="space-y-4">
+                        {chatMessages.length === 0 && (
+                            <div className="text-center text-muted-foreground p-4">
+                                <p>Describe your symptoms to the AI assistant.</p>
+                                <p className="text-xs">e.g., "The rash is very itchy and has been there for 3 days."</p>
+                            </div>
+                        )}
                         {chatMessages.map((msg, index) => (
                             <div key={index} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 {msg.sender !== 'user' && <Avatar className="w-8 h-8"><AvatarFallback><Bot /></AvatarFallback></Avatar>}
@@ -474,23 +505,7 @@ export default function PatientDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>3. Get Your Analysis</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">Once you have uploaded a valid image and described your symptoms, you can start the analysis.</p>
-                        <Button 
-                            className="w-full" 
-                            size="lg"
-                            onClick={handleAnalyze}
-                            disabled={!imageDataUri || step !== 'upload'}
-                        >
-                            <Sparkles className="mr-2" />
-                            Analyze Now
-                        </Button>
-                    </CardContent>
-                </Card>
+                )}
             </div>
           </div>
         );
@@ -506,3 +521,5 @@ export default function PatientDashboard() {
     </div>
   );
 }
+
+    
