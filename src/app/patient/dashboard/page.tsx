@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
-import { AlertCircle, Bot, CheckCircle, ChevronRight, FileUp, Loader2, MessageSquarePlus, Send, Sparkles, User, X } from 'lucide-react';
+import { AlertCircle, Bot, CheckCircle, ChevronRight, Download, FileUp, Loader2, MessageSquarePlus, Send, Sparkles, Stethoscope, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -212,10 +212,9 @@ export default function PatientDashboard() {
       });
       toast({
         title: "Report Sent",
-        description: "Your report has been successfully sent to the doctor's dashboard.",
+        description: "Your report has been successfully sent to the doctor's dashboard for review.",
       });
-      // Reset for new analysis
-      handleReset();
+      // Do not reset automatically, let the user decide.
     } catch (error) {
       console.error("Error sending to doctor:", error);
       toast({
@@ -226,6 +225,55 @@ export default function PatientDashboard() {
     } finally {
       setIsSendingToDoctor(false);
     }
+  };
+
+  const handleDownloadReport = () => {
+    if (!analysisResult || !patientDetails) return;
+
+    let reportContent = `MediScan AI Analysis Report\n`;
+    reportContent += `=============================\n\n`;
+    reportContent += `Patient: ${patientDetails.name}\n`;
+    reportContent += `Age: ${patientDetails.age}\n`;
+    reportContent += `Gender: ${patientDetails.gender}\n`;
+    reportContent += `Region: ${patientDetails.region}\n`;
+    reportContent += `Skin Tone: ${patientDetails.skinTone}\n`;
+    reportContent += `Date: ${new Date().toLocaleDateString()}\n\n`;
+
+    reportContent += `--- POTENTIAL CONDITIONS ---\n`;
+    analysisResult.potentialConditions.forEach(condition => {
+      reportContent += `\n`;
+      reportContent += `Name: ${condition.name}\n`;
+      reportContent += `Likelihood: ${condition.likelihood}\n`;
+      reportContent += `Confidence: ${(condition.confidence * 100).toFixed(0)}%\n`;
+      reportContent += `Description: ${condition.description}\n`;
+    });
+
+    reportContent += `\n\n--- AI SUMMARY ---\n`;
+    reportContent += `${analysisResult.report}\n`;
+
+    reportContent += `\n\n--- SUGGESTED HOME REMEDIES ---\n`;
+    reportContent += `${analysisResult.homeRemedies}\n`;
+
+    reportContent += `\n\n--- MEDICAL RECOMMENDATION ---\n`;
+    reportContent += `${analysisResult.medicalRecommendation}\n`;
+
+    reportContent += `\n\n--- DISCLAIMER ---\n`;
+    reportContent += `This is an AI-generated report and does not substitute for a professional medical diagnosis. Please consult a qualified healthcare provider.`;
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `MediScan_Report_${patientDetails.name.replace(' ', '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+        title: "Report Downloaded",
+        description: "Your report has been saved as a text file.",
+    });
   };
   
   const handleReset = () => {
@@ -435,21 +483,16 @@ export default function PatientDashboard() {
                     </div>
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
-                    {analysisResult.doctorConsultationSuggestion && (
-                        <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Consultation Recommended</AlertTitle>
-                            <AlertDescription>
-                            Our AI suggests consulting a doctor for a more accurate diagnosis and treatment plan.
-                            </AlertDescription>
-                        </Alert>
-                    )}
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={handleReset} className="w-full">Start New Analysis</Button>
+                      <Button variant="outline" onClick={handleDownloadReport} className="w-full">
+                        <Download className="mr-2" />
+                        Download Report
+                      </Button>
                       <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleSendToDoctor} disabled={isSendingToDoctor}>
-                        {isSendingToDoctor ? <Loader2 className="animate-spin" /> : 'Send to Doctor'}
+                        {isSendingToDoctor ? <Loader2 className="animate-spin" /> : <><Stethoscope className="mr-2" /> Consult Doctor</>}
                       </Button>
                     </div>
+                    <Button variant="link" onClick={handleReset} className="w-full">Start New Analysis</Button>
                   </CardFooter>
                 </Card>
               )}
@@ -521,5 +564,7 @@ export default function PatientDashboard() {
     </div>
   );
 }
+
+    
 
     
