@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,6 +11,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { GenerateInitialReportOutputSchema } from '@/ai/schemas/report-schema';
+
 
 const GenerateInitialReportInputSchema = z.object({
   photoDataUri: z
@@ -25,18 +28,6 @@ const GenerateInitialReportInputSchema = z.object({
 });
 export type GenerateInitialReportInput = z.infer<typeof GenerateInitialReportInputSchema>;
 
-export const GenerateInitialReportOutputSchema = z.object({
-  potentialConditions: z.array(z.object({
-    name: z.string().describe('The name of the potential skin condition.'),
-    likelihood: z.enum(['High', 'Medium', 'Low']).describe('The likelihood of this condition.'),
-    confidence: z.number().min(0).max(1).describe('The confidence score from 0.0 to 1.0.'),
-    description: z.string().describe('A brief description of the condition.'),
-  })).describe('An array of potential skin conditions identified from the image and symptoms.'),
-  report: z.string().describe('A summary of the analysis and findings.'),
-  homeRemedies: z.string().describe('Applicable home remedies, if any.'),
-  medicalRecommendation: z.string().describe('General medical advice or dermatologist recommendation.'),
-  doctorConsultationSuggestion: z.boolean().describe('Whether a doctor consultation is suggested.'),
-});
 export type GenerateInitialReportOutput = z.infer<typeof GenerateInitialReportOutputSchema>;
 
 export async function generateInitialReport(

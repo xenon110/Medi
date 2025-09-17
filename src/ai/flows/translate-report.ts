@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Translates a medical report to a specified language.
@@ -9,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {GenerateInitialReportOutputSchema} from './generate-initial-report';
+import {GenerateInitialReportOutputSchema} from '@/ai/schemas/report-schema';
 
 const TranslateReportInputSchema = z.object({
   report: GenerateInitialReportOutputSchema.describe('The original report object in English.'),
