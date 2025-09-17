@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "landing-hero",
+      "description": "A calming, abstract image related to healthcare or technology.",
+      "imageUrl": "https://picsum.photos/seed/101/1200/800",
+      "imageHint": "healthcare technology"
+    },
+    {
+      "id": "patient-login",
+      "description": "An icon-like image representing a patient.",
+      "imageUrl": "https://picsum.photos/seed/102/400/300",
+      "imageHint": "person profile"
+    },
+    {
+      "id": "doctor-login",
+      "description": "An icon-like image representing a doctor.",
+      "imageUrl": "https://picsum.photos/seed/103/400/300",
+      "imageHint": "doctor medical"
+    },
+    {
+      "id": "skin-lesion-example",
+      "description": "An example image of a skin lesion for the patient dashboard.",
+      "imageUrl": "https://picsum.photos/seed/104/500/500",
+      "imageHint": "skin dermatology"
+    }
+  ]
 }

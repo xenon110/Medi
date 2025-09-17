@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['Playfair', 'serif'],
         code: ['monospace'],
       },
       colors: {
@@ -88,10 +88,14 @@ export default {
             height: '0',
           },
         },
+        'blink': {
+          '50%': { opacity: '0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'blink': 'blink 1s linear infinite',
       },
     },
   },
