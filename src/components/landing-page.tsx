@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { User, Stethoscope, ArrowRight } from 'lucide-react';
@@ -5,10 +7,40 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Header from './layout/header';
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+
 
 export function LandingPage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'landing-hero');
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const router = useRouter();
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUserRole(userDoc.data().role);
+        }
+      } else {
+        setUserRole(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const getDashboardLink = () => {
+    if (!userRole) return '/login';
+    return userRole === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard';
+  };
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -53,10 +85,10 @@ export function LandingPage() {
                 </CardDescription>
               </CardContent>
               <CardFooter className="justify-center">
-                <Button asChild size="lg" className="w-full md:w-auto">
-                  <Link href="/patient/dashboard">
-                    Patient Login <ArrowRight className="ml-2" />
-                  </Link>
+                <Button asChild size="lg" className="w-full md:w-auto" onClick={() => router.push(user && userRole === 'patient' ? '/patient/dashboard' : '/login?role=patient')}>
+                   <a>
+                    Go to Patient Dashboard <ArrowRight className="ml-2" />
+                  </a>
                 </Button>
               </CardFooter>
             </Card>
@@ -74,10 +106,10 @@ export function LandingPage() {
                 </CardDescription>
               </CardContent>
               <CardFooter className="justify-center">
-                <Button asChild size="lg" variant="secondary" className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
-                  <Link href="/doctor/dashboard">
-                    Doctor Login <ArrowRight className="ml-2" />
-                  </Link>
+                <Button asChild size="lg" variant="secondary" className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => router.push(user && userRole === 'doctor' ? '/doctor/dashboard' : '/login?role=doctor')}>
+                  <a>
+                    Go to Doctor Dashboard <ArrowRight className="ml-2" />
+                  </a>
                 </Button>
               </CardFooter>
             </Card>

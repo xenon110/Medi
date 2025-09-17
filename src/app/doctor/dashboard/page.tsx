@@ -8,11 +8,14 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Paperclip, Send, Check, Pencil, Loader2 } from 'lucide-react';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+
 
 type Patient = {
   id: string;
@@ -26,6 +29,8 @@ type Patient = {
 
 export default function DoctorDashboard() {
   const { toast } = useToast();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,8 +40,29 @@ export default function DoctorDashboard() {
   const [prescriptionText, setPrescriptionText] = useState('');
 
   useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        // Verify user is a doctor
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists() && userDoc.data().role === 'doctor') {
+          setUser(currentUser);
+        } else {
+          router.push('/login'); // Redirect if not a doctor
+        }
+      } else {
+        router.push('/login');
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, [router]);
+
+  useEffect(() => {
+    if (!user) return; // Don't fetch patients if no user
+
     const q = query(collection(db, 'patients'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribePatients = onSnapshot(q, (querySnapshot) => {
       const patientsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -54,8 +80,8 @@ export default function DoctorDashboard() {
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [selectedPatient?.id]);
+    return () => unsubscribePatients();
+  }, [user, selectedPatient?.id]);
 
   const handleSelectPatient = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
@@ -116,6 +142,14 @@ export default function DoctorDashboard() {
     return date.toLocaleDateString();
   };
   
+  if (!user || isLoading) {
+     return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={48} />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 h-[calc(100vh-80px)]">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
@@ -127,10 +161,8 @@ export default function DoctorDashboard() {
           </CardHeader>
           <ScrollArea className="flex-1">
             <CardContent className="p-2">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-full">
-                  <Loader2 className="animate-spin" />
-                </div>
+              {patients.length === 0 ? (
+                <div className="text-center text-muted-foreground p-4">No patients yet.</div>
               ) : (
                 <div className="flex flex-col gap-2">
                   {patients.map((patient) => (
