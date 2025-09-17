@@ -25,7 +25,7 @@ const GenerateInitialReportInputSchema = z.object({
 });
 export type GenerateInitialReportInput = z.infer<typeof GenerateInitialReportInputSchema>;
 
-const GenerateInitialReportOutputSchema = z.object({
+export const GenerateInitialReportOutputSchema = z.object({
   potentialConditions: z.array(z.object({
     name: z.string().describe('The name of the potential skin condition.'),
     likelihood: z.enum(['High', 'Medium', 'Low']).describe('The likelihood of this condition.'),
