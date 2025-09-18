@@ -9,7 +9,6 @@ import Image from 'next/image';
 import { AlertCircle, ArrowLeft, Bot, CheckCircle, ChevronRight, Download, FileUp, Loader2, MessageSquarePlus, RefreshCw, Sparkles, Stethoscope, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +26,7 @@ import { translateReport, TranslateReportOutput } from '@/ai/flows/translate-rep
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 const patientDetailsSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
@@ -49,13 +49,6 @@ const dummyUser = {
   email: 'patient@test.com',
 };
 
-const dummyDoctors = [
-    { id: 'doc-1', name: 'Dr. Emily Carter', specialty: 'Dermatology' },
-    { id: 'doc-2', name: 'Dr. Ben Hanson', specialty: 'General Medicine' },
-    { id: 'doc-3', name: 'Dr. Sarah Lee', specialty: 'Dermatology' },
-];
-
-
 export default function PatientDashboard() {
   const { toast } = useToast();
   const [user, setUser] = useState<typeof dummyUser | null>(null);
@@ -73,10 +66,8 @@ export default function PatientDashboard() {
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
 
   const [analysisResult, setAnalysisResult] = useState<GenerateInitialReportOutput | null>(null);
-  const [isSendingToDoctor, setIsSendingToDoctor] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const originalReportRef = useRef<GenerateInitialReportOutput | null>(null);
-  const [isConsultDoctorDialogOpen, setIsConsultDoctorDialogOpen] = useState(false);
   
   useEffect(() => {
     // Simulate user login
@@ -108,13 +99,7 @@ export default function PatientDashboard() {
       const base64data = reader.result as string;
       setImageDataUri(base64data);
        try {
-        // Since this is a dummy flow now, we'll just simulate a successful validation
         await new Promise(resolve => setTimeout(resolve, 500));
-        // const validation: ValidateImageUploadOutput = await validateImageUpload({ photoDataUri: base64data });
-        // if (!validation.isValid) {
-        //   setImageValidationError(validation.reason || "I can't help with this photo.");
-        //   setImageDataUri(null); 
-        // }
       } catch (error) {
         setImageValidationError('An error occurred during image validation.');
         console.error(error);
@@ -143,7 +128,6 @@ export default function PatientDashboard() {
     setSymptomInput('');
     
     try {
-       // Dummy response
       const response: AssistWithSymptomInputsOutput = {
         refinedSymptoms: `Based on your input about "${symptomInput}", I've noted it down.`,
         suggestedQuestions: ["Is there any swelling?", "Does it hurt to touch?", "Have you used any creams?"]
@@ -178,7 +162,6 @@ export default function PatientDashboard() {
     const allSymptoms = chatMessages.filter(m => m.sender === 'user').map(m => m.text).join(', ');
 
     try {
-      // Dummy analysis result
       await new Promise(resolve => setTimeout(resolve, 2000));
       const result: GenerateInitialReportOutput = {
         potentialConditions: [
@@ -215,7 +198,6 @@ export default function PatientDashboard() {
 
     setIsTranslating(true);
     try {
-      // Dummy translation
       await new Promise(resolve => setTimeout(resolve, 1000));
       const translatedReport: TranslateReportOutput = {
         potentialConditions: originalReportRef.current.potentialConditions.map(pc => ({
@@ -248,20 +230,6 @@ export default function PatientDashboard() {
     } finally {
       setIsTranslating(false);
     }
-  };
-
-  const handleSendToDoctor = async () => {
-    setIsSendingToDoctor(true);
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network request
-    
-    toast({
-        title: "Report Sent!",
-        description: "Your report has been successfully sent to the doctor for review.",
-    });
-
-    setIsSendingToDoctor(false);
-    setIsConsultDoctorDialogOpen(false);
-    handleReset();
   };
 
   const handleDownloadReport = () => {
@@ -545,41 +513,11 @@ a.href = url;
                     </div>
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
-                     <Dialog open={isConsultDoctorDialogOpen} onOpenChange={setIsConsultDoctorDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="w-full bg-accent hover:bg-accent/90">
-                                <Stethoscope className="mr-2" /> Consult Doctor
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Consult a Doctor</DialogTitle>
-                                <DialogDescription>
-                                    Select a doctor to send your report to for a professional opinion.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                {dummyDoctors.map((doctor) => (
-                                    <Card key={doctor.id} className="hover:bg-muted/50 transition-colors">
-                                        <CardHeader className="flex flex-row items-center justify-between p-4">
-                                            <div className="flex items-center gap-4">
-                                                <Avatar>
-                                                    <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <CardTitle className="text-lg">{doctor.name}</CardTitle>
-                                                    <CardDescription>{doctor.specialty}</CardDescription>
-                                                </div>
-                                            </div>
-                                             <Button onClick={handleSendToDoctor} disabled={isSendingToDoctor}>
-                                                {isSendingToDoctor ? <Loader2 className="animate-spin" /> : 'Send Report'}
-                                            </Button>
-                                        </CardHeader>
-                                    </Card>
-                                ))}
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                     <Button asChild className="w-full bg-accent hover:bg-accent/90">
+                        <Link href="/patient/consult" target="_blank">
+                           <Stethoscope className="mr-2" /> Consult Doctor
+                        </Link>
+                    </Button>
                     <Button variant="outline" onClick={handleDownloadReport} className="w-full">
                         <Download className="mr-2" />
                         Download Report
