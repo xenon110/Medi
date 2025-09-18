@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { User, Stethoscope, ArrowRight, Hand, Bug, Syringe, CircleDot, Dna, ShieldAlert, Layers, UserCheck, Microscope, Bone, CircleSlash, Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { placeholderImages } from '@/lib/placeholder-images';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
@@ -15,11 +15,11 @@ import { useRouter } from 'next/navigation';
 
 
 export function LandingPage() {
-  const heroImage = PlaceHolderImages.find(img => img.id === 'landing-hero');
-  const resourceCenterImage = PlaceHolderImages.find(img => img.id === 'resource-center-banner');
-  const legUlcerImage = PlaceHolderImages.find(img => img.id === 'dermatology-leg-ulcer');
-  const molluscumImage = PlaceHolderImages.find(img => img.id === 'dermatology-molluscum');
-  const keratosisImage = PlaceHolderImages.find(img => img.id === 'dermatology-keratosis');
+  const heroImage = placeholderImages.find(img => img.id === 'landing-hero');
+  const resourceCenterImage = placeholderImages.find(img => img.id === 'resource-center-banner');
+  const legUlcerImage = placeholderImages.find(img => img.id === 'dermatology-leg-ulcer');
+  const molluscumImage = placeholderImages.find(img => img.id === 'dermatology-molluscum');
+  const keratosisImage = placeholderImages.find(img => img.id === 'dermatology-keratosis');
 
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);

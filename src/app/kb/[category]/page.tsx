@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { placeholderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle, FileText, FlaskConical, Stethoscope } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -24,9 +24,9 @@ export default function KnowledgePage({ params }: { params: { category: string }
     notFound();
   }
 
-  const image1 = PlaceHolderImages.find(img => img.id === article.images[0]);
-  const image2 = PlaceHolderImages.find(img => img.id === article.images[1]);
-  const image3 = PlaceHolderImages.find(img => img.id === article.images[2]);
+  const image1 = placeholderImages.find(img => img.id === article.images[0]);
+  const image2 = placeholderImages.find(img => img.id === article.images[1]);
+  const image3 = placeholderImages.find(img => img.id === article.images[2]);
 
   const currentIndex = KNOWLEDGE_BASE.findIndex(a => a.slug === params.category);
   const nextArticle = KNOWLEDGE_BASE[currentIndex + 1];
