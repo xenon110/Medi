@@ -39,15 +39,6 @@ export default function KnowledgePage({ params }: { params: { category: string }
         </div>
       </div>
       
-      <style jsx>{`
-        .bg-grid-pattern {
-          background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}</style>
-
-
       <div className="container mx-auto py-12 md:py-16">
         {/* Image Gallery */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
