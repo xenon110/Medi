@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Paperclip, Send, Check, Pencil, Loader2 } from 'lucide-react';
+import { Paperclip, Send, Check, Pencil, Loader2, Inbox } from 'lucide-react';
 import { db, auth } from '@/lib/firebase';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
@@ -49,6 +49,11 @@ export default function DoctorDashboard() {
         if (userDoc.exists() && userDoc.data().role === 'doctor') {
           setUser(currentUser);
         } else {
+          toast({
+            variant: 'destructive',
+            title: 'Access Denied',
+            description: 'You must be logged in as a doctor to view this page.',
+          });
           router.push('/login?role=doctor'); // Redirect if not a doctor
         }
       } else {
@@ -57,7 +62,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, [router]);
+  }, [router, toast]);
 
   useEffect(() => {
     if (!user) return; // Don't fetch patients if no user
@@ -71,14 +76,12 @@ export default function DoctorDashboard() {
       } as Patient));
       setPatients(patientsData);
       
-      // Reselect patient if they are in the new list
-      if (selectedPatient) {
+      if (patientsData.length > 0 && !selectedPatient) {
+        handleSelectPatient(patientsData[0].id, patientsData);
+      } else if (selectedPatient) {
         const updatedPatient = patientsData.find(p => p.id === selectedPatient.id);
         setSelectedPatient(updatedPatient || null);
-      } else if (patientsData.length > 0) {
-        // handleSelectPatient(patientsData[0].id)
       }
-
 
       setIsLoading(false);
     }, (error) => {
@@ -94,8 +97,8 @@ export default function DoctorDashboard() {
     return () => unsubscribePatients();
   }, [user, toast]);
 
-  const handleSelectPatient = (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId);
+  const handleSelectPatient = (patientId: string, patientList: Patient[] = patients) => {
+    const patient = patientList.find(p => p.id === patientId);
     if (patient) {
       setSelectedPatient(patient);
       setCustomReportText(patient.report?.report || '');
@@ -153,10 +156,13 @@ export default function DoctorDashboard() {
     return date.toLocaleDateString();
   };
   
-  if (!user || isLoading) {
+  if (isLoading) {
      return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={48} />
+      <div className="flex h-[calc(100vh-80px)] items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="animate-spin text-primary" size={48} />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -173,7 +179,11 @@ export default function DoctorDashboard() {
           <ScrollArea className="flex-1">
             <CardContent className="p-2">
               {patients.length === 0 ? (
-                <div className="text-center text-muted-foreground p-4">No patients yet.</div>
+                <div className="text-center text-muted-foreground p-8 flex flex-col items-center gap-4">
+                  <Inbox size={48} className="text-gray-400" />
+                  <h3 className="font-semibold">No Patients Yet</h3>
+                  <p className="text-sm">When patients submit reports, they will appear here.</p>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2">
                   {patients.map((patient) => (
@@ -281,8 +291,10 @@ export default function DoctorDashboard() {
               </CardFooter>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-muted-foreground">Select a patient to view their report.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+               <Inbox size={64} className="text-gray-400" />
+               <h3 className="font-semibold mt-4 text-lg">Select a Patient</h3>
+               <p>Choose a patient from the list on the left to view their detailed report and take action.</p>
             </div>
           )}
         </Card>
