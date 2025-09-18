@@ -58,27 +58,37 @@ export function LandingPage() {
   };
   
     const conditionCategories = [
-    { name: 'Reactions', icon: Hand },
-    { name: 'Infections', icon: Bug },
-    { name: 'Treatments', icon: Syringe },
-    { name: 'Lesions (cancerous)', icon: CircleDot },
-    { name: 'Lesions (benign)', icon: CircleSlash },
-    { name: 'Genetic', icon: Dna },
-    { name: 'Systemic diseases', icon: UserCheck },
-    { name: 'Autoimmune', icon: ShieldAlert },
-    { name: 'Rashes', icon: Layers },
-    { name: 'Follicular disorder', icon: Microscope },
-    { name: 'Infestations', icon: Bone },
-    { name: 'Eczemas', icon: Hand },
-    { name: 'Blood vessel problems', icon: Dna },
-    { name: 'Pigmentary disorders', icon: Layers },
+    { name: 'Reactions', icon: Hand, slug: 'reactions' },
+    { name: 'Infections', icon: Bug, slug: 'infections' },
+    { name: 'Treatments', icon: Syringe, slug: 'treatments' },
+    { name: 'Lesions (cancerous)', icon: CircleDot, slug: 'lesions-cancerous' },
+    { name: 'Lesions (benign)', icon: CircleSlash, slug: 'lesions-benign' },
+    { name: 'Genetic', icon: Dna, slug: 'genetic' },
+    { name: 'Systemic diseases', icon: UserCheck, slug: 'systemic-diseases' },
+    { name: 'Autoimmune', icon: ShieldAlert, slug: 'autoimmune' },
+    { name: 'Rashes', icon: Layers, slug: 'rashes' },
+    { name: 'Follicular disorder', icon: Microscope, slug: 'follicular-disorder' },
+    { name: 'Infestations', icon: Bone, slug: 'infestations' },
+    { name: 'Eczemas', icon: Hand, slug: 'eczemas' },
+    { name: 'Blood vessel problems', icon: Dna, slug: 'blood-vessel-problems' },
+    { name: 'Pigmentary disorders', icon: Layers, slug: 'pigmentary-disorders' },
   ];
 
   const commonConditions = [
-    'Acne', 'Athlete\'s foot', 'Cellulitis', 'Cold sores',
-    'Dermatitis/Eczema', 'Heat rash', 'Hives', 'Impetigo',
-    'Psoriasis', 'Ringworm', 'Rosacea', 'Seborrhoeic dermatitis',
-    'Shingles', 'Vitiligo'
+    { name: 'Acne', slug: 'acne'},
+    { name: 'Athlete\'s foot', slug: 'athletes-foot'},
+    { name: 'Cellulitis', slug: 'cellulitis'},
+    { name: 'Cold sores', slug: 'cold-sores'},
+    { name: 'Dermatitis/Eczema', slug: 'eczemas'},
+    { name: 'Heat rash', slug: 'heat-rash'},
+    { name: 'Hives', slug: 'hives'},
+    { name: 'Impetigo', slug: 'impetigo'},
+    { name: 'Psoriasis', slug: 'psoriasis'},
+    { name: 'Ringworm', slug: 'ringworm'},
+    { name: 'Rosacea', slug: 'rosacea'},
+    { name: 'Seborrhoeic dermatitis', slug: 'seborrhoeic-dermatitis'},
+    { name: 'Shingles', slug: 'shingles'},
+    { name: 'Vitiligo', slug: 'vitiligo'}
   ];
 
   return (
@@ -163,12 +173,12 @@ export function LandingPage() {
               <h3 className="font-semibold text-xl mb-4">Categories</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {conditionCategories.map((category) => (
-                  <div key={category.name} className="flex flex-col items-center text-center gap-2 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
-                    <div className="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/10 text-primary">
-                      <category.icon className="w-8 h-8" />
-                    </div>
-                    <span className="text-sm font-medium">{category.name}</span>
-                  </div>
+                    <Link href={`/kb/${category.slug}`} key={category.name} className="flex flex-col items-center text-center gap-2 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+                        <div className="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/10 text-primary">
+                        <category.icon className="w-8 h-8" />
+                        </div>
+                        <span className="text-sm font-medium">{category.name}</span>
+                    </Link>
                 ))}
                 <div className="flex flex-col items-center text-center gap-2 p-3 rounded-lg border-2 border-dashed hover:bg-muted transition-colors cursor-pointer justify-center">
                     <div className="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center text-muted-foreground">
@@ -183,9 +193,9 @@ export function LandingPage() {
               <h3 className="font-semibold text-xl mb-4">Common skin conditions</h3>
               <div className="flex flex-wrap gap-2">
                 {commonConditions.map((condition) => (
-                  <Button key={condition} variant="outline" className="rounded-full">
-                    {condition}
-                  </Button>
+                    <Button key={condition.name} variant="outline" className="rounded-full" asChild>
+                        <Link href={`/kb/${condition.slug}`}>{condition.name}</Link>
+                    </Button>
                 ))}
               </div>
             </div>

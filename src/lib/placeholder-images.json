@@ -48,6 +48,24 @@
         "description": "Seborrhoeic keratosis images",
         "imageUrl": "https://images.unsplash.com/photo-1581044777550-4cfa6ce24868?q=80&w=600&h=400&auto=format&fit=crop",
         "imageHint": "skin mole"
+    },
+    {
+      "id": "kb-eczema-1",
+      "description": "Close-up of eczema on skin",
+      "imageUrl": "https://images.unsplash.com/photo-1593105324915-3972c3558e1d?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin eczema"
+    },
+    {
+      "id": "kb-eczema-2",
+      "description": "Illustration of skin layers affected by eczema",
+      "imageUrl": "https://images.unsplash.com/photo-1560714197-7c1815357807?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin illustration"
+    },
+    {
+      "id": "kb-eczema-3",
+      "description": "Person applying cream to their arm",
+      "imageUrl": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin cream"
     }
   ]
 }
