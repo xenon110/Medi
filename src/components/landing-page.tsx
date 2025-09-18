@@ -58,8 +58,9 @@ export function LandingPage() {
            <Image
             src={heroImage.imageUrl}
             alt={heroImage.description}
-            fill
-            className="object-cover"
+            width={2070}
+            height={1380}
+            className="object-cover w-full h-full"
             data-ai-hint={heroImage.imageHint}
             priority
           />
