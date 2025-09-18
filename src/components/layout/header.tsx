@@ -7,8 +7,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SidebarTrigger } from '../ui/sidebar';
-import { useSidebar } from '../ui/sidebar';
+import { SidebarTrigger, useSidebar } from '../ui/sidebar';
 import { ThemeToggle } from '../theme-toggle';
 
 export default function Header() {
@@ -17,7 +16,8 @@ export default function Header() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const sidebar = useSidebar();
+  const isLoggedIn = !!userEmail;
+  const sidebar = isLoggedIn ? useSidebar() : null;
 
 
   useEffect(() => {
@@ -40,12 +40,20 @@ export default function Header() {
     router.push('/');
   };
 
-  const isLoggedIn = !!userEmail;
   
+  const handleDashboardClick = () => {
+    if (userRole === 'doctor') {
+      router.push('/doctor/dashboard');
+    } else if (userRole === 'patient') {
+      router.push('/patient/dashboard');
+    }
+  };
+
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-20 items-center">
-         {isLoggedIn && (
+         {isLoggedIn && sidebar && (
           <div className="md:hidden mr-4">
             <SidebarTrigger />
           </div>
@@ -57,12 +65,21 @@ export default function Header() {
           </span>
         </Link>
         
-        <div className="flex-1" />
+        <nav className="flex-1 flex justify-center items-center gap-6">
+           <Button variant="link" asChild>
+              <Link href="/">Home</Link>
+           </Button>
+          {isLoggedIn && (
+             <Button variant="link" onClick={handleDashboardClick}>
+              Dashboard
+            </Button>
+          )}
+        </nav>
 
         <div className="flex items-center gap-4">
           {isLoading ? (
             <Loader2 className="animate-spin" />
-          ) : userEmail ? (
+          ) : isLoggedIn ? (
             <>
                <ThemeToggle />
               <Button variant="ghost" size="icon">

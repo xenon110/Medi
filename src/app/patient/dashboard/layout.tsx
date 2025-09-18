@@ -1,5 +1,6 @@
+
 import Header from '@/components/layout/header';
-import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { Sidebar, SidebarProvider, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { LayoutDashboard, FileText, User, Settings, LifeBuoy } from 'lucide-react';
 

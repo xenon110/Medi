@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/layout/header';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 
 const signupSchema = z.object({
@@ -53,80 +54,82 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Header />
-      <main className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
-            <CardDescription>Join MediScan AI to get started.</CardDescription>
-          </CardHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="you@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>I am a...</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <SidebarProvider>
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
+              <CardDescription>Join MediScan AI to get started.</CardDescription>
+            </CardHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your role" />
-                          </SelectTrigger>
+                          <Input type="email" placeholder="you@example.com" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="patient">Patient</SelectItem>
-                          <SelectItem value="doctor">Doctor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-              <CardFooter className="flex flex-col items-stretch gap-4">
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? <Loader2 className="animate-spin" /> : 'Create Account'}
-                </Button>
-                <div className="text-center text-sm">
-                  Already have an account?{' '}
-                  <Button variant="link" asChild className="p-0 h-auto">
-                    <Link href="/login">Login</Link>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>I am a...</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="patient">Patient</SelectItem>
+                            <SelectItem value="doctor">Doctor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+                <CardFooter className="flex flex-col items-stretch gap-4">
+                  <Button type="submit" disabled={isLoading} className="w-full">
+                    {isLoading ? <Loader2 className="animate-spin" /> : 'Create Account'}
                   </Button>
-                </div>
-              </CardFooter>
-            </form>
-          </Form>
-        </Card>
-      </main>
-    </div>
+                  <div className="text-center text-sm">
+                    Already have an account?{' '}
+                    <Button variant="link" asChild className="p-0 h-auto">
+                      <Link href="/login">Login</Link>
+                    </Button>
+                  </div>
+                </CardFooter>
+              </form>
+            </Form>
+          </Card>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
