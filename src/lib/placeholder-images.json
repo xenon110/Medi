@@ -33,165 +33,167 @@
     },
     {
       "id": "kb-eczema-1",
-      "description": "Close-up of eczema on skin",
+      "description": "Close-up of eczema on skin, showing redness and dry texture.",
       "imageUrl": "https://images.unsplash.com/photo-1593105324915-3972c3558e1d?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin eczema"
     },
     {
       "id": "kb-eczema-2",
-      "description": "Illustration of skin layers affected by eczema",
-      "imageUrl": "https://images.unsplash.com/photo-1560714197-7c1815357807?q=80&w=600&h=400&auto=format&fit=crop",
-      "imageHint": "skin illustration"
+      "description": "Clinical view of atopic dermatitis on an arm.",
+      "imageUrl": "https://images.unsplash.com/photo-1618012623192-9a0e69b5a04a?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "atopic dermatitis"
     },
     {
       "id": "kb-eczema-3",
-      "description": "Person applying cream to their arm",
+      "description": "A person applying moisturizing cream to their dry skin.",
       "imageUrl": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin cream"
     },
     {
       "id": "kb-psoriasis-1",
-      "description": "Psoriasis on skin",
+      "description": "Clinical image showing psoriatic plaques on the skin.",
       "imageUrl": "https://images.unsplash.com/photo-1621484526363-239e76453f6c?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "psoriasis skin"
     },
     {
       "id": "kb-psoriasis-2",
-      "description": "Doctor examining skin with psoriasis",
+      "description": "Close-up of psoriasis scales on an elbow.",
+      "imageUrl": "https://images.unsplash.com/photo-1631751240428-2e86de694c9a?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin psoriasis"
+    },
+    {
+      "id": "kb-psoriasis-3",
+      "description": "Doctor examining skin affected by psoriasis.",
       "imageUrl": "https://images.unsplash.com/photo-1576089172922-30691157f495?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "doctor skin"
     },
     {
-      "id": "kb-psoriasis-3",
-      "description": "Topical cream for psoriasis",
-      "imageUrl": "https://images.unsplash.com/photo-1600096194534-96813292925b?q=80&w=600&h=400&auto=format&fit=crop",
-      "imageHint": "ointment cream"
-    },
-    {
       "id": "kb-acne-1",
-      "description": "Close-up of acne on face",
+      "description": "Close-up of moderate acne on a person's cheek.",
       "imageUrl": "https://images.unsplash.com/photo-1551887373-3c5bd224f6e2?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "acne face"
     },
     {
       "id": "kb-acne-2",
-      "description": "Skincare routine for acne",
-      "imageUrl": "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&h=400&auto=format=fit&crop",
-      "imageHint": "skincare face"
+      "description": "Example of different types of acne blemishes.",
+      "imageUrl": "https://images.unsplash.com/photo-1621253941804-505929c29d66?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin acne"
     },
     {
       "id": "kb-acne-3",
-      "description": "Acne treatment products",
-      "imageUrl": "https://images.unsplash.com/photo-1620916566398-39f168a7d8d7?q=80&w=600&h=400&auto=format&fit=crop",
+      "description": "Teenager applying acne treatment cream.",
+      "imageUrl": "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "acne treatment"
     },
     {
       "id": "kb-rosacea-1",
-      "description": "Facial redness from rosacea",
+      "description": "Facial redness and flushing characteristic of rosacea.",
       "imageUrl": "https://images.unsplash.com/photo-1612621431945-81571408b0d2?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "rosacea face"
     },
     {
       "id": "kb-rosacea-2",
-      "description": "Sun protection for rosacea",
+      "description": "Close-up of visible blood vessels on the cheek from rosacea.",
+      "imageUrl": "https://images.unsplash.com/photo-1620916566398-39f168a7d8d7?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin redness"
+    },
+    {
+      "id": "kb-rosacea-3",
+      "description": "Sun protection is key for managing rosacea.",
       "imageUrl": "https://images.unsplash.com/photo-1591135479633-5c84666d6289?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "sunscreen protection"
     },
     {
-      "id": "kb-rosacea-3",
-      "description": "Gentle skincare products",
-      "imageUrl": "https://images.unsplash.com/photo-1598440947619-2c35fc93c9ad?q=80&w=600&h=400&auto=format&fit=crop",
-      "imageHint": "skincare products"
-    },
-    {
       "id": "kb-hives-1",
-      "description": "Hives (urticaria) on skin",
+      "description": "Raised welts (urticaria) on the skin.",
       "imageUrl": "https://images.unsplash.com/photo-1601684349733-d9d95f87b2f6?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "hives urticaria"
     },
     {
       "id": "kb-hives-2",
-      "description": "Allergy testing",
-      "imageUrl": "https://images.unsplash.com/photo-1631589139893-86811656a48e?q=80&w=600&h=400&auto=format&fit=crop",
-      "imageHint": "allergy test"
+      "description": "An allergic reaction on the skin.",
+      "imageUrl": "https://images.unsplash.com/photo-1520699922720-4a8a657297c8?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin allergy"
     },
     {
       "id": "kb-hives-3",
-      "description": "Antihistamine medication",
+      "description": "Antihistamine medication pills for allergies.",
       "imageUrl": "https://images.unsplash.com/photo-1584308666744-8480404b65ae?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "pills medication"
     },
-     {
+    {
       "id": "kb-vitiligo-1",
-      "description": "Vitiligo patches on skin",
+      "description": "Vitiligo patches showing loss of pigment on hands.",
       "imageUrl": "https://images.unsplash.com/photo-1617882822497-65873275a513?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "vitiligo skin"
     },
     {
       "id": "kb-vitiligo-2",
-      "description": "Diversity and skin positivity",
+      "description": "A portrait celebrating skin diversity with vitiligo.",
       "imageUrl": "https://images.unsplash.com/photo-1611601373574-e3c3f81c9641?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin positivity"
     },
     {
       "id": "kb-vitiligo-3",
-      "description": "Sun protection for sensitive skin",
+      "description": "Applying sunscreen to protect depigmented skin.",
       "imageUrl": "https://images.unsplash.com/photo-1580399899352-44bbe34a504a?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "sunscreen protection"
     },
     {
       "id": "kb-lesions-cancerous-1",
-      "description": "Mole check for skin cancer",
+      "description": "Dermatologist examining a mole for signs of melanoma.",
       "imageUrl": "https://images.unsplash.com/photo-1555531923-8b01a1828859?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "mole check"
     },
     {
       "id": "kb-lesions-cancerous-2",
-      "description": "Dermatologist examining skin",
+      "description": "A suspicious skin lesion that could be basal cell carcinoma.",
       "imageUrl": "https://images.unsplash.com/photo-1612078903173-5743495b6e6e?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "dermatologist skin"
     },
     {
       "id": "kb-lesions-cancerous-3",
-      "description": "Microscope view of cells",
+      "description": "Microscopic view of cancer cells.",
       "imageUrl": "https://images.unsplash.com/photo-1578496479532-347458155217?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "cells microscope"
     },
     {
       "id": "kb-infections-1",
-      "description": "Bacteria on a petri dish",
-      "imageUrl": "https://images.unsplash.com/photo-1581092446337-23c3bbaec550?q=80&w=600&h=400&auto=format&fit=crop",
-      "imageHint": "bacteria science"
+      "description": "Image of cellulitis, a bacterial skin infection, on a leg.",
+      "imageUrl": "https://images.unsplash.com/photo-1629040181781-375935c7d2c3?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "cellulitis infection"
     },
     {
       "id": "kb-infections-2",
-      "description": "Applying antibacterial cream",
-      "imageUrl": "https://images.unsplash.com/photo-1584592487903-b783ae41f92a?q=80&w=600&h=400&auto=format&fit=crop",
-      "imageHint": "cream application"
+      "description": "Ringworm (tinea corporis) fungal infection rash.",
+      "imageUrl": "https://images.unsplash.com/photo-1631589139893-86811656a48e?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "ringworm fungus"
     },
     {
       "id": "kb-infections-3",
-      "description": "Doctor looking at infection",
+      "description": "Doctor inspecting a skin infection.",
       "imageUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "doctor patient"
     },
     {
       "id": "kb-rashes-1",
-      "description": "Generic skin rash",
-      "imageUrl": "https://images.unsplash.com/photo-1520699922720-4a8a657297c8?q=80&w=600&h=400&auto=format&fit=crop",
+      "description": "A general allergic skin rash with redness.",
+      "imageUrl": "https://images.unsplash.com/photo-1618012623192-9a0e69b5a04a?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin rash"
     },
     {
       "id": "kb-rashes-2",
-      "description": "Child with a rash being comforted",
+      "description": "Child with a rash being examined.",
       "imageUrl": "https://images.unsplash.com/photo-1546892557-658f4070747e?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "child comfort"
     },
     {
       "id": "kb-rashes-3",
-      "description": "Calamine lotion for rashes",
-      "imageUrl": "https://images.unsplash.com/photo-1631589139893-86811656a48e?q=80&w=600&h=400&auto=format&fit=crop",
+      "description": "Application of a soothing lotion on a rash.",
+      "imageUrl": "https://images.unsplash.com/photo-1584592487903-b783ae41f92a?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "lotion skin"
     }
   ]
 }
+
+    
