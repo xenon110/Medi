@@ -8,11 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Paperclip, Send, Check, Pencil, Loader2, Inbox } from 'lucide-react';
+import { Paperclip, Send, Check, Pencil, Loader2, Inbox, XCircle, ThumbsUp } from 'lucide-react';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 // Dummy Data
 const dummyPatients = [
@@ -51,8 +52,8 @@ const dummyPatients = [
       doctorConsultationSuggestion: false,
     },
     customReport: {
-      report: '',
-      prescription: '',
+      report: 'The AI diagnosis of Acne Vulgaris is accurate. The patient should start with a gentle skincare routine and consider topical treatments.',
+      prescription: 'Adapalene Gel 0.1%, apply a thin layer to affected areas once daily before bed.',
     },
   },
 ];
@@ -63,7 +64,7 @@ type Patient = {
   name: string;
   report: GenerateInitialReportOutput;
   createdAt: Date;
-  status: 'pending' | 'approved' | 'customized';
+  status: 'pending' | 'approved' | 'rejected' | 'customized';
   image?: string;
   [key: string]: any;
 };
@@ -100,7 +101,7 @@ export default function DoctorDashboard() {
     }
   };
 
-  const handleUpdatePatient = async (status: 'approved' | 'customized') => {
+  const handleUpdatePatient = async (status: 'approved' | 'customized' | 'rejected') => {
     if (!selectedPatient) return;
 
     setIsSending(true);
@@ -157,6 +158,21 @@ export default function DoctorDashboard() {
     );
   }
 
+  const getStatusBadgeVariant = (status: Patient['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'secondary';
+      case 'approved':
+      case 'customized':
+        return 'default';
+      case 'rejected':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+
   return (
     <div className="container mx-auto p-4 h-[calc(100vh-80px)]">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
@@ -189,9 +205,11 @@ export default function DoctorDashboard() {
                           <Avatar>
                             <AvatarFallback>{patient.name ? patient.name.charAt(0) : 'P'}</AvatarFallback>
                           </Avatar>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col items-start">
                             <span className="font-semibold">{patient.name || 'Anonymous'}</span>
-                            <span className="text-xs text-muted-foreground capitalize">{patient.status}</span>
+                             <Badge variant={getStatusBadgeVariant(patient.status)} className="text-xs capitalize mt-1">
+                                {patient.status}
+                             </Badge>
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground">{formatTimestamp(patient.createdAt)}</span>
@@ -234,7 +252,7 @@ export default function DoctorDashboard() {
                       <h3 className="font-semibold text-lg">Medical Recommendation</h3>
                       <p className="text-foreground/80">{selectedPatient.report?.medicalRecommendation}</p>
                     </div>
-                     {selectedPatient.status === 'customized' && selectedPatient.customReport?.prescription && (
+                     {selectedPatient.status !== 'pending' && selectedPatient.customReport?.prescription && (
                         <div className="space-y-2">
                             <h3 className="font-semibold text-lg">Prescription / Notes</h3>
                             <p className="text-foreground/80 whitespace-pre-wrap">{selectedPatient.customReport.prescription}</p>
@@ -246,7 +264,7 @@ export default function DoctorDashboard() {
                 {isCustomizing ? (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="prescription-text">Medicine Recommendations / Notes</Label>
+                      <Label htmlFor="prescription-text">Medicine Recommendations / Notes (Suggestion Box)</Label>
                       <Textarea 
                         id="prescription-text" 
                         placeholder="e.g., Paracetamol 500mg twice a day..." 
@@ -264,17 +282,30 @@ export default function DoctorDashboard() {
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
                       <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
-                        {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2" /> Send to Patient</>}
+                        {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2" /> Send Custom Response</>}
                       </Button>
                     </div>
                   </>
                 ) : (
                   <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={() => setIsCustomizing(true)} disabled={isSending || selectedPatient.status !== 'pending'}>
-                      <Pencil className="mr-2" /> Customize Report
-                    </Button>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdatePatient('approved')} disabled={isSending || selectedPatient.status !== 'pending'}>
-                      {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><Check className="mr-2" /> Approve & Send</>}
+                     <Button 
+                        variant="secondary" 
+                        onClick={() => setIsCustomizing(true)} 
+                        disabled={isSending || selectedPatient.status !== 'pending'}>
+                            <Pencil className="mr-2" /> Customize
+                     </Button>
+                     <Button 
+                        variant="destructive"
+                        className="bg-red-600 hover:bg-red-700" 
+                        onClick={() => handleUpdatePatient('rejected')} 
+                        disabled={isSending || selectedPatient.status !== 'pending'}>
+                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2" /> Reject</>}
+                     </Button>
+                    <Button 
+                        className="bg-green-600 hover:bg-green-700 text-white" 
+                        onClick={() => handleUpdatePatient('approved')} 
+                        disabled={isSending || selectedPatient.status !== 'pending'}>
+                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><ThumbsUp className="mr-2" /> Approve & Send</>}
                     </Button>
                   </div>
                 )}
