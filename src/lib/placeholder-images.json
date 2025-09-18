@@ -1,9 +1,10 @@
+
 {
   "placeholderImages": [
     {
       "id": "landing-hero",
       "description": "A calming, abstract image related to healthcare or technology.",
-      "imageUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&h=1380&auto=format&fit=crop",
       "imageHint": "healthcare technology"
     },
     {
@@ -23,6 +24,30 @@
       "description": "An example image of a skin lesion for the patient dashboard.",
       "imageUrl": "https://images.unsplash.com/photo-1618939307829-33823b26c043?q=80&w=500&h=500&auto=format&fit=crop",
       "imageHint": "skin dermatology"
+    },
+    {
+        "id": "resource-center-banner",
+        "description": "Dermatology resources for medical students",
+        "imageUrl": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?q=80&w=1200&h=400&auto=format&fit=crop",
+        "imageHint": "student library"
+    },
+    {
+        "id": "dermatology-leg-ulcer",
+        "description": "Leg ulcer images",
+        "imageUrl": "https://images.unsplash.com/photo-1629040181781-375935c7d2c3?q=80&w=600&h=400&auto=format&fit=crop",
+        "imageHint": "skin dermatology"
+    },
+    {
+        "id": "dermatology-molluscum",
+        "description": "Molluscum contagiosum images",
+        "imageUrl": "https://images.unsplash.com/photo-1605001200839-813425e4c6dc?q=80&w=600&h=400&auto=format&fit=crop",
+        "imageHint": "skin rash"
+    },
+    {
+        "id": "dermatology-keratosis",
+        "description": "Seborrhoeic keratosis images",
+        "imageUrl": "https://images.unsplash.com/photo-1581044777550-4cfa6ce24868?q=80&w=600&h=400&auto=format&fit=crop",
+        "imageHint": "skin mole"
     }
   ]
 }
