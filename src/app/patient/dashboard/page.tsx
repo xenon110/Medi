@@ -440,7 +440,7 @@ a.href = url;
                       {showSymptomChat ? 'Hide Symptoms' : 'Add Symptoms (Optional)'}
                     </Button>
                     <Button 
-                      className="w-full" 
+                      className="w-full bg-accent text-accent-foreground hover:bg-accent/90 hover:scale-105 hover:shadow-[0_0_20px_hsl(var(--accent))] transition-all duration-300" 
                       onClick={handleAnalyze}
                       disabled={!imageDataUri || step !== 'upload'}
                     >
