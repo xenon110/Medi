@@ -275,7 +275,7 @@ export default function DoctorDashboard() {
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
                       <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
-                        {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2" /> Send Custom Response</>}
+                        {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2 h-4 w-4" /> Send Custom Response</>}
                       </Button>
                     </div>
                   </>
@@ -285,19 +285,19 @@ export default function DoctorDashboard() {
                         variant="secondary" 
                         onClick={() => setIsCustomizing(true)} 
                         disabled={isSending || selectedPatient.status !== 'pending'}>
-                            <Pencil className="mr-2" /> Customize Report
+                            <Pencil className="mr-2 h-4 w-4" /> Customize Report
                      </Button>
                      <Button 
                         variant="destructive"
                         onClick={() => handleUpdatePatient('rejected')} 
                         disabled={isSending || selectedPatient.status !== 'pending'}>
-                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2" /> Reject</>}
+                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2 h-4 w-4" /> Reject</>}
                      </Button>
                     <Button 
                         className="bg-green-600 hover:bg-green-700 text-white" 
                         onClick={() => handleUpdatePatient('approved')} 
                         disabled={isSending || selectedPatient.status !== 'pending'}>
-                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><ThumbsUp className="mr-2" /> Approve</>}
+                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><ThumbsUp className="mr-2 h-4 w-4" /> Approve</>}
                     </Button>
                   </div>
                 )}

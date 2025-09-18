@@ -374,7 +374,7 @@ a.href = url;
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
-                    Continue <ChevronRight className="ml-2" />
+                    Continue <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
               </form>
@@ -392,7 +392,7 @@ a.href = url;
                 <CardHeader>
                   <div className="flex items-center gap-4">
                      <Button variant="outline" size="icon" onClick={() => setStep('details')}>
-                        <ArrowLeft />
+                        <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">Back</span>
                     </Button>
                     <CardTitle>1. Upload Skin Image</CardTitle>
@@ -437,7 +437,7 @@ a.href = url;
                       onClick={() => setShowSymptomChat(prev => !prev)}
                       disabled={step !== 'upload'}
                     >
-                      <MessageSquarePlus className="mr-2" />
+                      <MessageSquarePlus className="mr-2 h-4 w-4" />
                       {showSymptomChat ? 'Hide Symptoms' : 'Add Symptoms (Optional)'}
                     </Button>
                     <Button 
@@ -445,7 +445,7 @@ a.href = url;
                       onClick={handleAnalyze}
                       disabled={!imageDataUri || step !== 'upload'}
                     >
-                      <Sparkles className="mr-2" />
+                      <Sparkles className="mr-2 h-4 w-4" />
                       Analyze Now
                     </Button>
                   </div>
@@ -514,12 +514,12 @@ a.href = url;
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
                      <Button asChild className="w-full bg-accent hover:bg-accent/90">
-                        <Link href="/patient/consult">
-                           <Stethoscope className="mr-2" /> Consult Doctor
+                        <Link href="/patient/consult" target="_blank" rel="noopener noreferrer">
+                           <Stethoscope className="mr-2 h-4 w-4" /> Consult Doctor
                         </Link>
                     </Button>
                     <Button variant="outline" onClick={handleDownloadReport} className="w-full">
-                        <Download className="mr-2" />
+                        <Download className="mr-2 h-4 w-4" />
                         Download Report
                     </Button>
                     <Button variant="link" onClick={handleReset} className="w-full">Start New Analysis</Button>
