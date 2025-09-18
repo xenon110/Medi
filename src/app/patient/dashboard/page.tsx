@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
@@ -309,7 +308,7 @@ a.href = url;
         return (
           <Card className="w-full max-w-lg mx-auto">
             <CardHeader>
-              <CardTitle className="font-headline text-3xl">Welcome, {user.email}</CardTitle>
+              <CardTitle className="font-headline text-3xl">Patient Dashboard</CardTitle>
               <CardDescription>Let's start with some basic details to personalize your analysis.</CardDescription>
             </CardHeader>
             <Form {...form}>
@@ -374,7 +373,7 @@ a.href = url;
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
-                    Continue <ChevronRight className="ml-2 h-4 w-4" />
+                    Start New Scan <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
               </form>

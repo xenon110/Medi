@@ -1,18 +1,15 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Paperclip, Send, Check, Pencil, Loader2, Inbox, XCircle, ThumbsUp } from 'lucide-react';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
 // Dummy Data
@@ -174,7 +171,7 @@ export default function DoctorDashboard() {
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[calc(100vh-10rem)]">
       {/* Patient List */}
       <Card className="md:col-span-1 flex flex-col">
         <CardHeader>
@@ -291,8 +288,7 @@ export default function DoctorDashboard() {
                       onClick={() => handleUpdatePatient('rejected')} 
                       disabled={isSending || selectedPatient.status !== 'pending'}>
                           {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2 h-4 w-4" /> Reject</>}
-                    </Button>
-                  <Button 
+                    </Button>                  <Button 
                       className="bg-green-600 hover:bg-green-700 text-white" 
                       onClick={() => handleUpdatePatient('approved')} 
                       disabled={isSending || selectedPatient.status !== 'pending'}>

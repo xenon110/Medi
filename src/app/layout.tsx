@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import Header from '@/components/layout/header';
 
 export const metadata: Metadata = {
   title: 'MediScan AI',
@@ -29,7 +30,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1 container mx-auto py-8">{children}</main>
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>
