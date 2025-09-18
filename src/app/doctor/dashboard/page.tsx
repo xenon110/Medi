@@ -149,7 +149,7 @@ export default function DoctorDashboard() {
   
   if (isLoading) {
      return (
-      <div className="flex h-[calc(100vh-80px)] items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="animate-spin text-primary" size={48} />
           <p className="text-muted-foreground">Loading dashboard...</p>
@@ -174,144 +174,142 @@ export default function DoctorDashboard() {
 
 
   return (
-    <div className="container mx-auto p-4 h-[calc(100vh-80px)]">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
-        {/* Patient List */}
-        <Card className="md:col-span-1 flex flex-col">
-          <CardHeader>
-            <CardTitle>Patients</CardTitle>
-            <CardDescription>Select a patient to review their report.</CardDescription>
-          </CardHeader>
-          <ScrollArea className="flex-1">
-            <CardContent className="p-2">
-              {patients.length === 0 ? (
-                <div className="text-center text-muted-foreground p-8 flex flex-col items-center gap-4">
-                  <Inbox size={48} className="text-gray-400" />
-                  <h3 className="font-semibold">No Patients Yet</h3>
-                  <p className="text-sm">When patients submit reports, they will appear here.</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {patients.map((patient) => (
-                    <button
-                      key={patient.id}
-                      onClick={() => handleSelectPatient(patient.id)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        selectedPatient?.id === patient.id ? 'bg-muted' : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback>{patient.name ? patient.name.charAt(0) : 'P'}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col items-start">
-                            <span className="font-semibold">{patient.name || 'Anonymous'}</span>
-                             <Badge variant={getStatusBadgeVariant(patient.status)} className="text-xs capitalize mt-1">
-                                {patient.status}
-                             </Badge>
-                          </div>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+      {/* Patient List */}
+      <Card className="md:col-span-1 flex flex-col">
+        <CardHeader>
+          <CardTitle>Patients</CardTitle>
+          <CardDescription>Select a patient to review their report.</CardDescription>
+        </CardHeader>
+        <ScrollArea className="flex-1">
+          <CardContent className="p-2">
+            {patients.length === 0 ? (
+              <div className="text-center text-muted-foreground p-8 flex flex-col items-center gap-4">
+                <Inbox size={48} className="text-gray-400" />
+                <h3 className="font-semibold">No Patients Yet</h3>
+                <p className="text-sm">When patients submit reports, they will appear here.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {patients.map((patient) => (
+                  <button
+                    key={patient.id}
+                    onClick={() => handleSelectPatient(patient.id)}
+                    className={`w-full text-left p-3 rounded-lg transition-colors ${
+                      selectedPatient?.id === patient.id ? 'bg-muted' : 'hover:bg-muted/50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>{patient.name ? patient.name.charAt(0) : 'P'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">{patient.name || 'Anonymous'}</span>
+                            <Badge variant={getStatusBadgeVariant(patient.status)} className="text-xs capitalize mt-1">
+                              {patient.status}
+                            </Badge>
                         </div>
-                        <span className="text-xs text-muted-foreground">{formatTimestamp(patient.createdAt)}</span>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </ScrollArea>
-        </Card>
+                      <span className="text-xs text-muted-foreground">{formatTimestamp(patient.createdAt)}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </ScrollArea>
+      </Card>
 
-        {/* Chat/Report Window */}
-        <Card className="md:col-span-3 flex flex-col h-full">
-          {selectedPatient ? (
-            <>
-              <CardHeader className="border-b">
-                <CardTitle>{selectedPatient.name}</CardTitle>
-                <CardDescription>AI-Generated Report Analysis</CardDescription>
-              </CardHeader>
-              <ScrollArea className="flex-1">
-                <CardContent className="p-6 space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg">Potential Issues</h3>
-                      {isCustomizing ? (
-                        <Textarea 
-                          value={customReportText}
-                          onChange={(e) => setCustomReportText(e.target.value)}
-                          className="min-h-[150px] text-base"
-                        />
-                      ) : (
-                        <p className="text-foreground/80">{selectedPatient.customReport?.report || selectedPatient.report?.report}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-lg">Home Remedies</h3>
-                      <p className="text-foreground/80">{selectedPatient.report?.homeRemedies}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-lg">Medical Recommendation</h3>
-                      <p className="text-foreground/80">{selectedPatient.report?.medicalRecommendation}</p>
-                    </div>
-                     {selectedPatient.status !== 'pending' && selectedPatient.customReport?.prescription && (
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-lg">Prescription / Notes</h3>
-                            <p className="text-foreground/80 whitespace-pre-wrap">{selectedPatient.customReport.prescription}</p>
-                        </div>
-                    )}
-                </CardContent>
-              </ScrollArea>
-              <CardFooter className="p-4 border-t bg-card flex flex-col items-stretch gap-4">
-                {isCustomizing ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="prescription-text">Medicine Recommendations / Notes (Suggestion Box)</Label>
+      {/* Chat/Report Window */}
+      <Card className="md:col-span-3 flex flex-col h-full">
+        {selectedPatient ? (
+          <>
+            <CardHeader className="border-b">
+              <CardTitle>{selectedPatient.name}</CardTitle>
+              <CardDescription>AI-Generated Report Analysis</CardDescription>
+            </CardHeader>
+            <ScrollArea className="flex-1">
+              <CardContent className="p-6 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Potential Issues</h3>
+                    {isCustomizing ? (
                       <Textarea 
-                        id="prescription-text" 
-                        placeholder="e.g., Paracetamol 500mg twice a day..." 
-                        value={prescriptionText}
-                        onChange={(e) => setPrescriptionText(e.target.value)}
+                        value={customReportText}
+                        onChange={(e) => setCustomReportText(e.target.value)}
+                        className="min-h-[150px] text-base"
                       />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
-                      <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
-                        {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2 h-4 w-4" /> Send Custom Response</>}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
+                    ) : (
+                      <p className="text-foreground/80">{selectedPatient.customReport?.report || selectedPatient.report?.report}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Home Remedies</h3>
+                    <p className="text-foreground/80">{selectedPatient.report?.homeRemedies}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">Medical Recommendation</h3>
+                    <p className="text-foreground/80">{selectedPatient.report?.medicalRecommendation}</p>
+                  </div>
+                    {selectedPatient.status !== 'pending' && selectedPatient.customReport?.prescription && (
+                      <div className="space-y-2">
+                          <h3 className="font-semibold text-lg">Prescription / Notes</h3>
+                          <p className="text-foreground/80 whitespace-pre-wrap">{selectedPatient.customReport.prescription}</p>
+                      </div>
+                  )}
+              </CardContent>
+            </ScrollArea>
+            <CardFooter className="p-4 border-t bg-card flex flex-col items-stretch gap-4">
+              {isCustomizing ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="prescription-text">Medicine Recommendations / Notes (Suggestion Box)</Label>
+                    <Textarea 
+                      id="prescription-text" 
+                      placeholder="e.g., Paracetamol 500mg twice a day..." 
+                      value={prescriptionText}
+                      onChange={(e) => setPrescriptionText(e.target.value)}
+                    />
+                  </div>
                   <div className="flex justify-end gap-2">
-                     <Button 
-                        variant="secondary" 
-                        onClick={() => setIsCustomizing(true)} 
-                        disabled={isSending || selectedPatient.status !== 'pending'}>
-                            <Pencil className="mr-2 h-4 w-4" /> Customize Report
-                     </Button>
-                     <Button 
-                        variant="destructive"
-                        onClick={() => handleUpdatePatient('rejected')} 
-                        disabled={isSending || selectedPatient.status !== 'pending'}>
-                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2 h-4 w-4" /> Reject</>}
-                     </Button>
-                    <Button 
-                        className="bg-green-600 hover:bg-green-700 text-white" 
-                        onClick={() => handleUpdatePatient('approved')} 
-                        disabled={isSending || selectedPatient.status !== 'pending'}>
-                            {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><ThumbsUp className="mr-2 h-4 w-4" /> Approve</>}
+                    <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
+                    <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
+                      {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2 h-4 w-4" /> Send Custom Response</>}
                     </Button>
                   </div>
-                )}
-              </CardFooter>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-               <Inbox size={64} className="text-gray-400" />
-               <h3 className="font-semibold mt-4 text-lg">Select a Patient</h3>
-               <p>Choose a patient from the list on the left to view their detailed report and take action.</p>
-            </div>
-          )}
-        </Card>
-      </div>
+                </>
+              ) : (
+                <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => setIsCustomizing(true)} 
+                      disabled={isSending || selectedPatient.status !== 'pending'}>
+                          <Pencil className="mr-2 h-4 w-4" /> Customize Report
+                    </Button>
+                    <Button 
+                      variant="destructive"
+                      onClick={() => handleUpdatePatient('rejected')} 
+                      disabled={isSending || selectedPatient.status !== 'pending'}>
+                          {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2 h-4 w-4" /> Reject</>}
+                    </Button>
+                  <Button 
+                      className="bg-green-600 hover:bg-green-700 text-white" 
+                      onClick={() => handleUpdatePatient('approved')} 
+                      disabled={isSending || selectedPatient.status !== 'pending'}>
+                          {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><ThumbsUp className="mr-2 h-4 w-4" /> Approve</>}
+                  </Button>
+                </div>
+              )}
+            </CardFooter>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+              <Inbox size={64} className="text-gray-400" />
+              <h3 className="font-semibold mt-4 text-lg">Select a Patient</h3>
+              <p>Choose a patient from the list on the left to view their detailed report and take action.</p>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

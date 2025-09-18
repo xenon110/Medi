@@ -296,7 +296,7 @@ a.href = url;
 
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
       </div>
     );
@@ -514,7 +514,7 @@ a.href = url;
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
                      <Button asChild className="w-full bg-accent hover:bg-accent/90">
-                        <Link href="/patient/consult" target="_blank" rel="noopener noreferrer">
+                        <Link href="/patient/consult">
                            <Stethoscope className="mr-2 h-4 w-4" /> Consult Doctor
                         </Link>
                     </Button>
@@ -586,7 +586,7 @@ a.href = url;
   };
   
   return (
-    <div className="container mx-auto p-4 md:p-8 h-[calc(100vh-80px)]">
+    <div className="h-full">
         {renderStep()}
     </div>
   );

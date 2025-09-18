@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -6,8 +5,11 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SidebarTrigger } from '../ui/sidebar';
+import { useSidebar } from '../ui/sidebar';
+import { ThemeToggle } from '../theme-toggle';
 
 export default function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -15,6 +17,8 @@ export default function Header() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const sidebar = useSidebar();
+
 
   useEffect(() => {
     // In a real app, you'd get this from context or a client-side store
@@ -35,16 +39,17 @@ export default function Header() {
     setUserRole(null);
     router.push('/');
   };
+
+  const isLoggedIn = !!userEmail;
   
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    ...(userRole ? [{ href: `/${userRole}/dashboard`, label: 'Dashboard' }] : []),
-  ];
-
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-20 items-center">
+         {isLoggedIn && (
+          <div className="md:hidden mr-4">
+            <SidebarTrigger />
+          </div>
+        )}
         <Link href="/" className="flex items-center gap-3">
           <Logo className="h-8 w-8 text-primary" />
           <span className="font-headline text-2xl font-semibold tracking-wide hidden sm:inline">
@@ -52,30 +57,23 @@ export default function Header() {
           </span>
         </Link>
         
-        <nav className="flex-1 flex justify-center items-center">
-            <div className="flex items-center gap-4 md:gap-6">
-                {navLinks.map((link) => (
-                    <Link key={link.href} href={link.href} legacyBehavior passHref>
-                        <a className={cn("text-sm font-medium transition-colors hover:text-primary", 
-                        pathname === link.href ? "text-primary" : "text-muted-foreground"
-                        )}>
-                            {link.label}
-                        </a>
-                    </Link>
-                ))}
-            </div>
-        </nav>
+        <div className="flex-1" />
 
-        <div className="flex items-center gap-4 w-auto justify-end" style={{minWidth: '150px'}}>
+        <div className="flex items-center gap-4">
           {isLoading ? (
             <Loader2 className="animate-spin" />
           ) : userEmail ? (
             <>
-              <span className="text-sm text-muted-foreground hidden sm:inline">Welcome!</span>
+               <ThemeToggle />
+              <Button variant="ghost" size="icon">
+                <Bell />
+                <span className="sr-only">Notifications</span>
+              </Button>
               <Button variant="outline" onClick={handleLogout}>Logout</Button>
             </>
           ) : (
             <>
+              <ThemeToggle />
               <Button variant="ghost" asChild>
                 <Link href="/login">Login</Link>
               </Button>
