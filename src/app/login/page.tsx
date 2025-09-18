@@ -6,9 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -37,38 +34,27 @@ export default function LoginPage() {
     defaultValues: { email: '', password: '' },
   });
 
+  // Dummy onSubmit function
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
 
-      // Check user role from Firestore
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.role === 'doctor') {
-          router.push('/doctor/dashboard');
-        } else {
-          router.push('/patient/dashboard');
-        }
-      } else {
-         // Default to patient if role is not set, or handle error
-        router.push('/patient/dashboard');
-      }
-
+    // Dummy logic
+    if (data.email === 'doctor@test.com') {
+      toast({ title: 'Login Successful', description: 'Welcome back, Doctor!' });
+      router.push('/doctor/dashboard');
+    } else if (data.email === 'patient@test.com' || role === 'patient') {
       toast({ title: 'Login Successful', description: 'Welcome back!' });
-    } catch (error: any) {
-      toast({
+      router.push('/patient/dashboard');
+    } else {
+       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: 'Invalid email or password.',
       });
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -78,7 +64,10 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="font-headline text-3xl">Login</CardTitle>
-            <CardDescription>Enter your credentials to access your account.</CardDescription>
+            <CardDescription>
+              Enter your credentials to access your account. <br />
+              (Use `doctor@test.com` or `patient@test.com`)
+            </CardDescription>
           </CardHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>

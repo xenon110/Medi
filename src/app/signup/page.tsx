@@ -6,9 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -42,35 +39,17 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
-      
-      // Store user role in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        role: data.role,
-        createdAt: new Date(),
-      });
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
 
-      toast({ title: 'Account Created', description: 'You have been successfully signed up!' });
+    toast({ title: 'Account Created', description: 'You have been successfully signed up!' });
 
-      if (data.role === 'doctor') {
-        router.push('/doctor/dashboard');
-      } else {
-        router.push('/patient/dashboard');
-      }
-
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Signup Failed',
-        description: error.message || 'An unexpected error occurred.',
-      });
-    } finally {
-      setIsLoading(false);
+    if (data.role === 'doctor') {
+      router.push('/doctor/dashboard');
+    } else {
+      router.push('/patient/dashboard');
     }
+
+    setIsLoading(false);
   };
 
   return (

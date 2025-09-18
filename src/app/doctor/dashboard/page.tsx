@@ -9,20 +9,60 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Paperclip, Send, Check, Pencil, Loader2, Inbox } from 'lucide-react';
-import { db, auth } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+
+// Dummy Data
+const dummyPatients = [
+  {
+    id: 'patient-1',
+    name: 'Jane Doe',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 3600000),
+    report: {
+      potentialConditions: [
+        { name: 'Eczema', likelihood: 'High', confidence: 0.85, description: 'A condition that makes your skin red and itchy.' },
+        { name: 'Psoriasis', likelihood: 'Medium', confidence: 0.45, description: 'A condition in which skin cells build up and form scales and itchy, dry patches.' },
+      ],
+      report: 'Based on the image and symptoms, the most likely condition is Eczema. The patient reports severe itching and redness, consistent with atopic dermatitis.',
+      homeRemedies: 'Moisturize frequently, avoid harsh soaps, and use a cold compress to reduce itching.',
+      medicalRecommendation: 'A consultation with a dermatologist is recommended for a definitive diagnosis and prescription of topical corticosteroids if necessary.',
+      doctorConsultationSuggestion: true,
+    },
+    customReport: {
+      report: '',
+      prescription: '',
+    },
+  },
+  {
+    id: 'patient-2',
+    name: 'John Smith',
+    status: 'approved',
+    createdAt: new Date(Date.now() - 86400000 * 2),
+    report: {
+      potentialConditions: [
+        { name: 'Acne Vulgaris', likelihood: 'High', confidence: 0.9, description: 'Occurs when hair follicles become plugged with oil and dead skin cells.' },
+      ],
+      report: 'The image shows multiple comedones and pustules on the face, characteristic of acne vulgaris.',
+      homeRemedies: 'Wash face twice daily with a gentle cleanser. Avoid oily cosmetics.',
+      medicalRecommendation: 'Over-the-counter benzoyl peroxide or salicylic acid treatments are recommended.',
+      doctorConsultationSuggestion: false,
+    },
+    customReport: {
+      report: '',
+      prescription: '',
+    },
+  },
+];
 
 
 type Patient = {
   id: string;
   name: string;
   report: GenerateInitialReportOutput;
-  createdAt: Timestamp;
+  createdAt: Date;
   status: 'pending' | 'approved' | 'customized';
   image?: string;
   [key: string]: any;
@@ -30,8 +70,6 @@ type Patient = {
 
 export default function DoctorDashboard() {
   const { toast } = useToast();
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,61 +79,16 @@ export default function DoctorDashboard() {
   const [prescriptionText, setPrescriptionText] = useState('');
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        // Verify user is a doctor
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists() && userDoc.data().role === 'doctor') {
-          setUser(currentUser);
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Access Denied',
-            description: 'You must be logged in as a doctor to view this page.',
-          });
-          router.push('/login?role=doctor'); // Redirect if not a doctor
-        }
-      } else {
-        router.push('/login?role=doctor');
-      }
-    });
-
-    return () => unsubscribeAuth();
-  }, [router, toast]);
-
-  useEffect(() => {
-    if (!user) return; // Don't fetch patients if no user
-
+    // Simulate fetching patient data
     setIsLoading(true);
-    const q = query(collection(db, 'patients'), orderBy('createdAt', 'desc'));
-    const unsubscribePatients = onSnapshot(q, (querySnapshot) => {
-      const patientsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Patient));
-      setPatients(patientsData);
-      
-      if (patientsData.length > 0 && !selectedPatient) {
-        handleSelectPatient(patientsData[0].id, patientsData);
-      } else if (selectedPatient) {
-        const updatedPatient = patientsData.find(p => p.id === selectedPatient.id);
-        setSelectedPatient(updatedPatient || null);
+    setTimeout(() => {
+      setPatients(dummyPatients);
+      if (dummyPatients.length > 0) {
+        handleSelectPatient(dummyPatients[0].id, dummyPatients);
       }
-
       setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching patients:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch patient data.",
-      });
-      setIsLoading(false);
-    });
-
-    return () => unsubscribePatients();
-  }, [user, toast]);
+    }, 1500);
+  }, []);
 
   const handleSelectPatient = (patientId: string, patientList: Patient[] = patients) => {
     const patient = patientList.find(p => p.id === patientId);
@@ -111,38 +104,35 @@ export default function DoctorDashboard() {
     if (!selectedPatient) return;
 
     setIsSending(true);
-    const patientRef = doc(db, 'patients', selectedPatient.id);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
 
-    try {
-        const updateData: any = { status };
+    setPatients(prevPatients => prevPatients.map(p => {
+      if (p.id === selectedPatient.id) {
+        const updatedPatient = { ...p, status };
         if (status === 'customized') {
-            updateData['customReport'] = {
-                report: customReportText,
-                prescription: prescriptionText,
-            };
+          updatedPatient.customReport = {
+            report: customReportText,
+            prescription: prescriptionText,
+          };
         }
-        await updateDoc(patientRef, updateData);
+        setSelectedPatient(updatedPatient); // Update selected patient view
+        return updatedPatient;
+      }
+      return p;
+    }));
 
-        toast({
-            title: "Success",
-            description: `Patient report has been ${status}.`,
-        });
-        setIsCustomizing(false);
-    } catch (error) {
-        console.error("Error updating patient:", error);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to update patient status.",
-        });
-    } finally {
-        setIsSending(false);
-    }
+    toast({
+        title: "Success",
+        description: `Patient report has been ${status}.`,
+    });
+
+    setIsSending(false);
+    setIsCustomizing(false);
   };
 
-  const formatTimestamp = (timestamp: Timestamp | null | undefined) => {
+  const formatTimestamp = (timestamp: Date | null | undefined) => {
     if (!timestamp) return 'N/A';
-    const date = timestamp.toDate();
+    const date = new Date(timestamp);
     const now = new Date();
     const diffSeconds = Math.round((now.getTime() - date.getTime()) / 1000);
     const diffMinutes = Math.round(diffSeconds / 60);

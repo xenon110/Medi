@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
@@ -16,9 +17,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { validateImageUpload, ValidateImageUploadOutput } from '@/ai/flows/validate-image-upload';
@@ -43,10 +41,16 @@ type ChatMessage = {
   text: string | React.ReactNode;
 };
 
+// Dummy user object
+const dummyUser = {
+  uid: 'dummy-patient-123',
+  email: 'patient@test.com',
+};
+
+
 export default function PatientDashboard() {
   const { toast } = useToast();
-  const router = useRouter();
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<typeof dummyUser | null>(null);
   const [step, setStep] = useState<'details' | 'upload' | 'analyzing' | 'result'>('details');
   
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(null);
@@ -66,20 +70,14 @@ export default function PatientDashboard() {
   const originalReportRef = useRef<GenerateInitialReportOutput | null>(null);
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        router.push('/login');
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+    // Simulate user login
+    setUser(dummyUser);
+  }, []);
 
 
   const form = useForm<PatientDetails>({
     resolver: zodResolver(patientDetailsSchema),
-    defaultValues: { name: '', region: 'India', gender: 'male', skinTone: 'Type IV' },
+    defaultValues: { name: 'John Doe', region: 'India', gender: 'male', skinTone: 'Type IV', age: 30 },
   });
 
   const onSubmitDetails: SubmitHandler<PatientDetails> = (data) => {
@@ -224,29 +222,14 @@ export default function PatientDashboard() {
   const handleSendToDoctor = async () => {
     if (!patientDetails || !originalReportRef.current || !imageDataUri || !user) return;
     setIsSendingToDoctor(true);
-    try {
-      await addDoc(collection(db, 'patients'), {
-        ...patientDetails,
-        userId: user.uid,
-        report: originalReportRef.current,
-        image: imageDataUri,
-        createdAt: serverTimestamp(),
-        status: 'pending',
-      });
-      toast({
-        title: "Report Sent",
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network request
+    
+    toast({
+        title: "Report Sent!",
         description: "Your report has been successfully sent to the doctor's dashboard for review.",
-      });
-    } catch (error) {
-      console.error("Error sending to doctor:", error);
-      toast({
-        variant: "destructive",
-        title: "Submission Failed",
-        description: "Could not send your report to the doctor. Please try again.",
-      });
-    } finally {
-      setIsSendingToDoctor(false);
-    }
+    });
+
+    setIsSendingToDoctor(false);
   };
 
   const handleDownloadReport = () => {
