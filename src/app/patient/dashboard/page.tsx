@@ -514,7 +514,7 @@ a.href = url;
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
                      <Button asChild className="w-full bg-accent hover:bg-accent/90">
-                        <Link href="/patient/consult" target="_blank">
+                        <Link href="/patient/consult">
                            <Stethoscope className="mr-2" /> Consult Doctor
                         </Link>
                     </Button>
