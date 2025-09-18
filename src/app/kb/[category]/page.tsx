@@ -9,6 +9,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle, FileText, FlaskConical, Stethoscope } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+export async function generateStaticParams() {
+  return KNOWLEDGE_BASE.map((article) => ({
+    category: article.slug,
+  }));
+}
+
 export default function KnowledgePage({ params }: { params: { category: string } }) {
   const article: KnowledgeBaseArticle | undefined = KNOWLEDGE_BASE.find(
     (item) => item.slug === params.category
@@ -21,6 +27,10 @@ export default function KnowledgePage({ params }: { params: { category: string }
   const image1 = PlaceHolderImages.find(img => img.id === article.images[0]);
   const image2 = PlaceHolderImages.find(img => img.id === article.images[1]);
   const image3 = PlaceHolderImages.find(img => img.id === article.images[2]);
+
+  const currentIndex = KNOWLEDGE_BASE.findIndex(a => a.slug === params.category);
+  const nextArticle = KNOWLEDGE_BASE[currentIndex + 1];
+  const previousArticle = KNOWLEDGE_BASE[currentIndex - 1];
 
   return (
     <div className="min-h-screen">
@@ -132,9 +142,15 @@ export default function KnowledgePage({ params }: { params: { category: string }
             <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
                 <Link href="/patient/consult"><Stethoscope className="mr-2"/>Consult a Doctor</Link>
             </Button>
-            <Button variant="outline" asChild>
-                <Link href="/kb/rashes">Next Topic <ArrowRight className="ml-2"/></Link>
-            </Button>
+             {nextArticle ? (
+              <Button variant="outline" asChild>
+                  <Link href={`/kb/${nextArticle.slug}`}>Next: {nextArticle.title} <ArrowRight className="ml-2"/></Link>
+              </Button>
+            ) : previousArticle ? (
+               <Button variant="outline" asChild>
+                  <Link href={`/kb/${previousArticle.slug}`}>Prev: {previousArticle.title} <ArrowLeft className="mr-2"/></Link>
+              </Button>
+            ) : null}
         </div>
       </div>
     </div>

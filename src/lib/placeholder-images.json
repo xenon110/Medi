@@ -8,46 +8,28 @@
       "imageHint": "healthcare technology"
     },
     {
-      "id": "patient-login",
-      "description": "An icon-like image representing a patient.",
-      "imageUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=400&h=300&auto=format&fit=crop",
-      "imageHint": "person profile"
+      "id": "resource-center-banner",
+      "description": "Dermatology resources for medical students",
+      "imageUrl": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?q=80&w=1200&h=400&auto=format&fit=crop",
+      "imageHint": "student library"
     },
     {
-      "id": "doctor-login",
-      "description": "An icon-like image representing a doctor.",
-      "imageUrl": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=400&h=300&auto=format&fit=crop",
-      "imageHint": "doctor medical"
-    },
-    {
-      "id": "skin-lesion-example",
-      "description": "An example image of a skin lesion for the patient dashboard.",
-      "imageUrl": "https://images.unsplash.com/photo-1618939307829-33823b26c043?q=80&w=500&h=500&auto=format&fit=crop",
+      "id": "dermatology-leg-ulcer",
+      "description": "Leg ulcer images",
+      "imageUrl": "https://images.unsplash.com/photo-1629040181781-375935c7d2c3?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin dermatology"
     },
     {
-        "id": "resource-center-banner",
-        "description": "Dermatology resources for medical students",
-        "imageUrl": "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?q=80&w=1200&h=400&auto=format&fit=crop",
-        "imageHint": "student library"
+      "id": "dermatology-molluscum",
+      "description": "Molluscum contagiosum images",
+      "imageUrl": "https://images.unsplash.com/photo-1605001200839-813425e4c6dc?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin rash"
     },
     {
-        "id": "dermatology-leg-ulcer",
-        "description": "Leg ulcer images",
-        "imageUrl": "https://images.unsplash.com/photo-1629040181781-375935c7d2c3?q=80&w=600&h=400&auto=format&fit=crop",
-        "imageHint": "skin dermatology"
-    },
-    {
-        "id": "dermatology-molluscum",
-        "description": "Molluscum contagiosum images",
-        "imageUrl": "https://images.unsplash.com/photo-1605001200839-813425e4c6dc?q=80&w=600&h=400&auto=format&fit=crop",
-        "imageHint": "skin rash"
-    },
-    {
-        "id": "dermatology-keratosis",
-        "description": "Seborrhoeic keratosis images",
-        "imageUrl": "https://images.unsplash.com/photo-1581044777550-4cfa6ce24868?q=80&w=600&h=400&auto=format&fit=crop",
-        "imageHint": "skin mole"
+      "id": "dermatology-keratosis",
+      "description": "Seborrhoeic keratosis images",
+      "imageUrl": "https://images.unsplash.com/photo-1581044777550-4cfa6ce24868?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin mole"
     },
     {
       "id": "kb-eczema-1",
@@ -66,6 +48,150 @@
       "description": "Person applying cream to their arm",
       "imageUrl": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin cream"
+    },
+    {
+      "id": "kb-psoriasis-1",
+      "description": "Psoriasis on skin",
+      "imageUrl": "https://images.unsplash.com/photo-1621484526363-239e76453f6c?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "psoriasis skin"
+    },
+    {
+      "id": "kb-psoriasis-2",
+      "description": "Doctor examining skin with psoriasis",
+      "imageUrl": "https://images.unsplash.com/photo-1576089172922-30691157f495?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "doctor skin"
+    },
+    {
+      "id": "kb-psoriasis-3",
+      "description": "Topical cream for psoriasis",
+      "imageUrl": "https://images.unsplash.com/photo-1600096194534-96813292925b?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "ointment cream"
+    },
+    {
+      "id": "kb-acne-1",
+      "description": "Close-up of acne on face",
+      "imageUrl": "https://images.unsplash.com/photo-1551887373-3c5bd224f6e2?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "acne face"
+    },
+    {
+      "id": "kb-acne-2",
+      "description": "Skincare routine for acne",
+      "imageUrl": "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&h=400&auto=format=fit&crop",
+      "imageHint": "skincare face"
+    },
+    {
+      "id": "kb-acne-3",
+      "description": "Acne treatment products",
+      "imageUrl": "https://images.unsplash.com/photo-1620916566398-39f168a7d8d7?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "acne treatment"
+    },
+    {
+      "id": "kb-rosacea-1",
+      "description": "Facial redness from rosacea",
+      "imageUrl": "https://images.unsplash.com/photo-1612621431945-81571408b0d2?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "rosacea face"
+    },
+    {
+      "id": "kb-rosacea-2",
+      "description": "Sun protection for rosacea",
+      "imageUrl": "https://images.unsplash.com/photo-1591135479633-5c84666d6289?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "sunscreen protection"
+    },
+    {
+      "id": "kb-rosacea-3",
+      "description": "Gentle skincare products",
+      "imageUrl": "https://images.unsplash.com/photo-1598440947619-2c35fc93c9ad?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skincare products"
+    },
+    {
+      "id": "kb-hives-1",
+      "description": "Hives (urticaria) on skin",
+      "imageUrl": "https://images.unsplash.com/photo-1601684349733-d9d95f87b2f6?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "hives urticaria"
+    },
+    {
+      "id": "kb-hives-2",
+      "description": "Allergy testing",
+      "imageUrl": "https://images.unsplash.com/photo-1631589139893-86811656a48e?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "allergy test"
+    },
+    {
+      "id": "kb-hives-3",
+      "description": "Antihistamine medication",
+      "imageUrl": "https://images.unsplash.com/photo-1584308666744-8480404b65ae?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "pills medication"
+    },
+     {
+      "id": "kb-vitiligo-1",
+      "description": "Vitiligo patches on skin",
+      "imageUrl": "https://images.unsplash.com/photo-1617882822497-65873275a513?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "vitiligo skin"
+    },
+    {
+      "id": "kb-vitiligo-2",
+      "description": "Diversity and skin positivity",
+      "imageUrl": "https://images.unsplash.com/photo-1611601373574-e3c3f81c9641?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin positivity"
+    },
+    {
+      "id": "kb-vitiligo-3",
+      "description": "Sun protection for sensitive skin",
+      "imageUrl": "https://images.unsplash.com/photo-1580399899352-44bbe34a504a?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "sunscreen protection"
+    },
+    {
+      "id": "kb-lesions-cancerous-1",
+      "description": "Mole check for skin cancer",
+      "imageUrl": "https://images.unsplash.com/photo-1555531923-8b01a1828859?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "mole check"
+    },
+    {
+      "id": "kb-lesions-cancerous-2",
+      "description": "Dermatologist examining skin",
+      "imageUrl": "https://images.unsplash.com/photo-1612078903173-5743495b6e6e?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "dermatologist skin"
+    },
+    {
+      "id": "kb-lesions-cancerous-3",
+      "description": "Microscope view of cells",
+      "imageUrl": "https://images.unsplash.com/photo-1578496479532-347458155217?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "cells microscope"
+    },
+    {
+      "id": "kb-infections-1",
+      "description": "Bacteria on a petri dish",
+      "imageUrl": "https://images.unsplash.com/photo-1581092446337-23c3bbaec550?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "bacteria science"
+    },
+    {
+      "id": "kb-infections-2",
+      "description": "Applying antibacterial cream",
+      "imageUrl": "https://images.unsplash.com/photo-1584592487903-b783ae41f92a?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "cream application"
+    },
+    {
+      "id": "kb-infections-3",
+      "description": "Doctor looking at infection",
+      "imageUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "doctor patient"
+    },
+    {
+      "id": "kb-rashes-1",
+      "description": "Generic skin rash",
+      "imageUrl": "https://images.unsplash.com/photo-1520699922720-4a8a657297c8?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "skin rash"
+    },
+    {
+      "id": "kb-rashes-2",
+      "description": "Child with a rash being comforted",
+      "imageUrl": "https://images.unsplash.com/photo-1546892557-658f4070747e?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "child comfort"
+    },
+    {
+      "id": "kb-rashes-3",
+      "description": "Calamine lotion for rashes",
+      "imageUrl": "https://images.unsplash.com/photo-1631589139893-86811656a48e?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageHint": "lotion skin"
     }
   ]
 }
