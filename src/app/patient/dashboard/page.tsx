@@ -2,30 +2,19 @@
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
-import Image from 'next/image';
-import { Bot, CheckCircle, Loader2, Mic, Send, Sparkles, Stethoscope, User, XCircle, Upload, Camera, FileText, Clock } from 'lucide-react';
+import { Bot, CheckCircle, Loader2, Sparkles, User, XCircle, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import type { UserInfo } from 'firebase/auth';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { auth } from '@/lib/firebase';
 import { getUserProfile, saveReport } from '@/lib/firebase-services';
-import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { translateReport, TranslateReportOutput } from '@/ai/flows/translate-report';
-
-
-type ChatMessage = {
-  sender: 'user' | 'ai' | 'system';
-  text: string | React.ReactNode;
-};
 
 const dummyPreviousReports = [
   { id: 'rep-001', title: 'Follow-up on Rash', date: '2023-10-24'},
@@ -33,27 +22,20 @@ const dummyPreviousReports = [
   { id: 'rep-003', title: 'Eczema Flare-up', date: '2023-10-18'},
 ];
 
-
 export default function PatientDashboard() {
   const { toast } = useToast();
   const router = useRouter();
   const [user, setUser] = useState<(UserInfo & { age?: number; region?: string, skinTone?: string, gender?: string }) | null>(null);
   
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [imageValidationError, setImageValidationError] = useState<string | null>(null);
   const [isImageValidating, setIsImageValidating] = useState(false);
   
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-     { sender: 'ai', text: "Hello! I'm your MEDISKIN AI assistant. Please upload an image of your skin condition and describe any symptoms you're experiencing." }
-  ]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
-
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<GenerateInitialReportOutput | null>(null);
   
-  const originalReportRef = useRef<GenerateInitialReportOutput | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -81,7 +63,6 @@ export default function PatientDashboard() {
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
-      setImagePreview(dataUrl); // For previewing the selected image
       try {
         const validation = await validateImageUpload({ photoDataUri: dataUrl });
         if (validation.isValid) {
@@ -109,13 +90,13 @@ export default function PatientDashboard() {
   const handleSymptomSubmit = async () => {
     if (!symptomInput.trim() || isChatbotLoading) return;
 
-    const userMessage: ChatMessage = { sender: 'user', text: symptomInput };
+    const userMessage = { sender: 'user', text: symptomInput };
     setChatMessages(prev => [...prev, userMessage]);
     setIsChatbotLoading(true);
     
     try {
       const response = await assistWithSymptomInputs({ symptomQuery: symptomInput });
-      const aiMessage: ChatMessage = {
+      const aiMessage = {
         sender: 'ai',
         text: (
           <div className="space-y-2">
@@ -131,7 +112,7 @@ export default function PatientDashboard() {
       };
       setChatMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      const errorMessage: ChatMessage = { sender: 'system', text: 'Sorry, I had trouble understanding. Please try again.' };
+      const errorMessage = { sender: 'system', text: 'Sorry, I had trouble understanding. Please try again.' };
       setChatMessages(prev => [...prev, errorMessage]);
       console.error(error);
     } finally {
@@ -156,21 +137,25 @@ export default function PatientDashboard() {
     try {
       const result = await generateInitialReport({
         photoDataUri: imageDataUri,
-        symptomInputs: allSymptoms || 'No symptoms described.', // Ensure it's not empty
+        symptomInputs: allSymptoms || 'No symptoms described.',
         age: user.age || 30,
         gender: user.gender || 'not specified',
         region: user.region || 'not specified',
         skinTone: user.skinTone || 'not specified',
       });
-      setAnalysisResult(result);
-      originalReportRef.current = result;
       
-      await saveReport(user.uid, result);
+      const savedReport = await saveReport(user.uid, result);
+
+      // Store the result in session storage to pass to the report page
+      sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
       toast({
         title: "Analysis Complete",
-        description: "Your AI-powered report has been generated and saved.",
+        description: "Redirecting to your report...",
       });
+      
+      router.push(`/patient/report`);
+
     } catch (error) {
       console.error(error);
       toast({
@@ -183,6 +168,7 @@ export default function PatientDashboard() {
     }
   };
 
+
   if (!user) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-primary">
@@ -192,7 +178,7 @@ export default function PatientDashboard() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 min-h-screen text-foreground">
+    <div className="bg-gradient-subtle text-foreground">
       <div className="sub-header">
         <div className="portal-title">
             <Stethoscope/>
@@ -219,19 +205,19 @@ export default function PatientDashboard() {
              >
                 {isImageValidating ? (
                     <div className="flex flex-col items-center justify-center text-center h-full">
-                        <Loader2 className="w-16 h-16 animate-spin text-primary mb-4" />
-                        <p className="text-lg font-semibold text-primary">Validating Image...</p>
+                        <Loader2 className="w-16 h-16 animate-spin text-cyan-400 mb-4" />
+                        <p className="text-lg font-semibold">Validating Image...</p>
                         <p className="text-sm text-muted-foreground">Please wait while we check your photo.</p>
                     </div>
                 ) : imageValidationError ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full text-destructive">
+                    <div className="flex flex-col items-center justify-center text-center h-full text-red-500">
                         <XCircle className="w-16 h-16 mb-4" />
                         <p className="text-lg font-semibold">Image Invalid</p>
                         <p className="text-sm mb-4">{imageValidationError}</p>
                         <Button className="upload-btn" variant="destructive">Try Again</Button>
                     </div>
                 ) : imageDataUri ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full text-success">
+                    <div className="flex flex-col items-center justify-center text-center h-full text-green-500">
                         <CheckCircle className="w-16 h-16 mb-4" />
                         <p className="text-lg font-semibold">Image Ready!</p>
                         <p className="text-sm mb-4">You can now describe your symptoms or proceed to analysis.</p>
@@ -273,7 +259,7 @@ export default function PatientDashboard() {
                         <div className="ai-avatar">AI</div>
                         <strong>MEDISKIN AI Assistant</strong>
                     </div>
-                    <p>Hello! I'm your MEDISKIN AI assistant. Please upload an image of your skin condition and describe any symptoms you're experiencing.</p>
+                    <p>Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
                 </div>
                  <div className="chat-input-area">
                     <Textarea

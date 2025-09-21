@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Clock, CheckCircle, XCircle, FileDown, Eye, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 type ReportStatus = 'Pending' | 'Approved' | 'Disqualified';
 
@@ -25,6 +27,7 @@ const statusConfig = {
 
 export default function MyReportsPage() {
   const [activeTab, setActiveTab] = useState<ReportStatus>('Pending');
+  const router = useRouter();
 
   const filteredReports = dummyReports.filter(report => report.status === activeTab);
 
@@ -87,7 +90,7 @@ export default function MyReportsPage() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                                <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />View</Button>
+                                <Button variant="outline" size="sm" onClick={() => router.push(`/patient/report`)}><Eye className="mr-2 h-4 w-4" />View</Button>
                                 <Button variant="outline" size="sm"><FileDown className="mr-2 h-4 w-4" />Download</Button>
                                 {report.status === 'Pending' && <Button variant="secondary" size="sm"><Send className="mr-2 h-4 w-4" />Send</Button>}
                             </div>
@@ -105,3 +108,5 @@ export default function MyReportsPage() {
     </div>
   );
 }
+
+    
