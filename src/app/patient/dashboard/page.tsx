@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
-import { AlertCircle, Bot, CheckCircle, Clock, Download, FileText, FileUp, Loader2, MessageSquarePlus, Mic, RefreshCw, Send, Sparkles, Stethoscope, User, X } from 'lucide-react';
+import { AlertCircle, Bot, CheckCircle, Clock, Download, FileText, FileUp, Loader2, MessageSquarePlus, Mic, RefreshCw, Send, Sparkles, Stethoscope, User, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
