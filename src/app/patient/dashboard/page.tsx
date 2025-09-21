@@ -17,6 +17,10 @@ import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { auth } from '@/lib/firebase';
 import { getUserProfile, saveReport } from '@/lib/firebase-services';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { translateReport, TranslateReportOutput } from '@/ai/flows/translate-report';
+
 
 type ChatMessage = {
   sender: 'user' | 'ai' | 'system';
@@ -309,3 +313,5 @@ export default function PatientDashboard() {
     </div>
   );
 }
+
+    

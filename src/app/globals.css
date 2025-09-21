@@ -1,22 +1,23 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* #F8F9FA */
+    --background: 0 0% 100%;
     --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%; /* #FFFFFF */
+    --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 211 100% 50%; /* #007BFF */
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 98%; /* #F8F9FA */
+    --secondary: 210 20% 98%;
     --secondary-foreground: 222 47.4% 11.2%;
-    --muted: 210 20% 98%; /* #F8F9FA */
+    --muted: 210 20% 98%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 356 89% 93%; /* #FADADD */
+    --accent: 356 89% 93%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -26,7 +27,7 @@
     --warning-foreground: 240 5.9% 10%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 211 100% 50%; /* #007BFF */
+    --ring: 211 100% 50%;
     --radius: 0.5rem;
     --chart-1: 211 100% 50%;
     --chart-2: 173 58% 39%;
@@ -85,6 +86,151 @@
   }
 }
 
+@layer components {
+  .header {
+      @apply bg-white/95 backdrop-blur-md p-4 px-8 shadow-lg flex justify-between items-center border-b border-white/20;
+  }
+  .logo-section {
+      @apply flex items-center gap-3;
+  }
+  .logo {
+      @apply w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center text-white font-bold text-lg;
+  }
+  .brand-text {
+      @apply text-2xl font-bold bg-gradient-primary text-transparent bg-clip-text;
+  }
+  .tagline {
+      @apply text-xs text-gray-500 -mt-1;
+  }
+  .nav-links {
+      @apply hidden md:flex gap-8 items-center;
+  }
+  .nav-links a {
+      @apply text-gray-500 font-medium transition-colors duration-300;
+  }
+  .nav-links a:hover {
+      @apply text-primary;
+  }
+  .login-btn {
+      @apply bg-gradient-primary text-white py-2.5 px-6 rounded-full font-semibold cursor-pointer transition-all duration-300;
+  }
+  .login-btn:hover {
+      @apply -translate-y-0.5 shadow-lg shadow-purple-300/50;
+  }
+
+  .sub-header {
+      @apply bg-white/90 p-4 px-8 flex justify-between items-center border-b border-gray-900/10;
+  }
+  .portal-title {
+      @apply flex items-center gap-2.5 text-xl font-semibold text-gray-800;
+  }
+  .profile-section {
+      @apply flex items-center gap-4;
+  }
+  .status-badge {
+      @apply bg-gradient-secondary text-white py-1.5 px-4 rounded-full text-xs font-semibold;
+  }
+  .profile-btn {
+      @apply bg-transparent border-2 border-primary text-primary py-2 px-5 rounded-full font-semibold cursor-pointer transition-all duration-300;
+  }
+  .profile-btn:hover {
+      @apply bg-primary text-white;
+  }
+  .main-container {
+      @apply p-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[calc(100vh-140px)];
+  }
+  .card {
+      @apply bg-white/95 rounded-2xl p-8 shadow-lg backdrop-blur-md border border-white/20 transition-all duration-300;
+  }
+  .card:hover {
+      @apply -translate-y-1 shadow-2xl;
+  }
+  .card-header {
+      @apply flex items-center gap-3 mb-6 p-0;
+  }
+  .card-icon {
+      @apply w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center text-white text-xl;
+  }
+  .card-title {
+      @apply text-2xl font-bold text-gray-800;
+  }
+  .card-subtitle {
+      @apply text-gray-500 text-sm mt-1;
+  }
+  .upload-area {
+      @apply border-2 border-dashed border-cyan-400 rounded-2xl p-12 text-center bg-gradient-to-br from-cyan-500/5 to-blue-500/5 cursor-pointer transition-all duration-300;
+  }
+  .upload-area:hover {
+      @apply border-primary bg-gradient-to-br from-purple-500/10 to-indigo-500/10;
+  }
+  .upload-icon {
+      @apply w-16 h-16 mx-auto mb-4 bg-gradient-secondary rounded-full flex items-center justify-center text-white text-2xl;
+  }
+  .upload-text {
+      @apply text-lg font-semibold text-gray-800 mb-2;
+  }
+  .upload-subtext {
+      @apply text-gray-500 text-sm mb-6;
+  }
+  .upload-btn {
+      @apply bg-gradient-primary text-white py-3 px-8 rounded-full font-semibold text-base cursor-pointer transition-transform duration-300;
+  }
+   .upload-btn:hover {
+      @apply -translate-y-0.5;
+  }
+
+  .chat-container {
+      @apply flex flex-col h-full;
+  }
+  .ai-message {
+      @apply bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-6 rounded-2xl mb-6 border-l-4 border-cyan-400;
+  }
+  .ai-message-header {
+      @apply flex items-center gap-2.5 mb-2;
+  }
+  .ai-avatar {
+      @apply w-8 h-8 bg-gradient-secondary rounded-full flex items-center justify-center text-white font-bold text-sm;
+  }
+  .chat-input-area {
+      @apply mt-auto flex flex-col gap-4;
+  }
+  .chat-input {
+      @apply border-2 border-gray-200 rounded-2xl p-4 text-sm resize-y min-h-[80px] transition-colors duration-300;
+  }
+  .chat-input:focus {
+      @apply outline-none border-cyan-400 ring-4 ring-cyan-500/10;
+  }
+  .chat-btn {
+      @apply bg-gradient-secondary text-white py-3 px-6 rounded-full font-semibold cursor-pointer flex items-center justify-center gap-2 transition-transform duration-300;
+  }
+   .chat-btn:hover {
+      @apply -translate-y-0.5;
+  }
+
+  .reports-section {
+      @apply lg:col-span-2 mt-4;
+  }
+
+  .report-item {
+      @apply bg-white/80 p-6 rounded-2xl mb-4 flex justify-between items-center transition-all duration-300 border border-white/20;
+  }
+  .report-item:hover {
+      @apply bg-white/95 translate-x-1;
+  }
+  .report-info h4 {
+      @apply font-semibold text-gray-800 mb-1;
+  }
+  .report-info .date {
+      @apply text-gray-500 text-xs;
+  }
+  .view-btn {
+      @apply bg-gradient-primary text-white py-2 px-5 rounded-full font-semibold cursor-pointer transition-transform duration-300;
+  }
+  .view-btn:hover {
+      @apply scale-105;
+  }
+}
+
 @layer utilities {
   .transition-smooth {
     @apply transition-all duration-300 ease-in-out;
@@ -96,7 +242,7 @@
       @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];
   }
    .bg-gradient-subtle {
-    @apply bg-gradient-to-br from-card to-secondary/20;
+    @apply bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50;
   }
   .text-gradient-primary {
       @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-clip-text text-transparent;
@@ -108,3 +254,5 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 40px hsl(var(--primary)/.2);
   }
 }
+
+    

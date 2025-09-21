@@ -23,7 +23,7 @@ const Header = () => {
         <nav className="nav-links">
             <a href="/#features">Features</a>
             <a href="/#how-it-works">How It Works</a>
-            <a href="/#security">Security</a>
+            <a href="#security">Security</a>
             <a href="/help">Help</a>
             <ThemeToggle />
         </nav>
