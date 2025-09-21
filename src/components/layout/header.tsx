@@ -6,18 +6,41 @@ import { Stethoscope, Siren } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '../theme-toggle';
+import { auth } from '@/lib/firebase';
+import { logEmergency } from '@/lib/firebase-services';
 
 const Header = () => {
   const { toast } = useToast();
 
-  const handleEmergencyClick = () => {
-    toast({
-      variant: 'destructive',
-      title: '🚨 Emergency Protocol',
-      description:
-        'For immediate medical emergencies, please call your local emergency number or visit the nearest hospital. This platform is for non-emergency consultations.',
-      duration: 5000,
-    });
+  const handleEmergencyClick = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await logEmergency(user.uid);
+        toast({
+          variant: 'destructive',
+          title: '🚨 Emergency Logged',
+          description:
+            'Your emergency has been logged. For immediate assistance, please call your local emergency number or visit the nearest hospital.',
+          duration: 7000,
+        });
+      } catch (error) {
+        console.error("Failed to log emergency:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not log emergency. Please call for help directly.',
+        });
+      }
+    } else {
+       toast({
+        variant: 'destructive',
+        title: '🚨 Please Log In',
+        description:
+          'You must be logged in to report an emergency. For immediate medical emergencies, please call your local emergency number.',
+        duration: 7000,
+      });
+    }
   };
 
   return (
