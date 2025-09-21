@@ -60,11 +60,27 @@ export default function LoginPage() {
             router.push('/patient/dashboard');
         }
     } catch (error: any) {
-        console.error('Login error:', error);
+        console.error('Login error:', error.code, error.message);
+        let description = 'An unexpected error occurred. Please try again.';
+        switch (error.code) {
+            case 'auth/user-not-found':
+            case 'auth/invalid-email':
+                description = 'No account found with this email address.';
+                break;
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                description = 'Incorrect password. Please try again.';
+                break;
+            case 'auth/too-many-requests':
+                description = 'Access to this account has been temporarily disabled due to many failed login attempts. You can reset your password or try again later.';
+                break;
+            default:
+                description = error.message;
+        }
         toast({
             variant: 'destructive',
             title: 'Login Failed',
-            description: error.message || 'Invalid email or password.',
+            description: description,
         });
     } finally {
         setIsLoading(false);
