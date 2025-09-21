@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -42,11 +43,19 @@ const Header = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="outline" size="sm" onClick={() => router.push('/login?role=doctor')}>
-              Doctor Login
+            <Button 
+              variant="outline-medical" 
+              size="sm"
+              onClick={() => router.push('/login?role=doctor')}
+            >
+              Login as Doctor
             </Button>
-            <Button variant="default" size="sm" onClick={() => router.push('/login?role=patient')}>
-              Patient Login
+            <Button 
+              variant="patient" 
+              size="sm"
+              onClick={() => router.push('/login?role=patient')}
+            >
+              Login as Patient
             </Button>
           </div>
 
@@ -96,10 +105,10 @@ const Header = () => {
                 Help
               </a>
               <div className="flex flex-col space-y-2 pt-4 border-t border-border">
-                <Button variant="outline" size="sm" onClick={() => { router.push('/login?role=doctor'); setIsMenuOpen(false); }}>
+                <Button variant="outline-medical" size="sm" onClick={() => { router.push('/login?role=doctor'); setIsMenuOpen(false); }}>
                   Doctor Login
                 </Button>
-                <Button variant="default" size="sm" onClick={() => { router.push('/login?role=patient'); setIsMenuOpen(false); }}>
+                <Button variant="patient" size="sm" onClick={() => { router.push('/login?role=patient'); setIsMenuOpen(false); }}>
                   Patient Login
                 </Button>
               </div>

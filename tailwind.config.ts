@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -73,6 +74,12 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        'medical-primary': 'hsl(var(--primary))',
+        'medical-accent': 'hsl(var(--accent))',
+        'medical-text': 'hsl(var(--foreground))',
+        'medical-border': 'hsl(var(--border))',
+        'medical-bg': 'hsl(var(--secondary))',
+        'medical-success': 'hsl(var(--success))',
       },
       borderRadius: {
         lg: 'var(--radius)',

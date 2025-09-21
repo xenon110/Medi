@@ -1,311 +1,311 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Paperclip, Send, Check, Pencil, Loader2, Inbox, XCircle, ThumbsUp } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Paperclip, Send, CheckCircle, Pencil, Loader2, Inbox, XCircle, ThumbsUp, Search, Stethoscope, FileText, Edit3 } from 'lucide-react';
 import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // Dummy Data
 const dummyPatients = [
   {
-    id: 'patient-1',
-    name: 'Jane Doe',
-    status: 'pending',
-    createdAt: new Date(Date.now() - 3600000),
-    report: {
-      potentialConditions: [
-        { name: 'Eczema', likelihood: 'High', confidence: 0.85, description: 'A condition that makes your skin red and itchy.' },
-        { name: 'Psoriasis', likelihood: 'Medium', confidence: 0.45, description: 'A condition in which skin cells build up and form scales and itchy, dry patches.' },
-      ],
-      report: 'Based on the image and symptoms, the most likely condition is Eczema. The patient reports severe itching and redness, consistent with atopic dermatitis.',
-      homeRemedies: 'Moisturize frequently, avoid harsh soaps, and use a cold compress to reduce itching.',
-      medicalRecommendation: 'A consultation with a dermatologist is recommended for a definitive diagnosis and prescription of topical corticosteroids if necessary.',
-      doctorConsultationSuggestion: true,
-    },
-    customReport: {
-      report: '',
-      prescription: '',
-    },
+    id: 1,
+    name: "Sarah Johnson",
+    age: 28,
+    condition: "Suspicious mole examination",
+    time: "2 hours ago",
+    urgent: true,
+    unread: 2
   },
   {
-    id: 'patient-2',
-    name: 'John Smith',
-    status: 'approved',
-    createdAt: new Date(Date.now() - 86400000 * 2),
-    report: {
-      potentialConditions: [
-        { name: 'Acne Vulgaris', likelihood: 'High', confidence: 0.9, description: 'Occurs when hair follicles become plugged with oil and dead skin cells.' },
-      ],
-      report: 'The image shows multiple comedones and pustules on the face, characteristic of acne vulgaris.',
-      homeRemedies: 'Wash face twice daily with a gentle cleanser. Avoid oily cosmetics.',
-      medicalRecommendation: 'Over-the-counter benzoyl peroxide or salicylic acid treatments are recommended.',
-      doctorConsultationSuggestion: false,
-    },
-    customReport: {
-      report: 'The AI diagnosis of Acne Vulgaris is accurate. The patient should start with a gentle skincare routine and consider topical treatments.',
-      prescription: 'Adapalene Gel 0.1%, apply a thin layer to affected areas once daily before bed.',
-    },
+    id: 2,
+    name: "Michael Chen",
+    age: 35,
+    condition: "Recurring eczema flare-up",
+    time: "4 hours ago",
+    urgent: false,
+    unread: 0
   },
+  {
+    id: 3,
+    name: "Emma Williams",
+    age: 22,
+    condition: "Acne treatment follow-up",
+    time: "1 day ago",
+    urgent: false,
+    unread: 1
+  }
 ];
+
+const aiReport = {
+    patientName: "Sarah Johnson",
+    symptoms: ["Dark spot on arm", "Irregular borders", "Recent size increase"],
+    aiAnalysis: "The AI analysis suggests this could be a concerning lesion that requires immediate dermatological evaluation. The irregular borders and recent growth pattern are notable findings.",
+    recommendation: "Urgent dermatologist consultation recommended within 48 hours.",
+    homeRemedies: "No home remedies recommended for this condition."
+};
+
+const chatHistory = [
+    { type: "system", content: "AI Report generated for Sarah Johnson's skin condition", timestamp: "10:30 AM" },
+    { type: "ai-report", content: aiReport, timestamp: "10:30 AM" },
+    { type: "doctor", content: "I've reviewed the AI analysis and the patient's uploaded image. I agree with the assessment.", timestamp: "11:15 AM" }
+] as Array<{
+    type: string;
+    content: string | typeof aiReport;
+    timestamp: string;
+}>;
 
 
 type Patient = {
-  id: string;
+  id: number;
   name: string;
-  report: GenerateInitialReportOutput;
-  createdAt: Date;
-  status: 'pending' | 'approved' | 'rejected' | 'customized';
-  image?: string;
-  [key: string]: any;
+  age: number;
+  condition: string;
+  time: string;
+  urgent: boolean;
+  unread: number;
 };
 
 export default function DoctorDashboard() {
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCustomizing, setIsCustomizing] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [customReportText, setCustomReportText] = useState('');
-  const [prescriptionText, setPrescriptionText] = useState('');
+  const [patients, setPatients] = useState<Patient[]>(dummyPatients);
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState("");
+  
+  const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
-  useEffect(() => {
-    // Simulate fetching patient data
-    setIsLoading(true);
-    setTimeout(() => {
-      setPatients(dummyPatients);
-      if (dummyPatients.length > 0) {
-        handleSelectPatient(dummyPatients[0].id, dummyPatients);
-      }
-      setIsLoading(false);
-    }, 1500);
-  }, []);
-
-  const handleSelectPatient = (patientId: string, patientList: Patient[] = patients) => {
-    const patient = patientList.find(p => p.id === patientId);
-    if (patient) {
-      setSelectedPatient(patient);
-      setCustomReportText(patient.report?.report || '');
-      setPrescriptionText(patient.customReport?.prescription || '');
-      setIsCustomizing(false);
+  const sendMessage = () => {
+    if (currentMessage.trim()) {
+      // Logic to send message
+      setCurrentMessage("");
     }
   };
 
-  const handleUpdatePatient = async (status: 'approved' | 'customized' | 'rejected') => {
-    if (!selectedPatient) return;
-
-    setIsSending(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
-
-    setPatients(prevPatients => prevPatients.map(p => {
-      if (p.id === selectedPatient.id) {
-        const updatedPatient = { ...p, status };
-        if (status === 'customized') {
-          updatedPatient.customReport = {
-            report: customReportText,
-            prescription: prescriptionText,
-          };
-        }
-        setSelectedPatient(updatedPatient); // Update selected patient view
-        return updatedPatient;
-      }
-      return p;
-    }));
-
-    toast({
-        title: "Success",
-        description: `Patient report has been ${status}.`,
-    });
-
-    setIsSending(false);
-    setIsCustomizing(false);
-  };
-
-  const formatTimestamp = (timestamp: Date | null | undefined) => {
-    if (!timestamp) return 'N/A';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffSeconds = Math.round((now.getTime() - date.getTime()) / 1000);
-    const diffMinutes = Math.round(diffSeconds / 60);
-    const diffHours = Math.round(diffMinutes / 60);
-    const diffDays = Math.round(diffHours / 24);
-
-    if (diffSeconds < 60) return `${diffSeconds}s ago`;
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    if (diffHours < 24) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (diffDays === 1) return 'Yesterday';
-    return date.toLocaleDateString();
-  };
-  
   if (isLoading) {
      return (
       <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="animate-spin text-primary" size={48} />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
+        <Loader2 className="animate-spin text-primary" size={48} />
       </div>
     );
   }
 
-  const getStatusBadgeVariant = (status: Patient['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'secondary';
-      case 'approved':
-      case 'customized':
-        return 'default';
-      case 'rejected':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[calc(100vh-10rem)]">
-      {/* Patient List */}
-      <Card className="md:col-span-1 flex flex-col">
-        <CardHeader>
-          <CardTitle>Patients</CardTitle>
-          <CardDescription>Select a patient to review their report.</CardDescription>
-        </CardHeader>
-        <ScrollArea className="flex-1">
-          <CardContent className="p-2">
-            {patients.length === 0 ? (
-              <div className="text-center text-muted-foreground p-8 flex flex-col items-center gap-4">
-                <Inbox size={48} className="text-gray-400" />
-                <h3 className="font-semibold">No Patients Yet</h3>
-                <p className="text-sm">When patients submit reports, they will appear here.</p>
+    <div className="min-h-screen bg-gradient-subtle">
+      <header className="bg-background/95 backdrop-blur-sm border-b border-medical-border sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+             <Link href="/" className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
+                <Stethoscope className="w-4 h-4 text-white" />
+                </div>
+                <h1 className="text-xl font-semibold text-medical-text">MEDISKIN Doctor Portal</h1>
+            </Link>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Badge variant="secondary" className="bg-medical-primary/10 text-medical-primary border-medical-primary/20">
+              <Stethoscope className="w-3 h-3 mr-1" />
+              Doctor
+            </Badge>
+            <Button variant="ghost" size="sm">Dr. Smith</Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex h-[calc(100vh-73px)]">
+        {/* Patient List Sidebar */}
+        <div className="w-80 bg-white/50 backdrop-blur-sm border-r border-medical-border">
+          <div className="p-4 border-b border-medical-border">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-medical-text/40 w-4 h-4" />
+              <Input 
+                placeholder="Search patients..." 
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-y-auto">
+            {patients.map((patient) => (
+              <div
+                key={patient.id}
+                onClick={() => setSelectedPatientId(patient.id)}
+                className={`p-4 border-b border-medical-border/30 cursor-pointer transition-colors hover:bg-medical-bg/50 ${
+                  selectedPatientId === patient.id ? 'bg-medical-bg border-l-4 border-l-medical-primary' : ''
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${patient.name}`} />
+                    <AvatarFallback>{patient.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-medium text-medical-text truncate">{patient.name}</h3>
+                      {patient.unread > 0 && (
+                        <Badge variant="destructive" className="text-xs">
+                          {patient.unread}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <p className="text-sm text-medical-text/70 mb-1">Age: {patient.age}</p>
+                    <p className="text-sm text-medical-text/60 truncate mb-2">{patient.condition}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-medical-text/50">{patient.time}</span>
+                      {patient.urgent && (
+                        <Badge variant="destructive" className="text-xs">Urgent</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {patients.map((patient) => (
-                  <button
-                    key={patient.id}
-                    onClick={() => handleSelectPatient(patient.id)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      selectedPatient?.id === patient.id ? 'bg-muted' : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback>{patient.name ? patient.name.charAt(0) : 'P'}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-start">
-                          <span className="font-semibold">{patient.name || 'Anonymous'}</span>
-                            <Badge variant={getStatusBadgeVariant(patient.status)} className="text-xs capitalize mt-1">
-                              {patient.status}
-                            </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {selectedPatient ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 bg-white/50 backdrop-blur-sm border-b border-medical-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedPatient.name}`} />
+                      <AvatarFallback>
+                        {selectedPatient.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="font-semibold text-medical-text">
+                        {selectedPatient.name}
+                      </h2>
+                      <p className="text-sm text-medical-text/60">
+                        {selectedPatient.condition}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      <FileText className="w-4 h-4 mr-2" />
+                      View History
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatHistory.map((message, index) => (
+                  <div key={index}>
+                    {message.type === 'system' && typeof message.content === 'string' && (
+                      <div className="text-center">
+                        <Badge variant="secondary" className="text-xs">
+                          {message.content}
+                        </Badge>
+                        <p className="text-xs text-medical-text/40 mt-1">{message.timestamp}</p>
+                      </div>
+                    )}
+
+                    {message.type === 'ai-report' && typeof message.content === 'object' && (
+                      <Card className="bg-medical-bg/30 border border-medical-border">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm flex items-center">
+                            <FileText className="w-4 h-4 mr-2" />
+                            AI Analysis Report
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Symptoms Reported:</h4>
+                            <ul className="text-sm text-medical-text/70 space-y-1">
+                              {(message.content.symptoms as string[]).map((symptom: string, i: number) => (
+                                <li key={i}>• {symptom}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">AI Analysis:</h4>
+                            <p className="text-sm text-medical-text/70">{message.content.aiAnalysis}</p>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Recommendation:</h4>
+                            <p className="text-sm text-medical-text/70">{message.content.recommendation}</p>
+                          </div>
+
+                          <div className="flex justify-end space-x-2 pt-3">
+                            <Button variant="outline" size="sm">
+                              <Edit3 className="w-4 h-4 mr-2" />
+                              Customize Report
+                            </Button>
+                            <Button variant="medical" size="sm">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Approve & Send
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {message.type === 'doctor' && typeof message.content === 'string' && (
+                      <div className="flex justify-end">
+                        <div className="max-w-[70%] bg-gradient-primary text-white p-3 rounded-lg">
+                          <p className="text-sm">{message.content}</p>
+                          <p className="text-xs opacity-70 mt-1">{message.timestamp}</p>
                         </div>
                       </div>
-                      <span className="text-xs text-muted-foreground">{formatTimestamp(patient.createdAt)}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </ScrollArea>
-      </Card>
-
-      {/* Chat/Report Window */}
-      <Card className="md:col-span-3 flex flex-col h-full">
-        {selectedPatient ? (
-          <>
-            <CardHeader className="border-b">
-              <CardTitle>{selectedPatient.name}</CardTitle>
-              <CardDescription>AI-Generated Report Analysis</CardDescription>
-            </CardHeader>
-            <ScrollArea className="flex-1">
-              <CardContent className="p-6 space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Potential Issues</h3>
-                    {isCustomizing ? (
-                      <Textarea 
-                        value={customReportText}
-                        onChange={(e) => setCustomReportText(e.target.value)}
-                        className="min-h-[150px] text-base"
-                      />
-                    ) : (
-                      <p className="text-foreground/80">{selectedPatient.customReport?.report || selectedPatient.report?.report}</p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">Home Remedies</h3>
-                    <p className="text-foreground/80">{selectedPatient.report?.homeRemedies}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">Medical Recommendation</h3>
-                    <p className="text-foreground/80">{selectedPatient.report?.medicalRecommendation}</p>
-                  </div>
-                    {selectedPatient.status !== 'pending' && selectedPatient.customReport?.prescription && (
-                      <div className="space-y-2">
-                          <h3 className="font-semibold text-lg">Prescription / Notes</h3>
-                          <p className="text-foreground/80 whitespace-pre-wrap">{selectedPatient.customReport.prescription}</p>
-                      </div>
-                  )}
-              </CardContent>
-            </ScrollArea>
-            <CardFooter className="p-4 border-t bg-card flex flex-col items-stretch gap-4">
-              {isCustomizing ? (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="prescription-text">Medicine Recommendations / Notes (Suggestion Box)</Label>
-                    <Textarea 
-                      id="prescription-text" 
-                      placeholder="e.g., Paracetamol 500mg twice a day..." 
-                      value={prescriptionText}
-                      onChange={(e) => setPrescriptionText(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsCustomizing(false)} disabled={isSending}>Cancel</Button>
-                    <Button onClick={() => handleUpdatePatient('customized')} disabled={isSending}>
-                      {isSending ? <Loader2 className="animate-spin" /> : <><Send className="mr-2 h-4 w-4" /> Send Custom Response</>}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => setIsCustomizing(true)} 
-                      disabled={isSending || selectedPatient.status !== 'pending'}>
-                          <Pencil className="mr-2 h-4 w-4" /> Customize Report
-                    </Button>
-                    <Button 
-                      variant="destructive"
-                      onClick={() => handleUpdatePatient('rejected')} 
-                      disabled={isSending || selectedPatient.status !== 'pending'}>
-                          {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><XCircle className="mr-2 h-4 w-4" /> Reject</>}
-                    </Button>                  <Button 
-                      className="bg-green-600 hover:bg-green-700 text-white" 
-                      onClick={() => handleUpdatePatient('approved')} 
-                      disabled={isSending || selectedPatient.status !== 'pending'}>
-                          {isSending && selectedPatient.status === 'pending' ? <Loader2 className="animate-spin" /> : <><ThumbsUp className="mr-2 h-4 w-4" /> Approve</>}
+                ))}
+              </div>
+
+              {/* Message Input */}
+              <div className="p-4 bg-white/50 backdrop-blur-sm border-t border-medical-border">
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="icon">
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
+                  <Input
+                    placeholder="Type your response to the patient..."
+                    value={currentMessage}
+                    onChange={(e) => setCurrentMessage(e.target.value)}
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                  />
+                  <Button onClick={sendMessage}>
+                    <Send className="w-4 h-4" />
                   </Button>
                 </div>
-              )}
-            </CardFooter>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-              <Inbox size={64} className="text-gray-400" />
-              <h3 className="font-semibold mt-4 text-lg">Select a Patient</h3>
-              <p>Choose a patient from the list on the left to view their detailed report and take action.</p>
-          </div>
-        )}
-      </Card>
+              </div>
+            </>
+          ) : (
+             <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <MessageCircle className="w-16 h-16 text-medical-text/30 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-medical-text mb-2">Select a Patient</h3>
+                <p className="text-medical-text/60">Choose a patient from the list to view their case</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
