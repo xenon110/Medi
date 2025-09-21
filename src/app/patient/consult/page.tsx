@@ -34,33 +34,30 @@ export default function ConsultPage() {
     const [targetDoctorId, setTargetDoctorId] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchData = async (uid: string) => {
-            try {
-                const [fetchedDoctors, fetchedReports] = await Promise.all([
-                    getDoctors(),
-                    getReportsForPatient(uid)
-                ]);
-
-                setDoctors(fetchedDoctors);
-                setReports(fetchedReports.filter(r => r.status === 'pending-patient-input'));
-            } catch (error) {
-                console.error("Failed to fetch data:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch doctors or reports. Please try again later.' });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        const unsubscribe = auth.onAuthStateChanged(user => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (user) {
-                fetchData(user.uid);
+                try {
+                    const [fetchedDoctors, fetchedReports] = await Promise.all([
+                        getDoctors(),
+                        getReportsForPatient(user.uid)
+                    ]);
+
+                    setDoctors(fetchedDoctors);
+                    setReports(fetchedReports.filter(r => r.status === 'pending-patient-input'));
+                } catch (error) {
+                    console.error("Failed to fetch data:", error);
+                    toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch doctors or reports. Please try again later.' });
+                } finally {
+                    setIsLoading(false);
+                }
             } else {
-                // If no user, no need to fetch, stop loading and redirect
+                // If no user is logged in, stop loading and redirect.
                 setIsLoading(false);
                 router.push('/login?role=patient');
             }
         });
         
+        // Cleanup subscription on unmount
         return () => unsubscribe();
     }, [toast, router]);
 
@@ -136,17 +133,19 @@ export default function ConsultPage() {
                                             <CardDescription>{doctor.specialization || 'Dermatology'}</CardDescription>
                                         </div>
                                     </div>
-                                    <Button 
-                                        onClick={() => handleSendClick(doctor.uid)} 
-                                        disabled={!!isSending || reports.length === 0}
-                                        className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90"
-                                    >
-                                        {isSending === doctor.uid ? (
-                                            <Loader2 className="animate-spin" /> 
-                                        ) : (
-                                            <><Send className="mr-2 h-4 w-4" /> Send New Report</>
-                                        )}
-                                    </Button>
+                                    <DialogTrigger asChild>
+                                        <Button 
+                                            onClick={() => handleSendClick(doctor.uid)} 
+                                            disabled={!!isSending || reports.length === 0}
+                                            className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90"
+                                        >
+                                            {isSending === doctor.uid ? (
+                                                <Loader2 className="animate-spin" /> 
+                                            ) : (
+                                                <><Send className="mr-2 h-4 w-4" /> Send New Report</>
+                                            )}
+                                        </Button>
+                                    </DialogTrigger>
                                 </CardHeader>
                             </Card>
                         ))}
