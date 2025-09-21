@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "landing-hero",
-      "description": "A calming, abstract image related to healthcare or technology.",
-      "imageUrl": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&h=1380&auto=format&fit=crop",
-      "imageHint": "healthcare technology"
+      "description": "A doctor reviews medical data on a futuristic interface, representing AI in healthcare.",
+      "imageUrl": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2070&h=1380&auto=format&fit=crop",
+      "imageHint": "doctor technology"
     },
     {
       "id": "resource-center-banner",
@@ -34,13 +34,13 @@
     {
       "id": "kb-eczema-1",
       "description": "Close-up of eczema on skin, showing redness and dry texture.",
-      "imageUrl": "https://images.unsplash.com/photo-1593105324915-3972c3558e1d?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1618012623192-9a0e69b5a04a?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin eczema"
     },
     {
       "id": "kb-eczema-2",
       "description": "Clinical view of atopic dermatitis on an arm.",
-      "imageUrl": "https://images.unsplash.com/photo-1618012623192-9a0e69b5a04a?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1621484526363-239e76453f6c?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "atopic dermatitis"
     },
     {
@@ -52,13 +52,13 @@
     {
       "id": "kb-psoriasis-1",
       "description": "Clinical image showing psoriatic plaques on the skin.",
-      "imageUrl": "https://images.unsplash.com/photo-1621484526363-239e76453f6c?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1631751240428-2e86de694c9a?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "psoriasis skin"
     },
     {
       "id": "kb-psoriasis-2",
       "description": "Close-up of psoriasis scales on an elbow.",
-      "imageUrl": "https://images.unsplash.com/photo-1631751240428-2e86de694c9a?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1621484526363-239e76453f6c?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin psoriasis"
     },
     {
@@ -70,13 +70,13 @@
     {
       "id": "kb-acne-1",
       "description": "Close-up of moderate acne on a person's cheek.",
-      "imageUrl": "https://images.unsplash.com/photo-1551887373-3c5bd224f6e2?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1621253941804-505929c29d66?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "acne face"
     },
     {
       "id": "kb-acne-2",
       "description": "Example of different types of acne blemishes.",
-      "imageUrl": "https://images.unsplash.com/photo-1621253941804-505929c29d66?q=80&w=600&h=400&auto=format&fit=crop",
+      "imageUrl": "https://images.unsplash.com/photo-1551887373-3c5bd224f6e2?q=80&w=600&h=400&auto=format&fit=crop",
       "imageHint": "skin acne"
     },
     {
@@ -195,5 +195,3 @@
     }
   ]
 }
-
-    

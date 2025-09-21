@@ -26,13 +26,13 @@ export default function RootLayout({
       <body className={cn('font-body antialiased', 'min-h-screen bg-background font-sans')}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-1 container mx-auto py-8">{children}</main>
+            <main className="flex-1">{children}</main>
           </div>
           <Toaster />
         </ThemeProvider>
