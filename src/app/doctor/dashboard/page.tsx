@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -13,9 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { auth } from '@/lib/firebase';
-import { getReportsForDoctor, Report } from '@/lib/firebase-services';
+import { auth, db } from '@/lib/firebase';
+import { getReportsForDoctor, Report, getUserProfile, PatientProfile } from '@/lib/firebase-services';
 import { formatDistanceToNow } from 'date-fns';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+
 
 type PatientCase = Report & {
     time: string;
@@ -39,44 +42,49 @@ export default function DoctorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const fetchReports = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        // This case is handled by the layout, but as a fallback.
-        toast({ title: 'Not authenticated', variant: 'destructive' });
-        setIsLoading(false);
-        return;
-      }
+    const unsubscribeAuth = auth.onAuthStateChanged(user => {
+      if (user && db) {
+        setIsLoading(true);
+        
+        const reportsRef = collection(db, 'reports');
+        const q = query(reportsRef, where('doctorId', '==', user.uid));
 
-      try {
-        const reports = await getReportsForDoctor(user.uid);
-        const cases: PatientCase[] = reports.map(report => ({
-          ...report,
-          time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
-          unread: report.status === 'pending-doctor-review' ? 1 : 0,
-        }));
-        setPatientCases(cases);
-        if (cases.length > 0) {
-          setSelectedCase(cases[0]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch reports:", error);
-        toast({ title: 'Error fetching reports', description: 'Could not retrieve patient cases. Please try again later.', variant: 'destructive' });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
+          const casesPromises = querySnapshot.docs.map(async (doc) => {
+            const report = { id: doc.id, ...doc.data() } as Report;
+            const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
 
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        fetchReports();
+            return {
+              ...report,
+              patientProfile: patientProfile || undefined, // Add patient profile to the report
+              time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
+              unread: report.status === 'pending-doctor-review' ? 1 : 0,
+            };
+          });
+
+          const cases = await Promise.all(casesPromises);
+          
+          setPatientCases(cases as PatientCase[]);
+          if (cases.length > 0 && !selectedCase) {
+            setSelectedCase(cases[0] as PatientCase);
+          }
+          setIsLoading(false);
+
+        }, (error) => {
+          console.error("Error fetching reports in real-time:", error);
+          toast({ title: 'Error fetching reports', description: 'Could not retrieve patient cases. Please try again later.', variant: 'destructive' });
+          setIsLoading(false);
+        });
+
+        return () => unsubscribeSnap();
       } else {
+        // Not authenticated or db not available
         setIsLoading(false);
       }
     });
 
-    return () => unsubscribe();
-  }, [toast]);
+    return () => unsubscribeAuth();
+  }, [toast, selectedCase]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {

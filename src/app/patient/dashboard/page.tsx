@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
@@ -10,12 +11,13 @@ import type { UserInfo } from 'firebase/auth';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport } from '@/ai/flows/generate-initial-report';
-import { auth } from '@/lib/firebase';
-import { getUserProfile, saveReport, getReportsForPatient, Report, PatientProfile } from '@/lib/firebase-services';
+import { auth, db } from '@/lib/firebase';
+import { getUserProfile, saveReport, Report, PatientProfile } from '@/lib/firebase-services';
 
 export default function PatientDashboard() {
   const { toast } = useToast();
@@ -36,7 +38,7 @@ export default function PatientDashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribeAuth = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await getUserProfile(firebaseUser.uid);
         if (profile) {
@@ -45,18 +47,31 @@ export default function PatientDashboard() {
             return;
           }
           setUser(profile as PatientProfile);
-          const reports = await getReportsForPatient(firebaseUser.uid);
-          setRecentReports(reports);
+
+          if (db) {
+            const reportsRef = collection(db, 'reports');
+            const q = query(reportsRef, where('patientId', '==', firebaseUser.uid));
+            
+            const unsubscribeSnap = onSnapshot(q, (querySnapshot) => {
+              const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+              setRecentReports(reports);
+            }, (error) => {
+              console.error("Error fetching patient reports in real-time:", error);
+              toast({ variant: "destructive", title: "Error", description: "Could not fetch your reports." });
+            });
+            
+            return () => unsubscribeSnap();
+          }
+
         } else {
-          // If no profile, they shouldn't be here.
           router.push('/login?role=patient');
         }
       } else {
         router.push('/login?role=patient');
       }
     });
-    return () => unsubscribe();
-  }, [router]);
+    return () => unsubscribeAuth();
+  }, [router, toast]);
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

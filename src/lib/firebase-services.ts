@@ -1,4 +1,5 @@
 
+
 import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
@@ -79,14 +80,14 @@ export const getUserProfile = async (uid: string): Promise<(PatientProfile | Doc
   const doctorRef = doc(db, 'doctors', uid);
   const doctorSnap = await getDoc(doctorRef);
   if (doctorSnap.exists()) {
-    return doctorSnap.data() as DoctorProfile;
+    return { uid: doctorSnap.id, ...doctorSnap.data() } as DoctorProfile;
   }
 
   // If not found, check patients collection
   const patientRef = doc(db, 'patients', uid);
   const patientSnap = await getDoc(patientRef);
   if (patientSnap.exists()) {
-    return patientSnap.data() as PatientProfile;
+    return { uid: patientSnap.id, ...patientSnap.data() } as PatientProfile;
   }
 
   // If not found in either, return null
@@ -147,8 +148,13 @@ export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> =
     for (const docSnapshot of querySnapshot.docs) {
       const report = { id: docSnapshot.id, ...docSnapshot.data() } as Report;
       if (report.patientId) {
-        const patientProfile = await getUserProfile(report.patientId) as PatientProfile;
-        report.patientProfile = patientProfile;
+        // Fetching patient profile might fail if rules are too strict.
+        // It's better to fetch this on the backend or adjust rules.
+        // For now, let's try fetching and handle potential nulls.
+        const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
+        if (patientProfile) {
+            report.patientProfile = patientProfile;
+        }
       }
       reports.push(report);
     }
@@ -162,7 +168,7 @@ export const getDoctors = async (): Promise<DoctorProfile[]> => {
   // Optional: Add a where clause to only fetch verified doctors
   const q = query(doctorsCollection, where("verificationStatus", "==", "approved"));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => doc.data() as DoctorProfile);
+  return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as DoctorProfile));
 };
 
 export const sendReportToDoctor = async (reportId: string, doctorId: string) => {
@@ -173,5 +179,3 @@ export const sendReportToDoctor = async (reportId: string, doctorId: string) => 
         status: 'pending-doctor-review'
     });
 };
-
-    
