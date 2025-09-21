@@ -1,3 +1,4 @@
+
 import { BrainCircuit, Zap, UserCheck, Globe, ShieldCheck, MessagesSquare } from 'lucide-react';
 
 const features = [
@@ -41,22 +42,23 @@ const features = [
 
 const Features = () => {
   return (
-    <section id="features" className="features-section py-20 bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="section-title">Why Choose MEDISKIN?</h2>
-        <p className="section-subtitle">Advanced technology meets medical expertise</p>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
-          {features.map((feature, index) => (
-            <div key={index} className="feature-card">
-              <div className="w-16 h-16 bg-gradient-secondary text-white rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <feature.icon className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+     <section className="features py-20 bg-white" id="features">
+        <div className="features-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="section-title text-3xl md:text-4xl font-bold mb-4 text-gradient">Why Choose MEDISKIN?</h2>
+            <p className="section-subtitle text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">Advanced technology meets medical expertise</p>
+            
+            <div className="features-grid grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+                {features.map((feature, index) => (
+                    <div key={index} className="feature-card p-8 rounded-2xl bg-muted/30 border border-border/20 transition-transform duration-300 hover:-translate-y-2">
+                        <div className="w-16 h-16 bg-gradient-secondary text-white rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <feature.icon className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                        <p className="text-muted-foreground">{feature.description}</p>
+                    </div>
+                ))}
             </div>
-          ))}
         </div>
-      </div>
     </section>
   );
 };

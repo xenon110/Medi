@@ -11,13 +11,13 @@
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 221 83.2% 53.3%;
+    --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 20% 98%;
     --secondary: 220 14.3% 95.9%;
     --secondary-foreground: 220.9 39.3% 11%;
     --muted: 220 14.3% 95.9%;
     --muted-foreground: 220 8.9% 46.1%;
-    --accent: 345 95% 90%; /* Light Pink */
+    --accent: 345.6 100% 97.3%;
     --accent-foreground: 220.9 39.3% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
@@ -27,7 +27,7 @@
     --warning-foreground: 240 5.9% 10%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 221 83.2% 53.3%;
+    --ring: 262.1 83.3% 57.8%;
     --radius: 0.75rem;
     --chart-1: 221 83% 53%;
     --chart-2: 175 44% 52%;
@@ -43,7 +43,7 @@
     --card-foreground: 210 20% 98%;
     --popover: 224 71.4% 4.1%;
     --popover-foreground: 210 20% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 263.4 95.2% 66.3%;
     --primary-foreground: 210 20% 98%;
     --secondary: 215 27.9% 16.9%;
     --secondary-foreground: 210 20% 98%;
@@ -59,7 +59,7 @@
     --warning-foreground: 240 5.9% 10%;
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 217.2 91.2% 59.8%;
+    --ring: 263.4 95.2% 66.3%;
   }
 }
 
@@ -78,49 +78,6 @@
 }
 
 @layer components {
-  /* Landing Page New Design */
-  .header { @apply fixed top-0 w-full bg-white/95 backdrop-blur-xl p-4 px-8 z-50 transition-all duration-300 border-b border-white/20; }
-  .nav { @apply flex justify-between items-center max-w-7xl mx-auto; }
-  .logo-section { @apply flex items-center gap-3 cursor-pointer; }
-  .logo { @apply w-11 h-11 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center text-white font-bold text-lg; }
-  .brand-text { @apply text-2xl font-bold text-gradient-primary; }
-  .nav-links { @apply hidden md:flex gap-8 items-center; }
-  .nav-links a { @apply text-muted-foreground font-medium transition-colors duration-300 hover:text-primary relative; }
-  .nav-links a::after { @apply content-[''] absolute bottom-[-5px] left-0 w-0 h-0.5 bg-gradient-primary transition-all duration-300; }
-  .nav-links a:hover::after { @apply w-full; }
-  .emergency-btn { @apply bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-6 rounded-full font-semibold cursor-pointer transition-all duration-300 shadow-lg shadow-red-500/30; }
-  .emergency-btn:hover { @apply -translate-y-0.5 shadow-xl shadow-red-500/40; }
-
-  .hero { @apply pt-32 pb-20 text-white text-center relative overflow-hidden; }
-  .hero-content { @apply max-w-4xl mx-auto relative z-10; }
-  .trust-badges { @apply flex justify-center gap-4 flex-wrap; }
-  .trust-badge { @apply bg-white/10 backdrop-blur-md py-3 px-6 rounded-full flex items-center gap-2 border border-white/20 text-sm; }
-
-  .login-section { @apply py-20 bg-gradient-to-br from-white to-gray-50; }
-  .section-title { @apply text-3xl md:text-4xl font-bold mb-4 text-gradient-primary; }
-  .section-subtitle { @apply text-lg text-muted-foreground mb-12 max-w-2xl mx-auto; }
-  .login-options { @apply grid md:grid-cols-2 gap-8 lg:gap-12 mt-12; }
-  .login-card { @apply bg-white rounded-3xl p-8 lg:p-12 shadow-2xl shadow-primary/5 transition-all duration-300 hover:-translate-y-2 hover:shadow-primary/10 text-center relative overflow-hidden border; }
-  .card-icon { @apply w-20 h-20 mx-auto mb-8 rounded-2xl flex items-center justify-center text-white text-4xl; }
-  .patient-icon { @apply bg-gradient-secondary; }
-  .doctor-icon { @apply bg-gradient-primary; }
-  .card-title { @apply text-3xl font-bold mb-4 text-foreground; }
-  .card-description { @apply text-muted-foreground mb-8; }
-  .card-features { @apply text-left mb-8 space-y-3; }
-  .card-features li { @apply flex items-center gap-3; }
-  .feature-bullet { @apply w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-white; }
-  .patient-bullet { @apply bg-gradient-secondary; }
-  .doctor-bullet { @apply bg-gradient-primary; }
-  .login-btn { @apply w-full text-lg font-semibold rounded-full transition-all duration-300 hover:-translate-y-1 py-4; }
-  .patient-login { @apply bg-gradient-secondary text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30; }
-  .doctor-login { @apply bg-gradient-primary text-white shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30; }
-
-  .features-section { @apply py-20 bg-white; }
-  .feature-card { @apply p-8 rounded-2xl bg-gradient-to-br from-blue-50/50 to-cyan-50/50 border transition-transform duration-300 hover:-translate-y-2; }
-
-  .footer { @apply bg-gradient-primary text-white py-12; }
-  .footer-link { @apply text-white/80 transition-colors duration-300 hover:text-white; }
-
   /* Doctor Dashboard New Design */
   .dashboard-container { @apply flex h-screen w-screen bg-white overflow-hidden; }
   .sidebar { @apply w-20 bg-gradient-to-b from-[#667eea] to-[#764ba2] flex flex-col items-center py-6 relative z-50; }
@@ -214,8 +171,12 @@
 }
 
 @layer utilities {
-  .text-gradient-primary {
-    @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-clip-text text-transparent;
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle, hsla(var(--primary) / 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
   .bg-gradient-primary {
     @apply bg-gradient-to-r from-[#667eea] to-[#764ba2];
@@ -224,9 +185,9 @@
     @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];
   }
   .bg-gradient-subtle {
-    @apply bg-gradient-to-br from-white via-gray-50 to-blue-50;
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
   }
   .dark .bg-gradient-subtle {
-    @apply bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460];
+     background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
   }
 }

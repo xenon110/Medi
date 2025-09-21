@@ -2,20 +2,22 @@
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
-import { Bot, CheckCircle, Loader2, Sparkles, User, XCircle, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock } from 'lucide-react';
+import { Bot, CheckCircle, Loader2, Sparkles, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import type { UserInfo } from 'firebase/auth';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
-import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
+import { generateInitialReport } from '@/ai/flows/generate-initial-report';
 import { auth } from '@/lib/firebase';
 import { getUserProfile, saveReport } from '@/lib/firebase-services';
 
+// Dummy data for previous reports, you can replace this with real data
 const dummyPreviousReports = [
   { id: 'rep-001', title: 'Follow-up on Rash', date: '2023-10-24'},
   { id: 'rep-002', title: 'Initial Mole Check', date: '2023-10-22'},
@@ -146,7 +148,6 @@ export default function PatientDashboard() {
       
       const savedReport = await saveReport(user.uid, result);
 
-      // Store the result in session storage to pass to the report page
       sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
       toast({
@@ -168,136 +169,138 @@ export default function PatientDashboard() {
     }
   };
 
-
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-primary">
-        <Loader2 className="animate-spin text-white" size={48} />
+      <div className="flex h-screen items-center justify-center bg-gradient-subtle">
+        <Loader2 className="animate-spin text-primary" size={48} />
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-subtle text-foreground">
-      <div className="sub-header">
-        <div className="portal-title">
-            <Stethoscope/>
-            <span>MEDISKIN Patient Portal</span>
+    <div className="bg-gradient-subtle min-h-screen">
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">Welcome, {user?.displayName || 'Patient'}!</h1>
+            <p className="text-muted-foreground">Get started by uploading an image for a new analysis.</p>
         </div>
-        <div className="profile-section">
-            <div className="status-badge">Patient</div>
-            <Button className="profile-btn" onClick={() => router.push('/patient/profile')}>Profile</Button>
-        </div>
-      </div>
 
-      <div className="main-container">
-        <div className="card">
-            <div className="card-header">
-                <div className="card-icon"><Camera /></div>
-                <div>
-                    <div className="card-title">Upload Skin Image</div>
-                    <div className="card-subtitle">Upload a clear image for AI analysis</div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Image Upload & Reports */}
+            <div className="lg:col-span-2 space-y-8">
+                 <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Camera /> Upload Skin Image</CardTitle>
+                        <CardDescription>Upload a clear image of your skin condition for AI analysis.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div 
+                            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {isImageValidating ? (
+                                <>
+                                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                                    <p className="font-semibold">Validating Image...</p>
+                                    <p className="text-sm text-muted-foreground">Please wait while we check your photo.</p>
+                                </>
+                            ) : imageValidationError ? (
+                                <div className="text-center text-destructive">
+                                    <CheckCircle className="w-12 h-12 mx-auto mb-4" />
+                                    <p className="font-semibold">Image Invalid</p>
+                                    <p className="text-sm mb-4">{imageValidationError}</p>
+                                    <Button variant="destructive">Try Again</Button>
+                                </div>
+                            ) : imageDataUri ? (
+                                <div className="text-center text-green-600">
+                                    <CheckCircle className="w-12 h-12 mx-auto mb-4" />
+                                    <p className="font-semibold">Image Ready!</p>
+                                    <p className="text-sm text-muted-foreground">You can now describe your symptoms or analyze.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <Upload className="w-12 h-12 text-muted-foreground mb-4"/>
+                                    <p className="font-semibold">Click to upload or drag and drop</p>
+                                    <p className="text-sm text-muted-foreground">PNG, JPG up to 10MB</p>
+                                    <Input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        id="fileInput"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                </>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><FileText /> Recent Reports</CardTitle>
+                        <CardDescription>Review your past skin analysis reports.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {dummyPreviousReports.map((report) => (
+                                <div key={report.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                    <div>
+                                        <h4 className="font-semibold">{report.title}</h4>
+                                        <p className="text-sm text-muted-foreground">{report.date}</p>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={() => router.push('/patient/report')}>View Report</Button>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-             <div 
-                className="upload-area"
-                onClick={() => fileInputRef.current?.click()}
-             >
-                {isImageValidating ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full">
-                        <Loader2 className="w-16 h-16 animate-spin text-cyan-400 mb-4" />
-                        <p className="text-lg font-semibold">Validating Image...</p>
-                        <p className="text-sm text-muted-foreground">Please wait while we check your photo.</p>
-                    </div>
-                ) : imageValidationError ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full text-red-500">
-                        <XCircle className="w-16 h-16 mb-4" />
-                        <p className="text-lg font-semibold">Image Invalid</p>
-                        <p className="text-sm mb-4">{imageValidationError}</p>
-                        <Button className="upload-btn" variant="destructive">Try Again</Button>
-                    </div>
-                ) : imageDataUri ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full text-green-500">
-                        <CheckCircle className="w-16 h-16 mb-4" />
-                        <p className="text-lg font-semibold">Image Ready!</p>
-                        <p className="text-sm mb-4">You can now describe your symptoms or proceed to analysis.</p>
-                        <Button className="upload-btn" onClick={handleAnalyze} disabled={isAnalyzing}>
+
+            {/* Right Column: AI Assistant */}
+            <div className="lg:col-span-1">
+                <Card className="shadow-lg hover:shadow-xl transition-shadow h-full flex flex-col">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Bot/> AI Assistant</CardTitle>
+                        <CardDescription>Chat with our AI to describe your symptoms.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+                        <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-primary text-primary-foreground rounded-full"><Bot size={16}/></div>
+                                <div className="bg-muted p-3 rounded-lg">
+                                    <p className="text-sm">Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
+                                </div>
+                            </div>
+                            {/* Chat messages would be rendered here */}
+                        </div>
+                        <div className="mt-auto pt-4 border-t">
+                            <Textarea
+                                placeholder="Describe your symptoms..."
+                                value={symptomInput}
+                                onChange={(e) => setSymptomInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSymptomSubmit())}
+                                className="mb-2"
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="icon"><Mic/></Button>
+                                <Button onClick={handleSymptomSubmit} disabled={!symptomInput.trim() || isChatbotLoading}>
+                                    {isChatbotLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
+                                    Send
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                         <Button onClick={handleAnalyze} disabled={isAnalyzing || !imageDataUri} className="w-full">
                             {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                             Analyze Now
                         </Button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="upload-icon"><Upload /></div>
-                        <div className="upload-text">Click to upload or drag and drop</div>
-                        <div className="upload-subtext">PNG, JPG up to 10MB</div>
-                        <Button className="upload-btn">Select Image</Button>
-                        <Input
-                            ref={fileInputRef}
-                            type="file"
-                            id="fileInput"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                        />
-                    </>
-                )}
+                    </CardFooter>
+                </Card>
             </div>
-        </div>
-
-        <div className="card">
-            <div className="card-header">
-                <div className="card-icon"><Bot /></div>
-                <div>
-                    <div className="card-title">AI Assistant</div>
-                    <div className="card-subtitle">Chat with our AI to describe your symptoms</div>
-                </div>
-            </div>
-            <div className="chat-container">
-                <div className="ai-message">
-                    <div className="ai-message-header">
-                        <div className="ai-avatar">AI</div>
-                        <strong>MEDISKIN AI Assistant</strong>
-                    </div>
-                    <p>Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
-                </div>
-                 <div className="chat-input-area">
-                    <Textarea
-                        placeholder="Describe your symptoms..."
-                        value={symptomInput}
-                        onChange={(e) => setSymptomInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSymptomSubmit())}
-                        className="chat-input"
-                    />
-                    <Button onClick={handleSymptomSubmit} className="chat-btn" disabled={!symptomInput.trim() || isChatbotLoading}>
-                      <Send className="w-4 h-4" />
-                      {isChatbotLoading ? 'Thinking...' : 'Send Message'}
-                    </Button>
-                </div>
-            </div>
-        </div>
-
-        <div className="card reports-section">
-            <div className="card-header">
-                <div className="card-icon"><Clock /></div>
-                <div>
-                    <div className="card-title">Recent Reports</div>
-                    <div className="card-subtitle">Your latest skin analysis reports</div>
-                </div>
-            </div>
-             {dummyPreviousReports.map((report) => (
-                <div key={report.id} className="report-item">
-                    <div className="report-info">
-                        <h4>{report.title}</h4>
-                        <div className="date">{report.date}</div>
-                    </div>
-                    <Button className="view-btn" onClick={() => router.push('/patient/reports')}>View Report</Button>
-                </div>
-              ))}
         </div>
       </div>
     </div>
   );
 }
-
-    
