@@ -5,66 +5,63 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
+    --background: 207 100% 99%; /* Very light blue, almost white */
+    --foreground: 215 28% 17%; /* Dark grayish blue */
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 215 28% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 211 100% 50%;
+    --popover-foreground: 215 28% 17%;
+    --primary: 196 63% 65%; /* Soft Blue: #72BCD4 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 98%;
-    --secondary-foreground: 222 47.4% 11.2%;
-    --muted: 210 20% 98%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 356 89% 93%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --secondary: 207 100% 99%; /* Light Gray: #F0F8FF */
+    --secondary-foreground: 215 28% 17%;
+    --muted: 210 20% 95%; /* Lighter gray for backgrounds */
+    --muted-foreground: 215 16% 47%; /* Gray: #6C757D */
+    --accent: 175 44% 52%; /* Teal: #4DB6AC */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
     --success: 145 63% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 45 93% 47%;
     --warning-foreground: 240 5.9% 10%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 211 100% 50%;
-    --radius: 0.5rem;
-    --chart-1: 211 100% 50%;
-    --chart-2: 173 58% 39%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 196 63% 65%;
+    --radius: 0.75rem;
+    --chart-1: 196 63% 65%;
+    --chart-2: 175 44% 52%;
     --chart-3: 0 72% 51%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
+    --background: 222 84% 5%;
     --foreground: 210 40% 98%;
-    --card: 224 71.4% 4.1%;
+    --card: 222 84% 6%;
     --card-foreground: 210 40% 98%;
-    --popover: 224 71.4% 4.1%;
+    --popover: 222 84% 5%;
     --popover-foreground: 210 40% 98%;
-    --primary: 211 100% 50%;
+    --primary: 196 63% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 27.9% 16.9%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 175 44% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
     --success: 145 63% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 45 93% 47%;
     --warning-foreground: 240 5.9% 10%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 211 100% 50%;
-    --chart-1: 211 100% 50%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 196 63% 65%;
+    --chart-1: 196 63% 65%;
+    --chart-2: 175 44% 52%;
   }
 }
 
@@ -74,55 +71,117 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
   }
-  .bg-grid-pattern {
-    background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-  .dark .bg-grid-pattern {
-    background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+  .text-shadow {
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   }
 }
 
 @layer components {
+  /* Header from New Design */
   .header {
-      @apply bg-white/95 backdrop-blur-md p-4 px-8 shadow-lg flex justify-between items-center border-b border-white/20;
+    @apply bg-background/90 backdrop-blur-md p-4 px-8 shadow-lg flex justify-between items-center border-b border-white/20;
   }
   .logo-section {
-      @apply flex items-center gap-3;
+    @apply flex items-center gap-3 cursor-pointer;
   }
   .logo {
-      @apply w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center text-white font-bold text-lg;
+    @apply w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center text-white font-bold text-lg;
   }
   .brand-text {
-      @apply text-2xl font-bold bg-gradient-primary text-transparent bg-clip-text;
-  }
-  .tagline {
-      @apply text-xs text-gray-500 -mt-1;
+    @apply text-2xl font-bold text-gradient-primary;
   }
   .nav-links {
-      @apply hidden md:flex gap-8 items-center;
+    @apply hidden md:flex gap-8 items-center;
   }
   .nav-links a {
-      @apply text-gray-500 font-medium transition-colors duration-300;
-  }
-  .nav-links a:hover {
-      @apply text-primary;
-  }
-  .login-btn {
-      @apply bg-gradient-primary text-white py-2.5 px-6 rounded-full font-semibold cursor-pointer transition-all duration-300;
-  }
-  .login-btn:hover {
-      @apply -translate-y-0.5 shadow-lg shadow-purple-300/50;
+    @apply text-muted-foreground font-medium transition-colors duration-300 hover:text-primary;
   }
 
+  /* Hero from New Design */
+  .hero {
+    @apply pt-40 pb-20;
+  }
+  .trust-badge {
+    @apply bg-white/10 backdrop-blur-md py-3 px-6 rounded-full flex items-center gap-2 border border-white/20 text-sm;
+  }
+
+  /* Login Options from New Design */
+  .login-section {
+    @apply py-20;
+  }
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold mb-2 text-gradient-primary;
+  }
+  .section-subtitle {
+    @apply text-lg text-muted-foreground mb-12 max-w-2xl mx-auto;
+  }
+  .login-card {
+    @apply bg-card rounded-3xl p-8 lg:p-12 shadow-2xl shadow-primary/5 transition-all duration-300 hover:-translate-y-2 hover:shadow-primary/10 text-center;
+  }
+  .card-icon {
+    @apply w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center text-white;
+  }
+  .patient-icon {
+    @apply bg-gradient-secondary;
+  }
+  .doctor-icon {
+    @apply bg-gradient-primary;
+  }
+  .card-title {
+    @apply text-3xl font-bold mb-4 text-foreground;
+  }
+  .card-description {
+    @apply text-muted-foreground mb-8;
+  }
+  .card-features {
+    @apply text-left mb-8 space-y-3;
+  }
+  .card-features li {
+    @apply flex items-center gap-3;
+  }
+  .feature-bullet {
+    @apply w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0;
+  }
+  .patient-bullet {
+    @apply bg-gradient-secondary;
+  }
+  .doctor-bullet {
+    @apply bg-gradient-primary;
+  }
+  .login-btn {
+    @apply w-full text-lg font-semibold rounded-full transition-all duration-300 hover:-translate-y-1;
+  }
+  .patient-login {
+    @apply bg-gradient-secondary text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30;
+  }
+  .doctor-login {
+    @apply bg-gradient-primary text-white shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30;
+  }
+
+  /* Features Section from New Design */
+  .features-section {
+    @apply py-20;
+  }
+  .feature-card {
+    @apply p-8 rounded-2xl bg-gradient-to-br from-secondary to-white border transition-transform duration-300 hover:-translate-y-2;
+  }
+
+  /* Footer from New Design */
+  .footer {
+    @apply py-12;
+  }
+  .footer-link {
+    @apply text-white/80 transition-colors duration-300 hover:text-white;
+  }
+
+  /* Re-integrating old styles for dashboards */
   .sub-header {
-      @apply bg-white/90 p-4 px-8 flex justify-between items-center border-b border-gray-900/10;
+      @apply bg-card/90 p-4 px-8 flex justify-between items-center border-b;
   }
   .portal-title {
-      @apply flex items-center gap-2.5 text-xl font-semibold text-gray-800;
+      @apply flex items-center gap-2.5 text-xl font-semibold text-foreground;
   }
   .profile-section {
       @apply flex items-center gap-4;
@@ -138,24 +197,6 @@
   }
   .main-container {
       @apply p-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[calc(100vh-140px)];
-  }
-  .card {
-      @apply bg-white/95 rounded-2xl p-8 shadow-lg backdrop-blur-md border border-white/20 transition-all duration-300;
-  }
-  .card:hover {
-      @apply -translate-y-1 shadow-2xl;
-  }
-  .card-header {
-      @apply flex items-center gap-3 mb-6 p-0;
-  }
-  .card-icon {
-      @apply w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center text-white text-xl;
-  }
-  .card-title {
-      @apply text-2xl font-bold text-gray-800;
-  }
-  .card-subtitle {
-      @apply text-gray-500 text-sm mt-1;
   }
   .upload-area {
       @apply border-2 border-dashed border-cyan-400 rounded-2xl p-12 text-center bg-gradient-to-br from-cyan-500/5 to-blue-500/5 cursor-pointer transition-all duration-300;
@@ -178,7 +219,6 @@
    .upload-btn:hover {
       @apply -translate-y-0.5;
   }
-
   .chat-container {
       @apply flex flex-col h-full;
   }
@@ -206,22 +246,20 @@
    .chat-btn:hover {
       @apply -translate-y-0.5;
   }
-
   .reports-section {
       @apply lg:col-span-2 mt-4;
   }
-
   .report-item {
-      @apply bg-white/80 p-6 rounded-2xl mb-4 flex justify-between items-center transition-all duration-300 border border-white/20;
+      @apply bg-card/80 p-6 rounded-2xl mb-4 flex justify-between items-center transition-all duration-300 border;
   }
   .report-item:hover {
-      @apply bg-white/95 translate-x-1;
+      @apply bg-card/95 translate-x-1;
   }
   .report-info h4 {
-      @apply font-semibold text-gray-800 mb-1;
+      @apply font-semibold text-foreground mb-1;
   }
   .report-info .date {
-      @apply text-gray-500 text-xs;
+      @apply text-muted-foreground text-xs;
   }
   .view-btn {
       @apply bg-gradient-primary text-white py-2 px-5 rounded-full font-semibold cursor-pointer transition-transform duration-300;
@@ -232,27 +270,19 @@
 }
 
 @layer utilities {
-  .transition-smooth {
-    @apply transition-all duration-300 ease-in-out;
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-clip-text text-transparent;
   }
   .bg-gradient-primary {
-      @apply bg-gradient-to-r from-[#667eea] to-[#764ba2];
+    @apply bg-gradient-to-r from-[#667eea] to-[#764ba2];
   }
   .bg-gradient-secondary {
-      @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];
+    @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];
   }
-   .bg-gradient-subtle {
+  .bg-gradient-subtle {
     @apply bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50;
   }
-  .text-gradient-primary {
-      @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-clip-text text-transparent;
-  }
-  .shadow-card {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  .shadow-elevated {
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 40px hsl(var(--primary)/.2);
+  .dark .bg-gradient-subtle {
+    @apply bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460];
   }
 }
-
-    
