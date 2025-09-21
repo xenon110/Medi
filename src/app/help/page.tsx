@@ -68,7 +68,7 @@ export default function HelpPage() {
                  <CardDescription>
                     Can't find an answer? Reach out to our support team.
                 </CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent className="text-center">
                <p className="mb-4">For any issues or inquiries, please email us at:</p>
                <a href="mailto:support@mediscan.ai" className="text-primary font-semibold hover:underline">
