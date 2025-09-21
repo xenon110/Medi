@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Stethoscope, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ThemeToggle } from '../theme-toggle';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,6 +44,7 @@ const Header = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
+            <ThemeToggle />
             <Button 
               variant="outline-medical" 
               size="sm"
@@ -104,6 +106,9 @@ const Header = () => {
               >
                 Help
               </a>
+              <div className="flex justify-center py-2">
+                <ThemeToggle />
+              </div>
               <div className="flex flex-col space-y-2 pt-4 border-t border-border">
                 <Button variant="outline-medical" size="sm" onClick={() => { router.push('/login?role=doctor'); setIsMenuOpen(false); }}>
                   Doctor Login
