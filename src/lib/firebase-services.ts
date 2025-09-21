@@ -9,26 +9,39 @@ export type UserProfile = {
   uid: string;
   email: string;
   role: 'patient' | 'doctor';
-  name?: string;
+  name: string;
+  age: number;
   createdAt: FieldValue;
 };
 
 export type PatientProfile = UserProfile & {
   role: 'patient';
-  age?: number;
-  gender?: string;
-  region?: string;
-  skinTone?: string;
+  region: string;
+  skinTone: string;
 };
 
 export type DoctorProfile = UserProfile & {
   role: 'doctor';
+  experience?: number;
   specialization?: string;
   verificationStatus: 'pending' | 'approved' | 'rejected';
+  degreeUrl?: string;
+  additionalFileUrl?: string;
 };
 
+export type CreateUserProfileData = {
+  email: string;
+  role: 'patient' | 'doctor';
+  name: string;
+  age: number;
+  skinTone?: string;
+  region?: string;
+  experience?: number;
+};
+
+
 // This function creates a user document in Firestore in the correct collection.
-export const createUserProfile = async (uid: string, data: { email: string, role: 'patient' | 'doctor' }) => {
+export const createUserProfile = async (uid: string, data: CreateUserProfileData) => {
   if (!db) throw new Error("Firestore is not initialized.");
   
   const collectionName = data.role === 'doctor' ? 'doctors' : 'patients';
@@ -38,11 +51,17 @@ export const createUserProfile = async (uid: string, data: { email: string, role
     uid,
     email: data.email,
     role: data.role,
+    name: data.name,
+    age: data.age,
     createdAt: serverTimestamp(),
   };
 
   if (data.role === 'doctor') {
     (userData as Partial<DoctorProfile>).verificationStatus = 'pending';
+    (userData as Partial<DoctorProfile>).experience = data.experience;
+  } else {
+    (userData as Partial<PatientProfile>).skinTone = data.skinTone;
+    (userData as Partial<PatientProfile>).region = data.region;
   }
 
   await setDoc(userRef, userData, { merge: true });
