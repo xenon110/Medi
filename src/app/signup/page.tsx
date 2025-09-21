@@ -25,6 +25,7 @@ const patientSignupSchema = z.object({
   email: z.string().email('Invalid email address.'),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
   age: z.coerce.number().min(1, 'Age is required.').max(120),
+  gender: z.string().min(1, 'Gender is required.'),
   skinTone: z.string().min(1, 'Skin tone is required.'),
   region: z.string().min(1, 'Region is required.'),
 });
@@ -34,6 +35,7 @@ const doctorSignupSchema = z.object({
   email: z.string().email('Invalid email address.'),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
   age: z.coerce.number().min(18, 'You must be at least 18.').max(100),
+  gender: z.string().min(1, 'Gender is required.'),
   experience: z.coerce.number().min(0, 'Experience cannot be negative.'),
   degree: z.any().refine(file => file?.length == 1, 'Degree certificate is required.'),
   additionalFile: z.any().optional(),
@@ -53,8 +55,8 @@ export default function SignupPage() {
   const form = useForm<PatientSignupForm | DoctorSignupForm>({
     resolver: zodResolver(role === 'doctor' ? doctorSignupSchema : patientSignupSchema),
     defaultValues: role === 'doctor' 
-      ? { name: '', email: '', password: '', age: 30, experience: 5 }
-      : { name: '', email: '', password: '', age: 30, skinTone: '', region: '' },
+      ? { name: '', email: '', password: '', age: 30, gender: 'Other', experience: 5 }
+      : { name: '', email: '', password: '', age: 30, gender: '', skinTone: '', region: '' },
   });
 
   const onSubmit = async (data: PatientSignupForm | DoctorSignupForm) => {
@@ -78,6 +80,7 @@ export default function SignupPage() {
           role: role,
           name: data.name,
           age: data.age,
+          gender: data.gender,
           ...(role === 'patient' && { skinTone: (data as PatientSignupForm).skinTone, region: (data as PatientSignupForm).region }),
           ...(role === 'doctor' && { experience: (data as DoctorSignupForm).experience }),
         };
@@ -89,16 +92,21 @@ export default function SignupPage() {
         toast({ title: 'Account Created', description: 'You have been successfully signed up!' });
 
         if (role === 'doctor') {
+            // For doctors, you might want a verification pending page instead
             router.push('/doctor/dashboard');
         } else {
             router.push('/patient/dashboard');
         }
     } catch (error: any) {
         console.error('Signup error:', error);
+        let description = 'An unexpected error occurred. Please try again.';
+        if (error.code === 'auth/email-already-in-use') {
+          description = 'This email address is already in use. Please log in or use a different email.';
+        }
         toast({
             variant: 'destructive',
             title: 'Signup Failed',
-            description: error.message || 'An unexpected error occurred.',
+            description: description,
         });
     } finally {
         setIsLoading(false);
@@ -116,9 +124,25 @@ export default function SignupPage() {
       <FormField control={form.control} name="password" render={({ field }) => (
         <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl><FormMessage /></FormItem>
       )} />
-      <FormField control={form.control} name="age" render={({ field }) => (
-        <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-      )} />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField control={form.control} name="age" render={({ field }) => (
+          <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="gender" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Gender</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl>
+              <SelectContent>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+      </div>
       <FormField control={form.control} name="skinTone" render={({ field }) => (
         <FormItem>
           <FormLabel>Skin Tone (Fitzpatrick scale)</FormLabel>
@@ -166,12 +190,26 @@ export default function SignupPage() {
             <FormField control={form.control} name="password" render={({ field }) => (
                 <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
                 <FormField control={form.control} name="age" render={({ field }) => (
                     <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="experience" render={({ field }) => (
-                    <FormItem><FormLabel>Years of Experience</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Experience</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="gender" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )} />
             </div>
             <FormField control={form.control} name="degree" render={({ field }) => (
@@ -241,3 +279,5 @@ export default function SignupPage() {
     </div>
   );
 }
+
+    

@@ -12,6 +12,7 @@ export type UserProfile = {
   name: string;
   age: number;
   createdAt: FieldValue;
+  gender: string;
 };
 
 export type PatientProfile = UserProfile & {
@@ -34,6 +35,7 @@ export type CreateUserProfileData = {
   role: 'patient' | 'doctor';
   name: string;
   age: number;
+  gender: string;
   skinTone?: string;
   region?: string;
   experience?: number;
@@ -53,6 +55,7 @@ export const createUserProfile = async (uid: string, data: CreateUserProfileData
     role: data.role,
     name: data.name,
     age: data.age,
+    gender: data.gender,
     createdAt: serverTimestamp(),
   };
 
@@ -113,6 +116,9 @@ export const saveReport = async (patientId: string, reportData: GenerateInitialR
         aiReport: reportData,
         status: 'pending-patient-input' as const,
         createdAt: serverTimestamp(),
+        doctorId: null,
+        doctorNotes: '',
+        prescription: '',
     };
 
     const reportDocRef = await addDoc(reportsCollection, newReportData);
@@ -138,10 +144,12 @@ export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> =
     const querySnapshot = await getDocs(q);
     const reports: Report[] = [];
 
-    for (const doc of querySnapshot.docs) {
-      const report = { id: doc.id, ...doc.data() } as Report;
-      const patientProfile = await getUserProfile(report.patientId) as PatientProfile;
-      report.patientProfile = patientProfile;
+    for (const docSnapshot of querySnapshot.docs) {
+      const report = { id: docSnapshot.id, ...docSnapshot.data() } as Report;
+      if (report.patientId) {
+        const patientProfile = await getUserProfile(report.patientId) as PatientProfile;
+        report.patientProfile = patientProfile;
+      }
       reports.push(report);
     }
     return reports;
@@ -152,8 +160,8 @@ export const getDoctors = async (): Promise<DoctorProfile[]> => {
   if (!db) throw new Error("Firestore is not initialized.");
   const doctorsCollection = collection(db, 'doctors');
   // Optional: Add a where clause to only fetch verified doctors
-  // const q = query(doctorsCollection, where("verificationStatus", "==", "approved"));
-  const querySnapshot = await getDocs(doctorsCollection);
+  const q = query(doctorsCollection, where("verificationStatus", "==", "approved"));
+  const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as DoctorProfile);
 };
 
@@ -166,3 +174,4 @@ export const sendReportToDoctor = async (reportId: string, doctorId: string) => 
     });
 };
 
+    

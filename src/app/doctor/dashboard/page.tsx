@@ -42,6 +42,7 @@ export default function DoctorDashboard() {
     const fetchReports = async () => {
       const user = auth.currentUser;
       if (!user) {
+        // This case is handled by the layout, but as a fallback.
         toast({ title: 'Not authenticated', variant: 'destructive' });
         setIsLoading(false);
         return;
@@ -51,7 +52,7 @@ export default function DoctorDashboard() {
         const reports = await getReportsForDoctor(user.uid);
         const cases: PatientCase[] = reports.map(report => ({
           ...report,
-          time: formatDistanceToNow((report.createdAt as any).seconds * 1000, { addSuffix: true }),
+          time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
           unread: report.status === 'pending-doctor-review' ? 1 : 0,
         }));
         setPatientCases(cases);
@@ -60,7 +61,7 @@ export default function DoctorDashboard() {
         }
       } catch (error) {
         console.error("Failed to fetch reports:", error);
-        toast({ title: 'Error fetching reports', variant: 'destructive' });
+        toast({ title: 'Error fetching reports', description: 'Could not retrieve patient cases. Please try again later.', variant: 'destructive' });
       } finally {
         setIsLoading(false);
       }
@@ -69,6 +70,8 @@ export default function DoctorDashboard() {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         fetchReports();
+      } else {
+        setIsLoading(false);
       }
     });
 
@@ -177,7 +180,7 @@ export default function DoctorDashboard() {
 
             <div className="chat-messages">
                 <div className="message-group fade-in">
-                    <div className="message-date">{formatDistanceToNow((selectedCase.createdAt as any).seconds * 1000, { addSuffix: true })}</div>
+                    <div className="message-date">{selectedCase.time}</div>
                     
                     <div className="ai-report">
                         <div className="report-header">
@@ -293,3 +296,5 @@ export default function DoctorDashboard() {
     </div>
   );
 }
+
+    
