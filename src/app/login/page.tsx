@@ -90,9 +90,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-subtle">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Login</CardTitle>
           <CardDescription>
             Enter your credentials to access your {role} account.
@@ -132,7 +132,7 @@ export default function LoginPage() {
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Login'}
               </Button>
-              <div className="text-center text-sm">
+              <div className="text-center text-sm text-muted-foreground">
                 Don't have an account?{' '}
                 <Button variant="link" asChild className="p-0 h-auto">
                   <Link href={`/signup?role=${role}`}>Sign up</Link>

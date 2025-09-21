@@ -195,7 +195,7 @@ export default function SignupPage() {
                     <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="experience" render={({ field }) => (
-                    <FormItem><FormLabel>Experience</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Experience (years)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="gender" render={({ field }) => (
                   <FormItem>
@@ -251,11 +251,11 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-subtle">
+      <Card className="w-full max-w-lg shadow-2xl">
+        <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Create a {role === 'doctor' ? 'Doctor' : 'Patient'} Account</CardTitle>
-          <CardDescription>Join MediScan AI to get started on your skin health journey.</CardDescription>
+          <CardDescription>Join MEDISKIN to get started on your health journey.</CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -266,7 +266,7 @@ export default function SignupPage() {
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Create Account'}
               </Button>
-              <div className="text-center text-sm">
+              <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{' '}
                 <Button variant="link" asChild className="p-0 h-auto">
                   <Link href={`/login?role=${role}`}>Login</Link>
@@ -279,5 +279,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    
