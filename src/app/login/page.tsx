@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +13,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { getUserProfile } from '@/lib/firebase-services';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -22,37 +26,49 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const role = searchParams.get('role') || 'patient';
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  // Dummy onSubmit function
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
-
-    // Dummy logic
-    if (data.email === 'doctor@test.com') {
-      toast({ title: 'Login Successful', description: 'Welcome back, Doctor!' });
-      router.push('/doctor/dashboard');
-    } else if (data.email === 'patient@test.com' || role === 'patient') {
-      toast({ title: 'Login Successful', description: 'Welcome back!' });
-      router.push('/patient/dashboard');
-    } else {
-       toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Invalid email or password.',
-      });
+    if (!auth) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Firebase is not configured. Please check your setup.',
+        });
+        setIsLoading(false);
+        return;
     }
 
-    setIsLoading(false);
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+        const user = userCredential.user;
+
+        const userProfile = await getUserProfile(user.uid);
+
+        toast({ title: 'Login Successful', description: 'Welcome back!' });
+
+        if (userProfile?.role === 'doctor') {
+            router.push('/doctor/dashboard');
+        } else {
+            router.push('/patient/dashboard');
+        }
+    } catch (error: any) {
+        console.error('Login error:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: error.message || 'Invalid email or password.',
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -61,8 +77,7 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="font-headline text-3xl">Login</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account. <br />
-            (Use `doctor@test.com` or `patient@test.com`)
+            Enter your credentials to access your account.
           </CardDescription>
         </CardHeader>
         <Form {...form}>
@@ -102,7 +117,7 @@ export default function LoginPage() {
               <div className="text-center text-sm">
                 Don't have an account?{' '}
                 <Button variant="link" asChild className="p-0 h-auto">
-                  <Link href={`/signup?role=${role}`}>Sign up</Link>
+                  <Link href={`/signup`}>Sign up</Link>
                 </Button>
               </div>
             </CardFooter>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -13,6 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { createUserProfile } from '@/lib/firebase-services';
 
 
 const signupSchema = z.object({
@@ -37,17 +41,42 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupForm) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
-
-    toast({ title: 'Account Created', description: 'You have been successfully signed up!' });
-
-    if (data.role === 'doctor') {
-      router.push('/doctor/dashboard');
-    } else {
-      router.push('/patient/dashboard');
+     if (!auth) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Firebase is not configured. Please check your setup.',
+        });
+        setIsLoading(false);
+        return;
     }
 
-    setIsLoading(false);
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const user = userCredential.user;
+
+        await createUserProfile(user.uid, {
+            email: user.email!,
+            role: data.role,
+        });
+
+        toast({ title: 'Account Created', description: 'You have been successfully signed up!' });
+
+        if (data.role === 'doctor') {
+            router.push('/doctor/dashboard');
+        } else {
+            router.push('/patient/dashboard');
+        }
+    } catch (error: any) {
+        console.error('Signup error:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Signup Failed',
+            description: error.message || 'An unexpected error occurred.',
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
