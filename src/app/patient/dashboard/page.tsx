@@ -3,30 +3,20 @@
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import Image from 'next/image';
-import { AlertCircle, Bot, CheckCircle, Clock, Download, FileText, FileUp, Loader2, MessageSquarePlus, Mic, RefreshCw, Send, Sparkles, Stethoscope, User, X, Upload, Camera } from 'lucide-react';
+import { Bot, CheckCircle, Loader2, Mic, Send, Sparkles, Stethoscope, User, XCircle, Upload, Camera, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
+import type { UserInfo } from 'firebase/auth';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport, GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
-import { translateReport } from '@/ai/flows/translate-report';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { auth } from '@/lib/firebase';
 import { getUserProfile, saveReport } from '@/lib/firebase-services';
-import type { User as FirebaseUser, UserInfo } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 
 type ChatMessage = {
   sender: 'user' | 'ai' | 'system';
@@ -87,18 +77,24 @@ export default function PatientDashboard() {
     const reader = new FileReader();
     reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
-      setImagePreview(dataUrl);
+      setImagePreview(dataUrl); // For previewing the selected image
       try {
         const validation = await validateImageUpload({ photoDataUri: dataUrl });
         if (validation.isValid) {
           setImageDataUri(dataUrl);
+          setImageValidationError(null);
+          toast({
+            title: "Image is valid!",
+            description: "You can now describe your symptoms.",
+          });
         } else {
-          setImageValidationError(validation.reason || 'Invalid image.');
+          setImageValidationError(validation.reason || 'Invalid image. Please upload a clear photo of a skin condition.');
           setImageDataUri(null);
         }
       } catch (error) {
         console.error(error);
-        setImageValidationError('Error validating image.');
+        setImageValidationError('An error occurred during image validation.');
+        toast({ variant: "destructive", title: "Validation Error" });
       } finally {
         setIsImageValidating(false);
       }
@@ -141,7 +137,14 @@ export default function PatientDashboard() {
   };
 
   const handleAnalyze = async () => {
-    if (!imageDataUri || !user?.uid) return;
+    if (!imageDataUri || !user?.uid) {
+        toast({
+            variant: "destructive",
+            title: "Cannot Analyze",
+            description: "Please upload a valid image before starting the analysis.",
+        });
+        return;
+    }
 
     setIsAnalyzing(true);
     const allSymptoms = chatMessages.filter(m => m.sender === 'user').map(m => m.text).join('. ');
@@ -149,7 +152,7 @@ export default function PatientDashboard() {
     try {
       const result = await generateInitialReport({
         photoDataUri: imageDataUri,
-        symptomInputs: allSymptoms,
+        symptomInputs: allSymptoms || 'No symptoms described.', // Ensure it's not empty
         age: user.age || 30,
         gender: user.gender || 'not specified',
         region: user.region || 'not specified',
@@ -175,70 +178,18 @@ export default function PatientDashboard() {
       setIsAnalyzing(false);
     }
   };
-  
-    const handleTranslate = async (language: string) => {
-    if (!originalReportRef.current) return;
-
-    toast({ title: 'Translating report...' });
-    try {
-      const translated = await translateReport({
-        report: originalReportRef.current,
-        language: language,
-      });
-
-      // We need to merge the translated text fields with the original non-text fields
-      setAnalysisResult(prev => {
-        if (!prev) return null;
-        const updatedConditions = prev.potentialConditions.map((pc, index) => ({
-          ...pc,
-          name: translated.potentialConditions[index]?.name || pc.name,
-          description: translated.potentialConditions[index]?.description || pc.description,
-        }));
-
-        return {
-          ...prev,
-          potentialConditions: updatedConditions,
-          report: translated.report,
-          homeRemedies: translated.homeRemedies,
-          medicalRecommendation: translated.medicalRecommendation,
-        };
-      });
-
-      toast({ title: 'Translation Complete!', description: `Report translated to ${language}.` });
-    } catch (error) {
-      console.error(error);
-      toast({ variant: 'destructive', title: 'Translation Failed' });
-    }
-  };
 
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-r from-[#667eea] to-[#764ba2]">
+      <div className="flex h-screen items-center justify-center bg-gradient-primary">
         <Loader2 className="animate-spin text-white" size={48} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50">
-       <header className="header">
-        <div className="logo-section">
-            <div className="logo"><Stethoscope className="w-5 h-5"/></div>
-            <div>
-                <div className="brand-text">MEDISKIN</div>
-                <div className="tagline">AI Dermatology</div>
-            </div>
-        </div>
-        <nav className="nav-links">
-            <a href="/#features">Features</a>
-            <a href="/#how-it-works">How It Works</a>
-            <a href="#security">Security</a>
-            <a href="/help">Help</a>
-        </nav>
-        <Button className="login-btn" onClick={() => router.push('/login?role=patient')}>Login as Patient</Button>
-    </header>
-    
-    <div className="sub-header">
+    <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 min-h-screen text-foreground">
+      <div className="sub-header">
         <div className="portal-title">
             <Stethoscope/>
             <span>MEDISKIN Patient Portal</span>
@@ -247,11 +198,9 @@ export default function PatientDashboard() {
             <div className="status-badge">Patient</div>
             <Button className="profile-btn" onClick={() => router.push('/patient/profile')}>Profile</Button>
         </div>
-    </div>
-
+      </div>
 
       <div className="main-container">
-          
         <div className="card">
             <div className="card-header">
                 <div className="card-icon"><Camera /></div>
@@ -260,48 +209,49 @@ export default function PatientDashboard() {
                     <div className="card-subtitle">Upload a clear image for AI analysis</div>
                 </div>
             </div>
-            <div 
+             <div 
                 className="upload-area"
                 onClick={() => fileInputRef.current?.click()}
-            >
-              {isImageValidating ? (
-                 <div className="flex flex-col items-center justify-center h-full">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                    <p className="text-lg font-semibold text-primary">Validating...</p>
-                 </div>
-              ) : imageValidationError ? (
-                <div className="flex flex-col items-center justify-center h-full text-destructive">
-                    <XCircle className="w-12 h-12 mb-4" />
-                    <p className="font-semibold">Invalid Image</p>
-                    <p className="text-sm mb-4">{imageValidationError}</p>
-                    <Button className="upload-btn" variant="destructive">Try Again</Button>
-                </div>
-              ) : imageDataUri ? (
-                 <div className="flex flex-col items-center justify-center h-full text-success">
-                    <CheckCircle className="w-12 h-12 mb-4" />
-                    <p className="font-semibold">Image Ready!</p>
-                    <p className="text-sm mb-4">You can now proceed with the analysis.</p>
-                    <Button className="upload-btn" onClick={handleAnalyze} disabled={isAnalyzing}>
-                      {isAnalyzing ? <Loader2 className="mr-2 animate-spin" /> : <Sparkles className="mr-2" />}
-                      Analyze Now
-                    </Button>
-                 </div>
-              ) : (
-                <>
-                  <div className="upload-icon"><Upload /></div>
-                  <div className="upload-text">Click to upload or drag and drop</div>
-                  <div className="upload-subtext">PNG, JPG up to 10MB</div>
-                  <Button className="upload-btn">Select Image</Button>
-                  <Input
-                      ref={fileInputRef}
-                      type="file"
-                      id="fileInput"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                  />
-                </>
-              )}
+             >
+                {isImageValidating ? (
+                    <div className="flex flex-col items-center justify-center text-center h-full">
+                        <Loader2 className="w-16 h-16 animate-spin text-primary mb-4" />
+                        <p className="text-lg font-semibold text-primary">Validating Image...</p>
+                        <p className="text-sm text-muted-foreground">Please wait while we check your photo.</p>
+                    </div>
+                ) : imageValidationError ? (
+                    <div className="flex flex-col items-center justify-center text-center h-full text-destructive">
+                        <XCircle className="w-16 h-16 mb-4" />
+                        <p className="text-lg font-semibold">Image Invalid</p>
+                        <p className="text-sm mb-4">{imageValidationError}</p>
+                        <Button className="upload-btn" variant="destructive">Try Again</Button>
+                    </div>
+                ) : imageDataUri ? (
+                    <div className="flex flex-col items-center justify-center text-center h-full text-success">
+                        <CheckCircle className="w-16 h-16 mb-4" />
+                        <p className="text-lg font-semibold">Image Ready!</p>
+                        <p className="text-sm mb-4">You can now describe your symptoms or proceed to analysis.</p>
+                        <Button className="upload-btn" onClick={handleAnalyze} disabled={isAnalyzing}>
+                            {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                            Analyze Now
+                        </Button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="upload-icon"><Upload /></div>
+                        <div className="upload-text">Click to upload or drag and drop</div>
+                        <div className="upload-subtext">PNG, JPG up to 10MB</div>
+                        <Button className="upload-btn">Select Image</Button>
+                        <Input
+                            ref={fileInputRef}
+                            type="file"
+                            id="fileInput"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                        />
+                    </>
+                )}
             </div>
         </div>
 
@@ -331,7 +281,7 @@ export default function PatientDashboard() {
                     />
                     <Button onClick={handleSymptomSubmit} className="chat-btn" disabled={!symptomInput.trim() || isChatbotLoading}>
                       <Send className="w-4 h-4" />
-                      {isChatbotLoading ? 'Sending...' : 'Send Message'}
+                      {isChatbotLoading ? 'Thinking...' : 'Send Message'}
                     </Button>
                 </div>
             </div>
@@ -339,7 +289,7 @@ export default function PatientDashboard() {
 
         <div className="card reports-section">
             <div className="card-header">
-                <div className="card-icon"><FileText /></div>
+                <div className="card-icon"><Clock /></div>
                 <div>
                     <div className="card-title">Recent Reports</div>
                     <div className="card-subtitle">Your latest skin analysis reports</div>
@@ -351,14 +301,11 @@ export default function PatientDashboard() {
                         <h4>{report.title}</h4>
                         <div className="date">{report.date}</div>
                     </div>
-                    <Button className="view-btn" onClick={() => router.push('/patient/reports')}>View</Button>
+                    <Button className="view-btn" onClick={() => router.push('/patient/reports')}>View Report</Button>
                 </div>
               ))}
         </div>
-
       </div>
     </div>
   );
 }
-
-    
