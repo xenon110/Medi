@@ -15,12 +15,12 @@ import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport } from '@/ai/flows/generate-initial-report';
 import { auth } from '@/lib/firebase';
-import { getUserProfile, saveReport, getReportsForPatient, Report } from '@/lib/firebase-services';
+import { getUserProfile, saveReport, getReportsForPatient, Report, PatientProfile } from '@/lib/firebase-services';
 
 export default function PatientDashboard() {
   const { toast } = useToast();
   const router = useRouter();
-  const [user, setUser] = useState<(UserInfo & { age?: number; region?: string, skinTone?: string, gender?: string }) | null>(null);
+  const [user, setUser] = useState<PatientProfile | null>(null);
   
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [imageValidationError, setImageValidationError] = useState<string | null>(null);
@@ -40,11 +40,16 @@ export default function PatientDashboard() {
       if (firebaseUser) {
         const profile = await getUserProfile(firebaseUser.uid);
         if (profile) {
-          setUser({ ...firebaseUser, ...profile });
+          if (profile.role === 'doctor') {
+            router.push('/doctor/dashboard'); // Redirect doctor away
+            return;
+          }
+          setUser(profile as PatientProfile);
           const reports = await getReportsForPatient(firebaseUser.uid);
           setRecentReports(reports);
         } else {
-          setUser(firebaseUser);
+          // If no profile, they shouldn't be here.
+          router.push('/login?role=patient');
         }
       } else {
         router.push('/login?role=patient');
@@ -178,7 +183,7 @@ export default function PatientDashboard() {
     <div className="bg-gradient-subtle min-h-screen">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {user?.displayName || 'Patient'}!</h1>
+            <h1 className="text-3xl font-bold text-foreground">Welcome, {user?.name || 'Patient'}!</h1>
             <p className="text-muted-foreground">Get started by uploading an image for a new analysis.</p>
         </div>
 
@@ -301,3 +306,5 @@ export default function PatientDashboard() {
     </div>
   );
 }
+
+    
