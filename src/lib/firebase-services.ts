@@ -1,6 +1,6 @@
 
 
-import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 
@@ -102,7 +102,7 @@ export type Report = {
   doctorId?: string | null;
   aiReport: GenerateInitialReportOutput;
   status: 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected' | 'pending-patient-input';
-  createdAt: FieldValue | { seconds: number, nanoseconds: number };
+  createdAt: FieldValue | Timestamp | { seconds: number, nanoseconds: number };
   doctorNotes?: string;
   prescription?: string;
 }

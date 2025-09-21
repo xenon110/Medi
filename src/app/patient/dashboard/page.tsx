@@ -185,6 +185,17 @@ export default function PatientDashboard() {
       setIsAnalyzing(false);
     }
   };
+  
+  const getFormattedDate = (timestamp: any): string => {
+    if (!timestamp) return 'Date not available';
+    // Firestore Timestamps can be objects with seconds and nanoseconds
+    if (timestamp.seconds) {
+      return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    }
+    // Or they might already be Date objects
+    return new Date(timestamp).toLocaleDateString();
+  };
+
 
   if (!user) {
     return (
@@ -263,7 +274,7 @@ export default function PatientDashboard() {
                             {recentReports.map((report) => (
                                 <div key={report.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                     <div>
-                                        <h4 className="font-semibold">Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h4>
+                                        <h4 className="font-semibold">Report from {getFormattedDate(report.createdAt)}</h4>
                                         <p className="text-sm text-muted-foreground capitalize">{report.status.replace(/-/g, ' ')}</p>
                                     </div>
                                     <Button variant="outline" size="sm" onClick={() => router.push('/patient/report')}>View Report</Button>
@@ -321,5 +332,3 @@ export default function PatientDashboard() {
     </div>
   );
 }
-
-    
