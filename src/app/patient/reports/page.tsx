@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle, XCircle, FileDown, Eye, Send } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, FileDown, Eye, Send, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -33,6 +33,10 @@ export default function MyReportsPage() {
 
   return (
     <div className="container mx-auto py-8">
+      <Button variant="outline" onClick={() => router.back()} className="mb-4">
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+      </Button>
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="font-headline text-3xl">My Reports</CardTitle>

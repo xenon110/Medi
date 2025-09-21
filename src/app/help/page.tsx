@@ -8,6 +8,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 
 const faqs = [
     {
@@ -29,8 +32,14 @@ const faqs = [
 ]
 
 export default function HelpPage() {
+  const router = useRouter();
+
   return (
     <div className="container mx-auto py-8">
+      <Button variant="outline" onClick={() => router.back()} className="mb-4">
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+      </Button>
       <h1 className="text-3xl font-bold mb-6">Help & Support</h1>
       <div className="grid gap-8 md:grid-cols-2">
         <Card>
@@ -59,7 +68,7 @@ export default function HelpPage() {
                  <CardDescription>
                     Can't find an answer? Reach out to our support team.
                 </CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent className="text-center">
                <p className="mb-4">For any issues or inquiries, please email us at:</p>
                <a href="mailto:support@mediscan.ai" className="text-primary font-semibold hover:underline">

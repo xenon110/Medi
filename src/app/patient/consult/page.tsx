@@ -5,11 +5,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Send, ChevronLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getDoctors, getReportsForPatient, sendReportToDoctor, DoctorProfile, Report } from '@/lib/firebase-services';
 import { auth } from '@/lib/firebase';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
 
 export default function ConsultPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
     const [reports, setReports] = useState<Report[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -112,6 +114,10 @@ export default function ConsultPage() {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <div className="container mx-auto py-8">
+                <Button variant="outline" onClick={() => router.back()} className="mb-4">
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Back
+                </Button>
                 <Card className="bg-card/80 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="font-headline text-3xl">Consult a Doctor</CardTitle>

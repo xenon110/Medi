@@ -2,11 +2,19 @@
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { User, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const router = useRouter();
+
   return (
-    <div>
+    <div className="container mx-auto py-8">
+       <Button variant="outline" onClick={() => router.back()} className="mb-4">
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+      </Button>
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
       <Card>
         <CardHeader>
