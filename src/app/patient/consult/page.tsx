@@ -34,18 +34,15 @@ export default function ConsultPage() {
     const [targetDoctorId, setTargetDoctorId] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
+        const fetchData = async (uid: string) => {
             try {
-                const fetchedDoctors = await getDoctors();
-                setDoctors(fetchedDoctors);
+                const [fetchedDoctors, fetchedReports] = await Promise.all([
+                    getDoctors(),
+                    getReportsForPatient(uid)
+                ]);
 
-                const user = auth.currentUser;
-                if (user) {
-                    const fetchedReports = await getReportsForPatient(user.uid);
-                    // Only show reports that haven't been sent to a doctor yet
-                    setReports(fetchedReports.filter(r => r.status === 'pending-patient-input'));
-                }
+                setDoctors(fetchedDoctors);
+                setReports(fetchedReports.filter(r => r.status === 'pending-patient-input'));
             } catch (error) {
                 console.error("Failed to fetch data:", error);
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch doctors or reports. Please try again later.' });
@@ -56,15 +53,16 @@ export default function ConsultPage() {
 
         const unsubscribe = auth.onAuthStateChanged(user => {
             if (user) {
-                fetchData();
+                fetchData(user.uid);
             } else {
-                // If no user, no need to fetch, stop loading
+                // If no user, no need to fetch, stop loading and redirect
                 setIsLoading(false);
+                router.push('/login?role=patient');
             }
         });
         
         return () => unsubscribe();
-    }, [toast]);
+    }, [toast, router]);
 
     const handleSendClick = (doctorId: string) => {
         if (reports.length > 0) {
