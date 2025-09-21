@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,8 +26,10 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const role = searchParams.get('role') === 'doctor' ? 'doctor' : 'patient';
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -93,7 +95,7 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="font-headline text-3xl">Login</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            Enter your credentials to access your {role} account.
           </CardDescription>
         </CardHeader>
         <Form {...form}>
@@ -133,7 +135,7 @@ export default function LoginPage() {
               <div className="text-center text-sm">
                 Don't have an account?{' '}
                 <Button variant="link" asChild className="p-0 h-auto">
-                  <Link href={`/signup`}>Sign up</Link>
+                  <Link href={`/signup?role=${role}`}>Sign up</Link>
                 </Button>
               </div>
             </CardFooter>
