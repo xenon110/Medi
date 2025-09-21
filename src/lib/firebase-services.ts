@@ -1,9 +1,11 @@
 
-import { doc, setDoc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
+import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
+
 
 // Type definitions based on your schema
-type UserProfile = {
+export type UserProfile = {
   uid: string;
   email: string;
   role: 'patient' | 'doctor';
@@ -11,7 +13,7 @@ type UserProfile = {
   createdAt: FieldValue;
 };
 
-type PatientProfile = UserProfile & {
+export type PatientProfile = UserProfile & {
   role: 'patient';
   age?: number;
   gender?: string;
@@ -19,7 +21,7 @@ type PatientProfile = UserProfile & {
   skinTone?: string;
 };
 
-type DoctorProfile = UserProfile & {
+export type DoctorProfile = UserProfile & {
   role: 'doctor';
   specialization?: string;
   verificationStatus: 'pending' | 'approved' | 'rejected';
@@ -32,18 +34,18 @@ export const createUserProfile = async (uid: string, data: { email: string, role
   const collectionName = data.role === 'doctor' ? 'doctors' : 'patients';
   const userRef = doc(db, collectionName, uid);
 
-  const userData = {
+  const userData: Partial<PatientProfile | DoctorProfile> = {
     uid,
     email: data.email,
     role: data.role,
-    createdAt: new Date(),
+    createdAt: serverTimestamp(),
   };
 
   if (data.role === 'doctor') {
     (userData as Partial<DoctorProfile>).verificationStatus = 'pending';
   }
 
-  await setDoc(userRef, userData);
+  await setDoc(userRef, userData, { merge: true });
   return userData;
 };
 
@@ -67,4 +69,34 @@ export const getUserProfile = async (uid: string): Promise<(PatientProfile | Doc
 
   // If not found in either, return null
   return null;
+};
+
+
+export type Report = {
+  id?: string;
+  patientId: string;
+  doctorId?: string | null;
+  aiReport: GenerateInitialReportOutput;
+  status: 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected';
+  createdAt: FieldValue;
+  doctorNotes?: string;
+  prescription?: string;
+}
+
+export const saveReport = async (patientId: string, reportData: GenerateInitialReportOutput) => {
+    if (!db) throw new Error("Firestore is not initialized.");
+
+    const reportsCollection = collection(db, 'reports');
+    const reportDocRef = doc(reportsCollection); // Creates a new doc with a random ID
+
+    const newReport: Report = {
+        id: reportDocRef.id,
+        patientId: patientId,
+        aiReport: reportData,
+        status: 'pending-doctor-review',
+        createdAt: serverTimestamp(),
+    };
+
+    await setDoc(reportDocRef, newReport);
+    return newReport;
 };

@@ -26,6 +26,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { getUserProfile } from '@/lib/firebase-services';
+import type { User as FirebaseUser } from 'firebase/auth';
+
 
 const patientDetailsSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
@@ -42,15 +46,9 @@ type ChatMessage = {
   text: string | React.ReactNode;
 };
 
-// Dummy user object
-const dummyUser = {
-  uid: 'dummy-patient-123',
-  email: 'patient@test.com',
-};
-
 export default function PatientDashboard() {
   const { toast } = useToast();
-  const [user, setUser] = useState<typeof dummyUser | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [step, setStep] = useState<'details' | 'upload' | 'analyzing' | 'result'>('details');
   
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(null);
@@ -68,16 +66,33 @@ export default function PatientDashboard() {
   const [isTranslating, setIsTranslating] = useState(false);
   const originalReportRef = useRef<GenerateInitialReportOutput | null>(null);
   
-  useEffect(() => {
-    // Simulate user login
-    setUser(dummyUser);
-  }, []);
-
-
   const form = useForm<PatientDetails>({
     resolver: zodResolver(patientDetailsSchema),
-    defaultValues: { name: 'John Doe', region: 'India', gender: 'male', skinTone: 'Type IV', age: 30 },
+    defaultValues: { name: '', region: '', gender: 'male', skinTone: '', age: 0 },
   });
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        const profile = await getUserProfile(firebaseUser.uid);
+        if (profile) {
+          form.reset({
+            name: profile.name || firebaseUser.displayName || '',
+            age: profile.age || 30,
+            gender: profile.gender || 'male',
+            region: profile.region || '',
+            skinTone: profile.skinTone || '',
+          });
+        }
+      } else {
+        setUser(null);
+        router.push('/login');
+      }
+    });
+    return () => unsubscribe();
+  }, [form]);
+
 
   const onSubmitDetails: SubmitHandler<PatientDetails> = (data) => {
     setPatientDetails(data);
@@ -96,9 +111,16 @@ export default function PatientDashboard() {
     reader.readAsDataURL(file);
     reader.onloadend = async () => {
       const base64data = reader.result as string;
-      setImageDataUri(base64data);
-       try {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      
+      try {
+        const validationResult = await validateImageUpload({ photoDataUri: base64data });
+        if (validationResult.isValid) {
+          setImageDataUri(base64data);
+          setImageValidationError(null);
+        } else {
+          setImageDataUri(null);
+          setImageValidationError(validationResult.reason || 'The uploaded image is not valid.');
+        }
       } catch (error) {
         setImageValidationError('An error occurred during image validation.');
         console.error(error);
@@ -124,19 +146,15 @@ export default function PatientDashboard() {
     const userMessage: ChatMessage = { sender: 'user', text: symptomInput };
     setChatMessages(prev => [...prev, userMessage]);
     setIsChatbotLoading(true);
-    setSymptomInput('');
     
     try {
-      const response: AssistWithSymptomInputsOutput = {
-        refinedSymptoms: `Based on your input about "${symptomInput}", I've noted it down.`,
-        suggestedQuestions: ["Is there any swelling?", "Does it hurt to touch?", "Have you used any creams?"]
-      };
+      const response = await assistWithSymptomInputs({ symptomQuery: symptomInput });
       const aiMessage: ChatMessage = {
         sender: 'ai',
         text: (
           <div className="space-y-2">
             <p>{response.refinedSymptoms}</p>
-            <p className="font-semibold">Any of these apply?</p>
+            <p className="font-semibold">Here are some clarifying questions:</p>
             <div className="flex flex-col items-start gap-1">
               {response.suggestedQuestions.map((q, i) => (
                 <Button key={i} size="sm" variant="outline" className="h-auto py-1 px-2 text-xs" onClick={() => setSymptomInput(q)}>{q}</Button>
@@ -151,6 +169,7 @@ export default function PatientDashboard() {
       setChatMessages(prev => [...prev, errorMessage]);
       console.error(error);
     } finally {
+      setSymptomInput('');
       setIsChatbotLoading(false);
     }
   };
@@ -161,21 +180,22 @@ export default function PatientDashboard() {
     const allSymptoms = chatMessages.filter(m => m.sender === 'user').map(m => m.text).join(', ');
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      const result: GenerateInitialReportOutput = {
-        potentialConditions: [
-          { name: 'Atopic Dermatitis (Eczema)', likelihood: 'High', confidence: 0.88, description: 'A chronic condition causing red, itchy, and inflamed skin.' },
-          { name: 'Contact Dermatitis', likelihood: 'Medium', confidence: 0.55, description: 'A skin reaction from contact with a substance.' }
-        ],
-        report: 'The visual analysis of the provided image, combined with the described symptoms of itching and redness, strongly suggests Atopic Dermatitis. The inflammation pattern is consistent with common eczema presentations.',
-        homeRemedies: 'Apply a cold compress to the affected area for 15 minutes to reduce itching. Use a thick, unscented moisturizer multiple times a day, especially after bathing. Avoid harsh soaps and long, hot showers.',
-        medicalRecommendation: 'A consultation with a dermatologist is highly recommended to confirm the diagnosis and discuss prescription treatment options, such as topical corticosteroids or calcineurin inhibitors, to manage the inflammation.',
-        doctorConsultationSuggestion: true,
-      };
+      const result = await generateInitialReport({
+        photoDataUri: imageDataUri,
+        symptomInputs: allSymptoms,
+        ...patientDetails,
+      });
 
       setAnalysisResult(result);
       originalReportRef.current = result;
       setStep('result');
+      
+      // TODO: Save report to Firestore
+      toast({
+        title: "Analysis Complete",
+        description: "Your AI-powered report has been generated.",
+      });
+
     } catch (error) {
       console.error(error);
       toast({
@@ -197,16 +217,10 @@ export default function PatientDashboard() {
 
     setIsTranslating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const translatedReport: TranslateReportOutput = {
-        potentialConditions: originalReportRef.current.potentialConditions.map(pc => ({
-          name: `[${languageCode}] ${pc.name}`,
-          description: `[${languageCode}] ${pc.description}`,
-        })),
-        report: `[${languageCode}] ${originalReportRef.current.report}`,
-        homeRemedies: `[${languageCode}] ${originalReportRef.current.homeRemedies}`,
-        medicalRecommendation: `[${languageCode}] ${originalReportRef.current.medicalRecommendation}`,
-      };
+      const translatedReport = await translateReport({
+        report: originalReportRef.current,
+        language: languageCode,
+      });
 
       setAnalysisResult({
         ...originalReportRef.current,
@@ -267,7 +281,7 @@ export default function PatientDashboard() {
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-a.href = url;
+    a.href = url;
     a.download = `MediScan_Report_${patientDetails.name.replace(' ', '_')}.txt`;
     document.body.appendChild(a);
     a.click();
@@ -407,7 +421,7 @@ a.href = url;
                         <p>Click to upload or drag & drop</p>
                       </div>
                     )}
-                    <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload' || !!imageValidationError} />
+                    <Input id="image-upload" type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={step !== 'upload'} />
                   </div>
                   {isImageValidating && <div className="flex items-center text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Validating image...</div>}
                   {imageValidationError && (
@@ -442,7 +456,7 @@ a.href = url;
                     <Button 
                       className="w-full bg-accent text-accent-foreground hover:bg-accent/90 hover:scale-105 hover:shadow-[0_0_20px_hsl(var(--accent))] transition-all duration-300" 
                       onClick={handleAnalyze}
-                      disabled={!imageDataUri || step !== 'upload'}
+                      disabled={!imageDataUri || !!imageValidationError || step !== 'upload'}
                     >
                       <Sparkles className="mr-2 h-4 w-4" />
                       Analyze Now
@@ -570,7 +584,7 @@ a.href = url;
                             onClick={handleSymptomSubmit}
                             disabled={isChatbotLoading || !symptomInput.trim() || step !== 'upload'}
                         >
-                            {isChatbotLoading ? <Loader2 className="animate-spin"/> : <User/>}
+                            {isChatbotLoading ? <Loader2 className="animate-spin"/> : <Send/>}
                         </Button>
                     </div>
                   </CardContent>
@@ -585,7 +599,7 @@ a.href = url;
   };
   
   return (
-    <div className="h-full">
+    <div className="h-full p-6">
         {renderStep()}
     </div>
   );
