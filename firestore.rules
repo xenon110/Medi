@@ -1,64 +1,27 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check role from 'patients' or 'doctors' collections
-    function getUserRole(userId) {
-      let doctorProfile = get(/databases/$(database)/documents/doctors/$(userId)).data;
-      if (doctorProfile != null && doctorProfile.role == 'doctor') {
-        return 'doctor';
-      }
-      let patientProfile = get(/databases/$(database)/documents/patients/$(userId)).data;
-       if (patientProfile != null && patientProfile.role == 'patient') {
-        return 'patient';
-      }
-      return null;
-    }
-
-    // Doctors can be read by any authenticated user (for the consult page)
+    
+    // Doctors: Can read/write their own profile. Anyone can read the list of approved doctors.
     match /doctors/{doctorId} {
-      allow read: if request.auth != null && get(/databases/$(database)/documents/doctors/$(doctorId)).data.verificationStatus == 'approved';
-      allow write: if request.auth.uid == doctorId; // Doctors can edit their own profile
+      allow read: if request.auth != null && (resource.data.verificationStatus == 'approved' || request.auth.uid == doctorId);
+      allow write: if request.auth.uid == doctorId;
     }
 
-    // Patients can only manage their own profile
+    // Patients: Can only read/write their own profile.
     match /patients/{patientId} {
       allow read, write: if request.auth.uid == patientId;
     }
-
-    // Rules for the 'reports' collection
+    
+    // Reports:
+    // - Patients can create reports.
+    // - Patients can read their own reports.
+    // - Doctors can read/update reports assigned to them.
     match /reports/{reportId} {
-
-      // CREATE: A patient can create a report for themselves.
-      allow create: if request.auth != null
-                    && request.resource.data.patientId == request.auth.uid
-                    && getUserRole(request.auth.uid) == 'patient';
-
-      // READ:
-      // - Patients can read their OWN reports.
-      // - Doctors can read reports assigned to THEM.
-      allow read: if request.auth != null && (
-        (resource.data.patientId == request.auth.uid && getUserRole(request.auth.uid) == 'patient') ||
-        (resource.data.doctorId == request.auth.uid && getUserRole(request.auth.uid) == 'doctor')
-      );
-
-      // UPDATE:
-      // - Patients can update a report to assign a doctorId (send report).
-      // - Doctors can update a report assigned to them (e.g., change status, add notes).
-      allow update: if request.auth != null && (
-        ( // Patient sending report
-          getUserRole(request.auth.uid) == 'patient' &&
-          resource.data.patientId == request.auth.uid &&
-          request.resource.data.doctorId != resource.data.doctorId && // doctorId is being changed
-          resource.data.doctorId == null // Can only be assigned once by patient
-        ) ||
-        ( // Doctor reviewing report
-          getUserRole(request.auth.uid) == 'doctor' &&
-          resource.data.doctorId == request.auth.uid
-        )
-      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow read: if request.auth != null && (resource.data.patientId == request.auth.uid || resource.data.doctorId == request.auth.uid);
+      allow update: if request.auth != null && resource.data.doctorId == request.auth.uid;
     }
   }
 }
