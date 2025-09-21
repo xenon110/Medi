@@ -56,6 +56,7 @@ export default function ConsultPage() {
             if (user) {
                 fetchData();
             } else {
+                // If no user, no need to fetch, stop loading
                 setIsLoading(false);
             }
         });
