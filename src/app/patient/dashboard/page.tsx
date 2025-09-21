@@ -218,123 +218,6 @@ export default function PatientDashboard() {
       </div>
     );
   }
-  
-  if (isAnalyzing) {
-    return (
-      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
-        <Loader2 className="animate-spin text-primary" size={64} />
-        <p className="mt-4 text-xl font-semibold text-foreground">Analyzing Your Image...</p>
-        <p className="text-muted-foreground">The AI is processing your information. This may take a moment.</p>
-      </div>
-    );
-  }
-  
-   if (analysisResult) {
-    return (
-      <div className="min-h-screen bg-gradient-subtle">
-         <header className="bg-background/95 backdrop-blur-sm border-b border-medical-border sticky top-0 z-50">
-            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => router.push('/')}>
-                <div className="flex items-center justify-center w-10 h-10 bg-gradient-secondary rounded-xl">
-                  <Stethoscope className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gradient-primary">MEDISKIN</h1>
-                </div>
-              </div>
-              <Button onClick={() => setAnalysisResult(null)} variant="outline">
-                <RefreshCw className="mr-2"/> Start New Analysis
-              </Button>
-            </div>
-        </header>
-
-        <div className="container mx-auto py-8">
-          <Card className="shadow-elevated border-primary/20">
-            <CardHeader className="bg-gradient-subtle rounded-t-lg p-6">
-                <div className="flex justify-between items-center">
-                    <CardTitle className="text-3xl font-headline text-foreground">AI Analysis Report</CardTitle>
-                     <Select onValueChange={handleTranslate}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Translate Report" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="es">Español</SelectItem>
-                        <SelectItem value="hi">हिन्दी</SelectItem>
-                        <SelectItem value="bn">বাংলা</SelectItem>
-                        <SelectItem value="ta">தமிழ்</SelectItem>
-                      </SelectContent>
-                    </Select>
-                </div>
-              <CardDescription>This is a preliminary analysis. Always consult a qualified dermatologist.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Left Column: Conditions & Analysis */}
-                <div className="space-y-6">
-                   <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Potential Conditions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {analysisResult.potentialConditions.map((cond, i) => (
-                        <div key={i}>
-                          <div className="flex justify-between items-center mb-1">
-                            <h4 className="font-semibold text-primary">{cond.name}</h4>
-                            <Badge variant={cond.likelihood === 'High' ? 'destructive' : cond.likelihood === 'Medium' ? 'secondary' : 'default'} className="capitalize">{cond.likelihood}</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">{cond.description}</p>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs">Confidence:</Label>
-                            <Progress value={cond.confidence * 100} className="w-1/2 h-2" />
-                            <span className="text-xs font-mono">{(cond.confidence * 100).toFixed(1)}%</span>
-                          </div>
-                          { i < analysisResult.potentialConditions.length - 1 && <Separator className="mt-4"/>}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader><CardTitle className="text-xl">Summary Report</CardTitle></CardHeader>
-                    <CardContent><p className="text-sm text-foreground/80 whitespace-pre-wrap">{analysisResult.report}</p></CardContent>
-                  </Card>
-                </div>
-
-                {/* Right Column: Recommendations */}
-                <div className="space-y-6">
-                   <Card className="bg-primary/5 border-primary/20">
-                    <CardHeader><CardTitle className="text-xl text-primary">Medical Recommendation</CardTitle></CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm">{analysisResult.medicalRecommendation}</p>
-                      {analysisResult.doctorConsultationSuggestion && (
-                        <Button asChild className="w-full" size="lg">
-                          <Link href="/patient/consult"><Stethoscope className="mr-2"/> Consult a Doctor</Link>
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                   <Card>
-                    <CardHeader><CardTitle className="text-xl">Home Remedies</CardTitle></CardHeader>
-                    <CardContent><p className="text-sm text-foreground/80 whitespace-pre-wrap">{analysisResult.homeRemedies}</p></CardContent>
-                  </Card>
-                   <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Disclaimer</AlertTitle>
-                      <AlertDescription>
-                        This AI analysis is for informational purposes only and is not a substitute for professional medical advice.
-                      </AlertDescription>
-                    </Alert>
-                </div>
-              </div>
-            </CardContent>
-             <CardFooter className="p-4 bg-muted/50 flex justify-end gap-2">
-                <Button variant="outline"><Download className="mr-2" /> Download PDF</Button>
-                <Button><Send className="mr-2"/> Share with Doctor</Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50">
@@ -349,7 +232,7 @@ export default function PatientDashboard() {
         <nav className="nav-links">
             <a href="/#features">Features</a>
             <a href="/#how-it-works">How It Works</a>
-            <a href="/#security">Security</a>
+            <a href="#security">Security</a>
             <a href="/help">Help</a>
         </nav>
         <Button className="login-btn" onClick={() => router.push('/login?role=patient')}>Login as Patient</Button>
