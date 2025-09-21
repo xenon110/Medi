@@ -1,31 +1,35 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Patients can only read/write their own data.
+    // Helper function to check if a user is a doctor
+    function isDoctor(userId) {
+      return exists(/databases/$(database)/documents/doctors/$(userId));
+    }
+
+    // Patients can only read/write their own documents
     match /patients/{patientId} {
       allow read, write: if request.auth != null && request.auth.uid == patientId;
     }
 
-    // Doctors can only read/write their own data.
-    // Doctors can read patient data ONLY IF they are linked in a consultation (to be added later).
+    // Doctors can only read/write their own documents
     match /doctors/{doctorId} {
       allow read, write: if request.auth != null && request.auth.uid == doctorId;
     }
     
-    // Reports can be read by the patient who owns it or the doctor assigned to it.
-    // Patients can create reports.
+    // Reports can be read by the patient who owns it or the assigned doctor
+    // Reports can be created by the patient.
+    // Reports can be updated by the assigned doctor.
     match /reports/{reportId} {
-      allow create: if request.auth != null; // Anyone authenticated can create a report
-      allow read: if request.auth != null && (resource.data.patientId == request.auth.uid || resource.data.doctorId == request.auth.uid);
-      allow update: if request.auth != null && resource.data.doctorId == request.auth.uid; // Only doctors can update
+      allow read: if request.auth != null && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.patientId;
+      allow update: if request.auth != null && isDoctor(request.auth.uid) && request.auth.uid == resource.data.doctorId;
     }
 
-    // Chats are private between a patient and a doctor.
+    // Chats can be read/written by the patient or doctor involved in the chat
     match /chats/{chatId} {
-      allow read, write: if request.auth != null && (request.auth.uid in resource.data.participants);
+      allow read, write: if request.auth != null && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId);
     }
   }
 }

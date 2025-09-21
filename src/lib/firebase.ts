@@ -6,15 +6,13 @@ import { getAuth } from 'firebase/auth';
 
 // This is a public configuration and is safe to be exposed on the client-side.
 // Security is enforced by Firebase Security Rules.
-// NOTE: This is a placeholder and will not work.
-// You must replace it with your own Firebase project configuration.
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAGbbOra2xq5gofQglFln0AWKzYZLJSHNk",
+  authDomain: "studio-6167596920-dbcef.firebaseapp.com",
+  projectId: "studio-6167596920-dbcef",
+  storageBucket: "studio-6167596920-dbcef.appspot.com",
+  messagingSenderId: "1041595331915",
+  appId: "1:1041595331915:web:58281b2d730cd78670a4ce"
 };
 
 // Initialize Firebase
