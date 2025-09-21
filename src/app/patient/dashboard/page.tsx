@@ -15,14 +15,7 @@ import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport } from '@/ai/flows/generate-initial-report';
 import { auth } from '@/lib/firebase';
-import { getUserProfile, saveReport } from '@/lib/firebase-services';
-
-// Dummy data for previous reports, you can replace this with real data
-const dummyPreviousReports = [
-  { id: 'rep-001', title: 'Follow-up on Rash', date: '2023-10-24'},
-  { id: 'rep-002', title: 'Initial Mole Check', date: '2023-10-22'},
-  { id: 'rep-003', title: 'Eczema Flare-up', date: '2023-10-18'},
-];
+import { getUserProfile, saveReport, getReportsForPatient, Report } from '@/lib/firebase-services';
 
 export default function PatientDashboard() {
   const { toast } = useToast();
@@ -37,6 +30,8 @@ export default function PatientDashboard() {
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const [recentReports, setRecentReports] = useState<Report[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +41,8 @@ export default function PatientDashboard() {
         const profile = await getUserProfile(firebaseUser.uid);
         if (profile) {
           setUser({ ...firebaseUser, ...profile });
+          const reports = await getReportsForPatient(firebaseUser.uid);
+          setRecentReports(reports);
         } else {
           setUser(firebaseUser);
         }
@@ -243,11 +240,11 @@ export default function PatientDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {dummyPreviousReports.map((report) => (
+                            {recentReports.map((report) => (
                                 <div key={report.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                     <div>
-                                        <h4 className="font-semibold">{report.title}</h4>
-                                        <p className="text-sm text-muted-foreground">{report.date}</p>
+                                        <h4 className="font-semibold">Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h4>
+                                        <p className="text-sm text-muted-foreground capitalize">{report.status.replace(/-/g, ' ')}</p>
                                     </div>
                                     <Button variant="outline" size="sm" onClick={() => router.push('/patient/report')}>View Report</Button>
                                 </div>

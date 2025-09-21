@@ -1,5 +1,5 @@
 
-import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 
@@ -92,30 +92,77 @@ export const getUserProfile = async (uid: string): Promise<(PatientProfile | Doc
 
 
 export type Report = {
-  id?: string;
+  id: string;
   patientId: string;
+  patientProfile?: PatientProfile;
   doctorId?: string | null;
   aiReport: GenerateInitialReportOutput;
-  status: 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected';
-  createdAt: FieldValue;
+  status: 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected' | 'pending-patient-input';
+  createdAt: FieldValue | { seconds: number, nanoseconds: number };
   doctorNotes?: string;
   prescription?: string;
 }
 
-export const saveReport = async (patientId: string, reportData: GenerateInitialReportOutput) => {
+export const saveReport = async (patientId: string, reportData: GenerateInitialReportOutput): Promise<Report> => {
     if (!db) throw new Error("Firestore is not initialized.");
 
     const reportsCollection = collection(db, 'reports');
-    const reportDocRef = doc(reportsCollection); // Creates a new doc with a random ID
-
-    const newReport: Report = {
-        id: reportDocRef.id,
+    
+    const newReportData = {
         patientId: patientId,
         aiReport: reportData,
-        status: 'pending-doctor-review',
+        status: 'pending-patient-input' as const,
         createdAt: serverTimestamp(),
     };
 
-    await setDoc(reportDocRef, newReport);
-    return newReport;
+    const reportDocRef = await addDoc(reportsCollection, newReportData);
+
+    return {
+        id: reportDocRef.id,
+        ...newReportData,
+    }
 };
+
+export const getReportsForPatient = async (patientId: string): Promise<Report[]> => {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const reportsCollection = collection(db, 'reports');
+    const q = query(reportsCollection, where("patientId", "==", patientId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+};
+
+export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> => {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const reportsCollection = collection(db, 'reports');
+    const q = query(reportsCollection, where("doctorId", "==", doctorId));
+    const querySnapshot = await getDocs(q);
+    const reports: Report[] = [];
+
+    for (const doc of querySnapshot.docs) {
+      const report = { id: doc.id, ...doc.data() } as Report;
+      const patientProfile = await getUserProfile(report.patientId) as PatientProfile;
+      report.patientProfile = patientProfile;
+      reports.push(report);
+    }
+    return reports;
+};
+
+
+export const getDoctors = async (): Promise<DoctorProfile[]> => {
+  if (!db) throw new Error("Firestore is not initialized.");
+  const doctorsCollection = collection(db, 'doctors');
+  // Optional: Add a where clause to only fetch verified doctors
+  // const q = query(doctorsCollection, where("verificationStatus", "==", "approved"));
+  const querySnapshot = await getDocs(doctorsCollection);
+  return querySnapshot.docs.map(doc => doc.data() as DoctorProfile);
+};
+
+export const sendReportToDoctor = async (reportId: string, doctorId: string) => {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const reportRef = doc(db, 'reports', reportId);
+    await updateDoc(reportRef, {
+        doctorId: doctorId,
+        status: 'pending-doctor-review'
+    });
+};
+

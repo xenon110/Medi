@@ -7,118 +7,93 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Paperclip, Send, CheckCircle, Pencil, Loader2, Inbox, XCircle, ThumbsUp, Search, Stethoscope, FileText, Edit3, MessageSquare, LayoutGrid, Calendar, Settings, User, Phone, MoreVertical, Star, Bot, Home, Pill, AlertTriangle } from 'lucide-react';
-import { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { getReportsForDoctor, Report } from '@/lib/firebase-services';
+import { formatDistanceToNow } from 'date-fns';
 
-// Dummy Data
-const dummyPatients = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    avatarInitials: "PS",
-    condition: "Skin Rash Analysis",
-    time: "2 minutes ago",
-    status: "Urgent",
-    unread: 1,
-    age: 28,
-    gender: "Female",
-    region: "Mumbai, India",
-    skinTone: "Medium",
-    submitted: "Today 2:43 PM",
-    symptoms: "Patient reports itchy red rash on forearm for 3 days. Mild burning sensation. No fever. Applied aloe vera gel with temporary relief. Family history of eczema."
-  },
-  {
-    id: 2,
-    name: "Rahul Kumar",
-    avatarInitials: "RK",
-    condition: "Acne Treatment Follow-up",
-    time: "15 minutes ago",
-    status: "Pending",
-    unread: 0,
-    age: 22,
-    gender: "Male",
-    region: "Delhi, India",
-    skinTone: "Light",
-    submitted: "Today 2:30 PM",
-    symptoms: "Following up on acne treatment. Still experiencing some breakouts on the chin area."
-  },
-  {
-    id: 3,
-    name: "Anjali Patel",
-    avatarInitials: "AP",
-    condition: "Mole Examination",
-    time: "1 hour ago",
-    status: "Pending",
-    unread: 0,
-    age: 35,
-    gender: "Female",
-    region: "Ahmedabad, India",
-    skinTone: "Medium",
-    submitted: "Today 1:45 PM",
-    symptoms: "Concerned about a new mole on the back. It seems to have grown slightly in the last month."
-  },
-  {
-    id: 4,
-    name: "Vikram Singh",
-    avatarInitials: "VS",
-    condition: "Eczema Consultation",
-    time: "3 hours ago",
-    status: "Reviewed",
-    unread: 0,
-    age: 45,
-    gender: "Male",
-    region: "Jaipur, India",
-    skinTone: "Medium",
-    submitted: "Today 11:30 AM",
-    symptoms: "Eczema flare-up on hands and elbows. Skin is very dry and cracked."
-  },
-  {
-    id: 5,
-    name: "Meera Reddy",
-    avatarInitials: "MR",
-    condition: "Psoriasis Treatment",
-    time: "5 hours ago",
-    status: "Urgent",
-    unread: 2,
-    age: 52,
-    gender: "Female",
-    region: "Hyderabad, India",
-    skinTone: "Dark",
-    submitted: "Today 9:00 AM",
-    symptoms: "Psoriasis plaques are becoming more inflamed and spreading. Current treatment not effective."
-  }
-];
+type PatientCase = Report & {
+    time: string;
+    unread: number;
+};
 
-const aiReport = {
-    patientName: "Priya Sharma",
-    symptoms: ["Dark spot on arm", "Irregular borders", "Recent size increase"],
-    aiAnalysis: "The AI analysis suggests this could be a concerning lesion that requires immediate dermatological evaluation. The irregular borders and recent growth pattern are notable findings.",
-    recommendation: "Urgent dermatologist consultation recommended within 48 hours.",
-    homeRemedies: "No home remedies recommended for this condition."
+const statusMap: { [key in Report['status']]: { label: string; badgeClass: string; } } = {
+  'pending-doctor-review': { label: 'Pending', badgeClass: 'status-pending' },
+  'doctor-approved': { label: 'Reviewed', badgeClass: 'status-reviewed' },
+  'doctor-modified': { label: 'Reviewed', badgeClass: 'status-reviewed' },
+  'rejected': { label: 'Disqualified', badgeClass: 'status-reviewed' }, // Or a different color
+  'pending-patient-input': { label: 'Draft', badgeClass: 'status-reviewed' },
 };
 
 
-type Patient = typeof dummyPatients[0];
-
 export default function DoctorDashboard() {
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>(dummyPatients);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(patients[0]);
+  const [patientCases, setPatientCases] = useState<PatientCase[]>([]);
+  const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [filter, setFilter] = useState('All');
+  const [isLoading, setIsLoading] = useState(true);
   
-  const handleSelectPatient = (patient: Patient) => {
-    setSelectedPatient(patient);
+  useEffect(() => {
+    const fetchReports = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        toast({ title: 'Not authenticated', variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const reports = await getReportsForDoctor(user.uid);
+        const cases: PatientCase[] = reports.map(report => ({
+          ...report,
+          time: formatDistanceToNow((report.createdAt as any).seconds * 1000, { addSuffix: true }),
+          unread: report.status === 'pending-doctor-review' ? 1 : 0,
+        }));
+        setPatientCases(cases);
+        if (cases.length > 0) {
+          setSelectedCase(cases[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reports:", error);
+        toast({ title: 'Error fetching reports', variant: 'destructive' });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        fetchReports();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+
+
+  const handleSelectCase = (patientCase: PatientCase) => {
+    setSelectedCase(patientCase);
   };
   
-  const filteredPatients = patients.filter(p => {
+  const filteredCases = patientCases.filter(p => {
     if (filter === 'All') return true;
-    return p.status === filter;
+    const statusInfo = statusMap[p.status];
+    return statusInfo && statusInfo.label === filter;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg">Loading Patient Cases...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">
@@ -141,7 +116,7 @@ export default function DoctorDashboard() {
         <div className="patient-list">
             <div className="list-header">
                 <h2 className="text-xl font-bold text-gray-800">Patient Cases</h2>
-                <p className="text-sm text-gray-500">{patients.filter(p => p.status === 'Pending' || p.status === 'Urgent').length} pending reviews</p>
+                <p className="text-sm text-gray-500">{patientCases.filter(p => p.status === 'pending-doctor-review').length} pending reviews</p>
             </div>
 
             <div className="search-bar">
@@ -150,7 +125,7 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="filter-tabs">
-                {['All', 'Pending', 'Urgent'].map(tab => (
+                {['All', 'Pending', 'Reviewed'].map(tab => (
                     <div 
                       key={tab} 
                       className={cn('filter-tab', { 'active': filter === tab })}
@@ -162,23 +137,21 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="patients-container">
-                {filteredPatients.map((patient) => (
+                {filteredCases.map((pCase) => (
                     <div 
-                      key={patient.id} 
-                      className={cn('patient-item', { 'active': selectedPatient?.id === patient.id })}
-                      onClick={() => handleSelectPatient(patient)}
+                      key={pCase.id} 
+                      className={cn('patient-item', { 'active': selectedCase?.id === pCase.id })}
+                      onClick={() => handleSelectCase(pCase)}
                     >
-                        <div className="patient-avatar">{patient.avatarInitials}</div>
+                        <div className="patient-avatar">{pCase.patientProfile?.name.split(' ').map(n => n[0]).join('') || 'P'}</div>
                         <div className="patient-info">
-                            <div className="patient-name">{patient.name}</div>
-                            <p className="patient-condition">{patient.condition}</p>
-                            <p className="patient-time">{patient.time}</p>
+                            <div className="patient-name">{pCase.patientProfile?.name || 'Unknown Patient'}</div>
+                            <p className="patient-condition">Dermatology Case</p>
+                            <p className="patient-time">{pCase.time}</p>
                         </div>
                         <div className="patient-status">
-                            {patient.status === 'Urgent' && <div className="status-badge status-urgent">Urgent</div>}
-                            {patient.status === 'Pending' && <div className="status-badge status-pending">Pending</div>}
-                            {patient.status === 'Reviewed' && <div className="status-badge status-reviewed">Reviewed</div>}
-                            {patient.unread > 0 && <div className="unread-count">{patient.unread}</div>}
+                            {statusMap[pCase.status] && <div className={cn('status-badge', statusMap[pCase.status].badgeClass)}>{statusMap[pCase.status].label}</div>}
+                            {pCase.unread > 0 && <div className="unread-count">{pCase.unread}</div>}
                         </div>
                     </div>
                 ))}
@@ -186,14 +159,14 @@ export default function DoctorDashboard() {
         </div>
 
         {/* Chat Panel */}
-        {selectedPatient ? (
+        {selectedCase && selectedCase.patientProfile ? (
           <div className="chat-panel">
             <div className="chat-header">
                 <div className="chat-patient-info">
-                    <div className="chat-avatar">{selectedPatient.avatarInitials}</div>
+                    <div className="chat-avatar">{selectedCase.patientProfile.name.split(' ').map(n => n[0]).join('')}</div>
                     <div className="chat-patient-details">
-                        <h3 id="chat-patient-name">{selectedPatient.name}</h3>
-                        <p id="chat-patient-condition">{selectedPatient.condition} • Age: {selectedPatient.age} • {selectedPatient.gender}</p>
+                        <h3 id="chat-patient-name">{selectedCase.patientProfile.name}</h3>
+                        <p id="chat-patient-condition">Dermatology Case • Age: {selectedCase.patientProfile.age} • {selectedCase.patientProfile.gender}</p>
                     </div>
                 </div>
                 <div className="chat-actions">
@@ -204,7 +177,7 @@ export default function DoctorDashboard() {
 
             <div className="chat-messages">
                 <div className="message-group fade-in">
-                    <div className="message-date">Today, 2:45 PM</div>
+                    <div className="message-date">{formatDistanceToNow((selectedCase.createdAt as any).seconds * 1000, { addSuffix: true })}</div>
                     
                     <div className="ai-report">
                         <div className="report-header">
@@ -216,34 +189,34 @@ export default function DoctorDashboard() {
                             <div className="details-grid">
                                 <div className="detail-item">
                                     <div className="detail-label">Patient Name</div>
-                                    <div className="detail-value">{selectedPatient.name}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.name}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Age</div>
-                                    <div className="detail-value">{selectedPatient.age} years</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.age} years</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Gender</div>
-                                    <div className="detail-value">{selectedPatient.gender}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.gender}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Region</div>
-                                    <div className="detail-value">{selectedPatient.region}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.region}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Skin Tone</div>
-                                    <div className="detail-value">{selectedPatient.skinTone}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.skinTone}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Submitted</div>
-                                    <div className="detail-value">{selectedPatient.submitted}</div>
+                                    <div className="detail-value">{new Date((selectedCase.createdAt as any).seconds * 1000).toLocaleString()}</div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="symptoms-list">
                             <div className="symptoms-title">Reported Symptoms:</div>
-                            <div className="symptoms-content">{selectedPatient.symptoms}</div>
+                            <div className="symptoms-content">{selectedCase.aiReport.symptomInputs}</div>
                         </div>
 
                         <div className="image-analysis">
@@ -254,18 +227,12 @@ export default function DoctorDashboard() {
                         </div>
 
                         <div className="analysis-sections">
-                            <div className="analysis-section">
+                             <div className="analysis-section">
                                 <h4 className="section-title text-green-600">
                                     <Home size={18} /> Home Remedies Recommendation
                                 </h4>
-                                <div className="section-content">
-                                    <strong>Recommended treatments:</strong><br />
-                                    • Apply cool, damp cloth for 10-15 minutes twice daily<br />
-                                    • Use fragrance-free moisturizer 3 times daily<br />
-                                    • Avoid hot showers and harsh soaps<br />
-                                    • Consider oatmeal baths for soothing relief<br />
-                                    <br />
-                                    <strong>Duration:</strong> Monitor for 48-72 hours. If symptoms persist or worsen, seek medical attention.
+                                <div className="section-content whitespace-pre-wrap">
+                                   {selectedCase.aiReport.homeRemedies}
                                 </div>
                             </div>
 
@@ -273,32 +240,21 @@ export default function DoctorDashboard() {
                                 <h4 className="section-title text-amber-600">
                                     <Pill size={18} /> Medical Recommendation
                                 </h4>
-                                <div className="section-content">
-                                    <strong>Preliminary Assessment:</strong> Contact dermatitis (probable)<br />
-                                    <strong>Confidence Level:</strong> 78%<br />
-                                    <br />
-                                    <strong>Suggested approach:</strong><br />
-                                    • Topical corticosteroid (mild strength) if available<br />
-                                    • Antihistamine for itch relief<br />
-                                    • Identify and avoid potential allergens<br />
-                                    • Document any new exposures in past week
+                                <div className="section-content whitespace-pre-wrap">
+                                   {selectedCase.aiReport.medicalRecommendation}
                                 </div>
                             </div>
 
-                            <div className="analysis-section consultation">
+                           {selectedCase.aiReport.doctorConsultationSuggestion && (
+                             <div className="analysis-section consultation">
                                 <h4 className="section-title text-red-600">
                                     <AlertTriangle size={18}/> Professional Consultation Required
                                 </h4>
                                 <div className="section-content">
-                                    <strong>Recommendation:</strong> Dermatologist consultation recommended<br />
-                                    <br />
-                                    <strong>Reasons:</strong><br />
-                                    • Rash persisting beyond typical timeline<br />
-                                    • Family history suggests possible chronic condition<br />
-                                    • Professional assessment needed for accurate diagnosis<br />
-                                    • May require patch testing for allergen identification
+                                    Based on the analysis, we recommend sharing this report with a doctor.
                                 </div>
                             </div>
+                           )}
                         </div>
                     </div>
                 </div>
@@ -329,7 +285,7 @@ export default function DoctorDashboard() {
           <div className="flex-1 flex items-center justify-center bg-gray-50 text-center">
             <div>
               <MessageSquare size={48} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700">Select a patient</h3>
+              <h3 className="text-xl font-semibold text-gray-700">Select a patient case</h3>
               <p className="text-gray-500">Choose a case from the list to view details.</p>
             </div>
           </div>
