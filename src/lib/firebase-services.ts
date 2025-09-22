@@ -1,6 +1,6 @@
 
 
-import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp, orderBy } from 'firebase/firestore';
 import { db } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 
@@ -165,8 +165,8 @@ export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> =
 export const getDoctors = async (): Promise<DoctorProfile[]> => {
   if (!db) throw new Error("Firestore is not initialized.");
   const doctorsCollection = collection(db, 'doctors');
-  // This query now matches the security rule `allow list: if request.query.get('verificationStatus') == 'approved';`
-  const q = query(doctorsCollection, where("verificationStatus", "==", "approved"));
+  // This query now matches the security rule and the composite index.
+  const q = query(doctorsCollection, where("verificationStatus", "==", "approved"), orderBy("name"));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as DoctorProfile));
 };
