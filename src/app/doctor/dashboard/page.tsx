@@ -56,15 +56,19 @@ export default function DoctorDashboard() {
             const q = query(reportsRef, where('doctorId', '==', user.uid), orderBy('createdAt', 'desc'));
 
             const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
+              setIsLoading(true); // Set loading while we process new data
               const casesPromises = querySnapshot.docs.map(async (doc) => {
                 const report = { id: doc.id, ...doc.data() } as Report;
                 if (!report.patientId) return null;
 
                 const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
+                
+                // Gracefully handle cases where patient profile might not exist
+                if (!patientProfile) return null;
 
                 return {
                   ...report,
-                  patientProfile: patientProfile || undefined,
+                  patientProfile: patientProfile,
                   time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
                   unread: report.status === 'pending-doctor-review' ? 1 : 0,
                 };
@@ -109,7 +113,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, []); // Intentionally empty to run only once on mount
+  }, [router, toast, selectedCase]); // Re-added selectedCase to handle updates correctly
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -123,7 +127,7 @@ export default function DoctorDashboard() {
     return true;
   });
 
-  if (isLoading) {
+  if (isLoading && patientCases.length === 0) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
