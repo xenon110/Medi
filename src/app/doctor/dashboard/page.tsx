@@ -62,12 +62,24 @@ export default function DoctorDashboard() {
             };
           });
 
-          const cases = await Promise.all(casesPromises);
+          const cases = (await Promise.all(casesPromises)).sort((a, b) => {
+            const timeA = (a.createdAt as any)?.seconds || 0;
+            const timeB = (b.createdAt as any)?.seconds || 0;
+            return timeB - timeA;
+          });
           
           setPatientCases(cases as PatientCase[]);
-          if (cases.length > 0 && !selectedCase) {
-            setSelectedCase(cases[0] as PatientCase);
+          
+          // Logic to update or set the selected case
+          if (selectedCase) {
+             const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
+             setSelectedCase(updatedSelectedCase || cases[0] || null);
+          } else if (cases.length > 0) {
+             setSelectedCase(cases[0] as PatientCase);
+          } else {
+             setSelectedCase(null);
           }
+          
           setIsLoading(false);
 
         }, (error) => {
@@ -84,7 +96,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, [toast, selectedCase]);
+  }, [toast]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -304,5 +316,3 @@ export default function DoctorDashboard() {
     </div>
   );
 }
-
-    
