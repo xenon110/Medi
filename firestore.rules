@@ -1,28 +1,28 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Doctors Collection Rules:
-    // - Any authenticated user can get a list of APPROVED doctors. This is for the 'Consult a Doctor' page.
-    // - Any authenticated user can read a single doctor's profile.
-    // - A doctor can only create or update their own profile.
+    
+    // Doctors: 
+    // - Any authenticated user can get a LIST of APPROVED doctors.
+    // - Any authenticated user can GET a single doctor's profile.
+    // - A doctor can only write/update their own document.
     match /doctors/{doctorId} {
+      allow list: if request.auth != null && request.query.get('verificationStatus') == 'approved';
       allow get: if request.auth != null;
-      allow list: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == doctorId;
     }
-
-    // Patients Collection Rules:
-    // - A user can only read or write their own patient document.
+    
+    // Patients: Users can only read or write to their own patient document.
     match /patients/{patientId} {
       allow read, write: if request.auth != null && request.auth.uid == patientId;
     }
 
-    // Reports Collection Rules:
-    // - Patients can create reports for themselves.
-    // - Users can only read a report if they are the patient OR the assigned doctor.
-    // - Doctors can only update reports assigned to them.
+    // Reports: 
+    // - Patients can create reports.
+    // - Patients can only read their own reports.
+    // - Doctors can read and update reports assigned to them.
     match /reports/{reportId} {
       allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
       allow read: if request.auth != null && 
@@ -30,12 +30,10 @@ service cloud.firestore {
       allow update: if request.auth != null && resource.data.doctorId == request.auth.uid;
     }
 
-    // Emergencies Collection Rules:
-    // - Any authenticated user can create an emergency log. This allows for quick logging.
-    // - Reading logs should be restricted, e.g., to admin roles (not implemented here).
+    // Emergencies:
+    // - Authenticated users can create emergency logs.
     match /emergencies/{emergencyId} {
-      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
-      allow read, update, delete: if false; // Only admins should be able to read/delete
+      allow create: if request.auth != null;
     }
   }
 }
