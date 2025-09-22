@@ -3,12 +3,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Doctors:
-    // - Allow anyone authenticated to query the list of APPROVED doctors.
-    // - Allow anyone authenticated to read a single doctor's profile.
-    // - Only allow a doctor to write to their own profile.
+    // Doctors: 
+    // - Any authenticated user can get a list of APPROVED doctors.
+    // - Any authenticated user can read a single doctor's profile.
+    // - A doctor can only write/update their own document.
     match /doctors/{doctorId} {
-      allow list: if request.auth != null && request.query.get("where")[0][1] == "verificationStatus" && request.query.get("where")[0][2] == "approved";
+      allow list: if request.auth != null && request.query.get('verificationStatus') == 'approved';
       allow get: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == doctorId;
     }
@@ -26,10 +26,11 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
       allow read: if request.auth != null && 
                   (resource.data.patientId == request.auth.uid || resource.data.doctorId == request.auth.uid);
-      allow update: if request.auth != null && (resource.data.doctorId == request.auth.uid || resource.data.patientId == request.auth.uid);
+      allow update: if request.auth != null && resource.data.doctorId == request.auth.uid;
     }
 
-    // Emergencies: Allow any authenticated user to log an emergency.
+    // Emergencies:
+    // - Authenticated users can create emergency logs.
     match /emergencies/{emergencyId} {
       allow create: if request.auth != null;
     }
