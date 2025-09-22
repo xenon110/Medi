@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -15,9 +14,10 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
-import { getReportsForDoctor, Report, getUserProfile, PatientProfile } from '@/lib/firebase-services';
+import { Report, getUserProfile, PatientProfile, DoctorProfile } from '@/lib/firebase-services';
 import { formatDistanceToNow } from 'date-fns';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 
 type PatientCase = Report & {
@@ -36,70 +36,80 @@ const statusMap: { [key in Report['status']]: { label: string; badgeClass: strin
 
 export default function DoctorDashboard() {
   const { toast } = useToast();
+  const router = useRouter();
   const [patientCases, setPatientCases] = useState<PatientCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [filter, setFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<'doctor' | 'patient' | null>(null);
   
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       if (user && db) {
-        setIsLoading(true);
-        
-        const reportsRef = collection(db, 'reports');
-        const q = query(reportsRef, where('doctorId', '==', user.uid));
+        // First, verify the user is a doctor.
+        getUserProfile(user.uid).then(profile => {
+          if (profile && profile.role === 'doctor') {
+            setUserRole('doctor');
 
-        const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
-          const casesPromises = querySnapshot.docs.map(async (doc) => {
-            const report = { id: doc.id, ...doc.data() } as Report;
-            if (!report.patientId) return null; // Gracefully handle missing patient ID on a report
+            // User is a doctor, set up the real-time listener for reports.
+            const reportsRef = collection(db, 'reports');
+            const q = query(reportsRef, where('doctorId', '==', user.uid), orderBy('createdAt', 'desc'));
 
-            const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
+            const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
+              const casesPromises = querySnapshot.docs.map(async (doc) => {
+                const report = { id: doc.id, ...doc.data() } as Report;
+                if (!report.patientId) return null;
 
-            return {
-              ...report,
-              patientProfile: patientProfile || undefined, // Add patient profile to the report, allow undefined
-              time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
-              unread: report.status === 'pending-doctor-review' ? 1 : 0,
-            };
-          });
+                const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
 
-          const cases = (await Promise.all(casesPromises)).filter(Boolean) as PatientCase[];
-          
-          cases.sort((a, b) => {
-            const timeA = (a.createdAt as any)?.seconds || 0;
-            const timeB = (b.createdAt as any)?.seconds || 0;
-            return timeB - timeA;
-          });
-          
-          setPatientCases(cases);
-          
-          if (selectedCase) {
-             const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
-             setSelectedCase(updatedSelectedCase || cases[0] || null);
-          } else if (cases.length > 0) {
-             setSelectedCase(cases[0]);
+                return {
+                  ...report,
+                  patientProfile: patientProfile || undefined,
+                  time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
+                  unread: report.status === 'pending-doctor-review' ? 1 : 0,
+                };
+              });
+
+              const cases = (await Promise.all(casesPromises)).filter(Boolean) as PatientCase[];
+              
+              setPatientCases(cases);
+              
+              // Smartly update or set the selected case
+              if (selectedCase) {
+                 const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
+                 setSelectedCase(updatedSelectedCase || cases[0] || null);
+              } else if (cases.length > 0) {
+                 setSelectedCase(cases[0]);
+              } else {
+                 setSelectedCase(null);
+              }
+              
+              setIsLoading(false);
+
+            }, (error) => {
+              console.error("Error fetching reports in real-time:", error);
+              if (error.code === 'permission-denied' || error.code === 'unauthenticated') {
+                toast({ title: 'Permissions Error', description: 'Could not fetch reports. Please check Firestore rules and indexes.', variant: 'destructive' });
+              } else {
+                toast({ title: 'Error', description: 'A problem occurred while fetching patient cases.', variant: 'destructive' });
+              }
+              setIsLoading(false);
+            });
+
+            return () => unsubscribeSnap();
           } else {
-             setSelectedCase(null);
+             // User is not a doctor, redirect them.
+             router.push('/login?role=patient');
           }
-          
-          setIsLoading(false);
-
-        }, (error) => {
-          console.error("Error fetching reports in real-time:", error);
-          toast({ title: 'Error fetching reports', description: 'Could not retrieve patient cases. Please check your Firestore rules and indexes.', variant: 'destructive' });
-          setIsLoading(false);
         });
-
-        return () => unsubscribeSnap();
       } else {
-        setIsLoading(false);
-        // User not logged in, handled by layout
+        // No user logged in, should be handled by layout, but as a fallback:
+        router.push('/login?role=doctor');
       }
     });
 
     return () => unsubscribeAuth();
-  }, [toast, selectedCase]);
+  }, []); // Intentionally empty to run only once on mount
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -108,8 +118,9 @@ export default function DoctorDashboard() {
   
   const filteredCases = patientCases.filter(p => {
     if (filter === 'All') return true;
-    const statusInfo = statusMap[p.status];
-    return statusInfo && statusInfo.label === filter;
+    if (filter === 'Pending') return p.status === 'pending-doctor-review';
+    if (filter === 'Reviewed') return p.status === 'doctor-approved' || p.status === 'doctor-modified';
+    return true;
   });
 
   if (isLoading) {
@@ -183,6 +194,12 @@ export default function DoctorDashboard() {
                         </div>
                     )
                 ))}
+                 {filteredCases.length === 0 && (
+                    <div className="text-center p-8 text-gray-500">
+                        <Inbox size={32} className="mx-auto mb-2" />
+                        <p>No {filter !== 'All' ? filter.toLowerCase() : ''} cases found.</p>
+                    </div>
+                )}
             </div>
         </div>
 
@@ -314,15 +331,10 @@ export default function DoctorDashboard() {
             <div>
               <MessageSquare size={48} className="mx-auto text-gray-300 mb-4" />
               <h3 className="text-xl font-semibold text-gray-700">Select a patient case</h3>
-              <p className="text-gray-500">Choose a case from the list to view details or wait for new cases to arrive.</p>
+              <p className="text-gray-500">Choose a case from the list to view details, or wait for new cases to arrive.</p>
             </div>
           </div>
         )}
     </div>
   );
 }
-
-    
-
-    
-

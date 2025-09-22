@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { getUserProfile } from '@/lib/firebase-services';
 import type { User } from 'firebase/auth';
 
 export default function DoctorLayout({
@@ -14,28 +13,20 @@ export default function DoctorLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async (user: User) => {
-      const userProfile = await getUserProfile(user.uid);
-      if (userProfile && userProfile.role === 'doctor') {
-        setIsAuthorized(true);
-      } else {
-        // If user is logged in but not a doctor, redirect them.
-        router.push('/login?role=patient');
-      }
-      setIsLoading(false);
-    };
-
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        checkAuth(user);
+        // We will let the dashboard page handle role-specific authorization.
+        // The layout just needs to ensure a user is logged in.
+        setIsAuthenticated(true);
       } else {
-        // If no user is logged in, redirect to login page.
+        // If no user is logged in, redirect to login page for doctors.
         router.push('/login?role=doctor');
       }
+      setIsLoading(false);
     });
 
     // Cleanup subscription on unmount
@@ -46,21 +37,21 @@ export default function DoctorLayout({
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-lg">Verifying authorization...</p>
+        <p className="ml-4 text-lg">Verifying authentication...</p>
       </div>
     );
   }
 
-  if (!isAuthorized) {
-    // This part is mainly for the brief moment before the redirect completes.
+  if (!isAuthenticated) {
+    // This state is briefly hit before the redirect to login completes.
     return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="ml-4 text-lg">Redirecting...</p>
+            <p className="ml-4 text-lg">Redirecting to login...</p>
       </div>
     );
   }
 
-  // If authorized, render the children (the actual doctor page)
+  // If authenticated, render the children (the actual doctor page)
   return <>{children}</>;
 }
