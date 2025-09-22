@@ -108,7 +108,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, [router, toast]);
+  }, [router, toast, selectedCase]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
