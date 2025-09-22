@@ -164,22 +164,24 @@ export default function DoctorDashboard() {
 
             <div className="patients-container">
                 {filteredCases.map((pCase) => (
-                    <div 
-                      key={pCase.id} 
-                      className={cn('patient-item', { 'active': selectedCase?.id === pCase.id })}
-                      onClick={() => handleSelectCase(pCase)}
-                    >
-                        <div className="patient-avatar">{pCase.patientProfile?.name.split(' ').map(n => n[0]).join('') || 'P'}</div>
-                        <div className="patient-info">
-                            <div className="patient-name">{pCase.patientProfile?.name || 'Unknown Patient'}</div>
-                            <p className="patient-condition">Dermatology Case</p>
-                            <p className="patient-time">{pCase.time}</p>
+                    pCase.patientProfile && (
+                        <div 
+                          key={pCase.id} 
+                          className={cn('patient-item', { 'active': selectedCase?.id === pCase.id })}
+                          onClick={() => handleSelectCase(pCase)}
+                        >
+                            <div className="patient-avatar">{pCase.patientProfile.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div className="patient-info">
+                                <div className="patient-name">{pCase.patientProfile.name}</div>
+                                <p className="patient-condition">Dermatology Case</p>
+                                <p className="patient-time">{pCase.time}</p>
+                            </div>
+                            <div className="patient-status">
+                                {statusMap[pCase.status] && <div className={cn('status-badge', statusMap[pCase.status].badgeClass)}>{statusMap[pCase.status].label}</div>}
+                                {pCase.unread > 0 && <div className="unread-count">{pCase.unread}</div>}
+                            </div>
                         </div>
-                        <div className="patient-status">
-                            {statusMap[pCase.status] && <div className={cn('status-badge', statusMap[pCase.status].badgeClass)}>{statusMap[pCase.status].label}</div>}
-                            {pCase.unread > 0 && <div className="unread-count">{pCase.unread}</div>}
-                        </div>
-                    </div>
+                    )
                 ))}
             </div>
         </div>
@@ -323,3 +325,4 @@ export default function DoctorDashboard() {
     
 
     
+
