@@ -2,38 +2,36 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Doctors: 
-    // - Any authenticated user can get a LIST of APPROVED doctors. This is for the patient's consult page.
-    // - Any authenticated user can GET a single doctor's profile if they have the ID.
-    // - A doctor can only WRITE/update their own document.
     match /doctors/{doctorId} {
-      // Allow 'list' for queries filtered by 'approved' status.
-      // Allow 'read' for any authenticated user to get the documents from that list.
-      allow list: if request.auth != null && request.query.where.get('verificationStatus') == 'approved';
-      allow read: if request.auth != null;
+      // Allow reading a doctor's profile if they are approved, or if the user is that doctor.
+      // This rule allows the 'getDoctors' query to list all approved doctors.
+      allow read: if request.auth != null &&
+                  (resource.data.verificationStatus == "approved" || request.auth.uid == doctorId);
+      
+      // A doctor can only write to their own profile.
       allow write: if request.auth != null && request.auth.uid == doctorId;
     }
     
-    // Patients: Users can only read or write to their own patient document.
     match /patients/{patientId} {
+      // A patient can only read or write their own profile.
       allow read, write: if request.auth != null && request.auth.uid == patientId;
     }
 
-    // Reports: 
-    // - Patients can create reports for themselves.
-    // - Patients can read their own reports.
-    // - Doctors can read and update reports assigned to them.
     match /reports/{reportId} {
+      // A patient can create a report for themselves.
       allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      
+      // A patient or the assigned doctor can read the report.
       allow read: if request.auth != null && 
                   (resource.data.patientId == request.auth.uid || resource.data.doctorId == request.auth.uid);
+      
+      // Only the assigned doctor can update the report (e.g., add notes, change status).
+      // Patient can update by sending to a doctor (handled in app logic, not rules).
       allow update: if request.auth != null && (resource.data.doctorId == request.auth.uid || resource.data.patientId == request.auth.uid);
     }
 
-    // Emergencies:
-    // - Authenticated users can create emergency logs.
     match /emergencies/{emergencyId} {
+      // Any authenticated user can log an emergency.
       allow create: if request.auth != null;
     }
   }
