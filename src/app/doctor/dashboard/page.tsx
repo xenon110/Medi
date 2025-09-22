@@ -46,16 +46,15 @@ export default function DoctorDashboard() {
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       if (user && db) {
+        setIsLoading(true);
         getUserProfile(user.uid).then(profile => {
           if (profile && profile.role === 'doctor') {
             setUserRole('doctor');
 
             const reportsRef = collection(db, 'reports');
-            // This query now requires a composite index: (doctorId ASC, createdAt DESC)
             const q = query(reportsRef, where('doctorId', '==', user.uid), orderBy('createdAt', 'desc'));
 
             const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
-              setIsLoading(true);
               const casesPromises = querySnapshot.docs.map(async (doc) => {
                 const report = { id: doc.id, ...doc.data() } as Report;
                 if (!report.patientId) return null;
@@ -76,6 +75,7 @@ export default function DoctorDashboard() {
               
               setPatientCases(cases);
               
+              // Logic to update or set the selected case
               if (selectedCase) {
                  const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
                  setSelectedCase(updatedSelectedCase || cases[0] || null);
@@ -101,6 +101,11 @@ export default function DoctorDashboard() {
           } else {
              router.push('/login?role=patient');
           }
+        }).catch(err => {
+            console.error("Error getting user profile:", err);
+            toast({ title: "Authentication Error", description: "Could not verify your profile.", variant: "destructive"});
+            setIsLoading(false);
+            router.push('/login?role=doctor');
         });
       } else {
         router.push('/login?role=doctor');
@@ -108,7 +113,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, [router, toast, selectedCase]);
+  }, [router, toast]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -122,7 +127,7 @@ export default function DoctorDashboard() {
     return true;
   });
 
-  if (isLoading && patientCases.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
