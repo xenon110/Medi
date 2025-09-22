@@ -52,20 +52,18 @@ export default function DoctorDashboard() {
         const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
           const casesPromises = querySnapshot.docs.map(async (doc) => {
             const report = { id: doc.id, ...doc.data() } as Report;
-            // Gracefully handle missing patient profiles
-            if (!report.patientId) return null;
+            if (!report.patientId) return null; // Gracefully handle missing patient ID on a report
 
             const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
 
             return {
               ...report,
-              patientProfile: patientProfile || undefined, // Add patient profile to the report
+              patientProfile: patientProfile || undefined, // Add patient profile to the report, allow undefined
               time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
               unread: report.status === 'pending-doctor-review' ? 1 : 0,
             };
           });
 
-          // Filter out any null cases that resulted from missing patient IDs
           const cases = (await Promise.all(casesPromises)).filter(Boolean) as PatientCase[];
           
           cases.sort((a, b) => {
@@ -76,7 +74,6 @@ export default function DoctorDashboard() {
           
           setPatientCases(cases);
           
-          // Logic to update or set the selected case
           if (selectedCase) {
              const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
              setSelectedCase(updatedSelectedCase || cases[0] || null);
@@ -96,8 +93,8 @@ export default function DoctorDashboard() {
 
         return () => unsubscribeSnap();
       } else {
-        // Not authenticated or db not available
         setIsLoading(false);
+        // User not logged in, handled by layout
       }
     });
 
@@ -322,5 +319,7 @@ export default function DoctorDashboard() {
     </div>
   );
 }
+
+    
 
     
