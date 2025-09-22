@@ -1,13 +1,12 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
     
     // Doctors: 
-    // - Any authenticated user can get a LIST of APPROVED doctors.
-    // - Any authenticated user can GET a single doctor's profile.
-    // - A doctor can only write/update their own document.
+    // - Any authenticated user can get a LIST of APPROVED doctors. This is for the patient's consult page.
+    // - Any authenticated user can GET a single doctor's profile if they have the ID.
+    // - A doctor can only WRITE/update their own document.
     match /doctors/{doctorId} {
       allow list: if request.auth != null && request.query.get('verificationStatus') == 'approved';
       allow get: if request.auth != null;
@@ -20,8 +19,8 @@ service cloud.firestore {
     }
 
     // Reports: 
-    // - Patients can create reports.
-    // - Patients can only read their own reports.
+    // - Patients can create reports for themselves.
+    // - Patients can read their own reports.
     // - Doctors can read and update reports assigned to them.
     match /reports/{reportId} {
       allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
