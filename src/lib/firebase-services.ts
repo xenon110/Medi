@@ -188,3 +188,4 @@ export const logEmergency = async (patientId: string) => {
         timestamp: serverTimestamp()
     });
 };
+
