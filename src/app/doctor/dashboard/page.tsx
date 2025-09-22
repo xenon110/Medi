@@ -46,24 +46,22 @@ export default function DoctorDashboard() {
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       if (user && db) {
-        // First, verify the user is a doctor.
         getUserProfile(user.uid).then(profile => {
           if (profile && profile.role === 'doctor') {
             setUserRole('doctor');
 
-            // User is a doctor, set up the real-time listener for reports.
             const reportsRef = collection(db, 'reports');
+            // This query now requires a composite index: (doctorId ASC, createdAt DESC)
             const q = query(reportsRef, where('doctorId', '==', user.uid), orderBy('createdAt', 'desc'));
 
             const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
-              setIsLoading(true); // Set loading while we process new data
+              setIsLoading(true);
               const casesPromises = querySnapshot.docs.map(async (doc) => {
                 const report = { id: doc.id, ...doc.data() } as Report;
                 if (!report.patientId) return null;
 
                 const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
                 
-                // Gracefully handle cases where patient profile might not exist
                 if (!patientProfile) return null;
 
                 return {
@@ -74,11 +72,10 @@ export default function DoctorDashboard() {
                 };
               });
 
-              const cases = (await Promise.all(casesPromises)).filter(Boolean) as PatientCase[];
+              const cases = (await Promise.all(casesPromises)).filter((c): c is PatientCase => c !== null);
               
               setPatientCases(cases);
               
-              // Smartly update or set the selected case
               if (selectedCase) {
                  const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
                  setSelectedCase(updatedSelectedCase || cases[0] || null);
@@ -92,7 +89,7 @@ export default function DoctorDashboard() {
 
             }, (error) => {
               console.error("Error fetching reports in real-time:", error);
-              if (error.code === 'permission-denied' || error.code === 'unauthenticated') {
+              if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.code === 'failed-precondition') {
                 toast({ title: 'Permissions Error', description: 'Could not fetch reports. Please check Firestore rules and indexes.', variant: 'destructive' });
               } else {
                 toast({ title: 'Error', description: 'A problem occurred while fetching patient cases.', variant: 'destructive' });
@@ -102,18 +99,16 @@ export default function DoctorDashboard() {
 
             return () => unsubscribeSnap();
           } else {
-             // User is not a doctor, redirect them.
              router.push('/login?role=patient');
           }
         });
       } else {
-        // No user logged in, should be handled by layout, but as a fallback:
         router.push('/login?role=doctor');
       }
     });
 
     return () => unsubscribeAuth();
-  }, [router, toast]); // Removed selectedCase to prevent loops
+  }, [router, toast]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
