@@ -1,5 +1,4 @@
 
-
 import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp, orderBy } from 'firebase/firestore';
 import { db } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
@@ -188,5 +187,3 @@ export const logEmergency = async (patientId: string) => {
         timestamp: serverTimestamp()
     });
 };
-
-
