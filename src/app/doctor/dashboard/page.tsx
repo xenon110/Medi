@@ -52,6 +52,9 @@ export default function DoctorDashboard() {
         const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
           const casesPromises = querySnapshot.docs.map(async (doc) => {
             const report = { id: doc.id, ...doc.data() } as Report;
+            // Gracefully handle missing patient profiles
+            if (!report.patientId) return null;
+
             const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
 
             return {
@@ -62,20 +65,23 @@ export default function DoctorDashboard() {
             };
           });
 
-          const cases = (await Promise.all(casesPromises)).sort((a, b) => {
+          // Filter out any null cases that resulted from missing patient IDs
+          const cases = (await Promise.all(casesPromises)).filter(Boolean) as PatientCase[];
+          
+          cases.sort((a, b) => {
             const timeA = (a.createdAt as any)?.seconds || 0;
             const timeB = (b.createdAt as any)?.seconds || 0;
             return timeB - timeA;
           });
           
-          setPatientCases(cases as PatientCase[]);
+          setPatientCases(cases);
           
           // Logic to update or set the selected case
           if (selectedCase) {
              const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
              setSelectedCase(updatedSelectedCase || cases[0] || null);
           } else if (cases.length > 0) {
-             setSelectedCase(cases[0] as PatientCase);
+             setSelectedCase(cases[0]);
           } else {
              setSelectedCase(null);
           }
@@ -84,7 +90,7 @@ export default function DoctorDashboard() {
 
         }, (error) => {
           console.error("Error fetching reports in real-time:", error);
-          toast({ title: 'Error fetching reports', description: 'Could not retrieve patient cases. Please try again later.', variant: 'destructive' });
+          toast({ title: 'Error fetching reports', description: 'Could not retrieve patient cases. Please check your Firestore rules and indexes.', variant: 'destructive' });
           setIsLoading(false);
         });
 
@@ -96,7 +102,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, [toast]);
+  }, [toast, selectedCase]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -309,10 +315,12 @@ export default function DoctorDashboard() {
             <div>
               <MessageSquare size={48} className="mx-auto text-gray-300 mb-4" />
               <h3 className="text-xl font-semibold text-gray-700">Select a patient case</h3>
-              <p className="text-gray-500">Choose a case from the list to view details.</p>
+              <p className="text-gray-500">Choose a case from the list to view details or wait for new cases to arrive.</p>
             </div>
           </div>
         )}
     </div>
   );
 }
+
+    
