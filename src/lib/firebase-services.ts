@@ -165,7 +165,9 @@ export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> =
 export const getDoctors = async (): Promise<DoctorProfile[]> => {
   if (!db) throw new Error("Firestore is not initialized.");
   const doctorsCollection = collection(db, 'doctors');
-  const querySnapshot = await getDocs(doctorsCollection);
+  // This query now matches the security rule `allow list: if request.query.get('verificationStatus') == 'approved';`
+  const q = query(doctorsCollection, where("verificationStatus", "==", "approved"));
+  const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as DoctorProfile));
 };
 
