@@ -1,15 +1,14 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Doctors collection
     match /doctors/{doctorId} {
-      allow read: if request.auth != null &&
+      allow read: if request.auth != null && 
                   (resource.data.verificationStatus == "approved" || request.auth.uid == doctorId);
       allow write: if request.auth != null && request.auth.uid == doctorId;
     }
-    
+
     // Patients collection
     match /patients/{patientId} {
       allow read, write: if request.auth != null && request.auth.uid == patientId;
@@ -17,27 +16,33 @@ service cloud.firestore {
 
     // Reports collection
     match /reports/{reportId} {
+      
       // Patients can create a report for themselves
       allow create: if request.auth != null &&
                     request.resource.data.patientId == request.auth.uid;
 
-      // Allow doctors and patients to get a specific report
+      // Reading a single report
       allow get: if request.auth != null &&
-                 (resource.data.patientId == request.auth.uid ||
-                  resource.data.doctorId == request.auth.uid);
+                        (resource.data.patientId == request.auth.uid ||
+                         resource.data.doctorId == request.auth.uid);
 
-      // Securely allow doctors OR patients to list their respective reports
-      allow list: if request.auth != null && (
-          // Patient can list their own reports
-          (request.query.where[0] == 'patientId' && request.query.where[1] == '==' && request.query.where[2] == request.auth.uid) ||
-          // Doctor can list reports assigned to them
-          (request.query.where[0] == 'doctorId' && request.query.where[1] == '==' && request.query.where[2] == request.auth.uid)
-      );
+      // Updating a report
+      allow update: if request.auth != null &&
+                    (
+                      // Doctor can update a report assigned to them
+                      resource.data.doctorId == request.auth.uid || 
+                      // Patient can update a report (e.g. to send to a doctor)
+                      (resource.data.patientId == request.auth.uid && request.resource.data.doctorId != null)
+                    );
 
-      // Allow doctors to update reports assigned to them OR patients to send a report
-      allow update: if request.auth != null && 
-                    (resource.data.doctorId == request.auth.uid || 
-                     (request.resource.data.doctorId != null && resource.data.patientId == request.auth.uid));
+      // Listing reports securely using queries
+      allow list: if request.auth != null &&
+                  (
+                    // Patient can list only their reports
+                    (request.query.where('patientId', '==', request.auth.uid)) ||
+                    // Doctor can list only reports assigned to them
+                    (request.query.where('doctorId', '==', request.auth.uid))
+                  );
     }
 
     // Emergencies collection
