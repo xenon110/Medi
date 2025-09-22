@@ -36,20 +36,25 @@ export default function ConsultPage() {
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (user) {
+                setIsLoading(true);
+                // Fetch doctors and reports in separate try/catch blocks for better error handling
                 try {
-                    const [fetchedDoctors, fetchedReports] = await Promise.all([
-                        getDoctors(),
-                        getReportsForPatient(user.uid)
-                    ]);
-
+                    const fetchedDoctors = await getDoctors();
                     setDoctors(fetchedDoctors);
+                } catch (error) {
+                    console.error("Failed to fetch doctors:", error);
+                    toast({ variant: 'destructive', title: 'Error Fetching Doctors', description: 'Could not retrieve the list of available doctors. This may be due to a missing database index.' });
+                }
+
+                try {
+                    const fetchedReports = await getReportsForPatient(user.uid);
                     setReports(fetchedReports.filter(r => r.status === 'pending-patient-input'));
                 } catch (error) {
-                    console.error("Failed to fetch data:", error);
-                    toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch doctors or reports. Please try again later.' });
-                } finally {
-                    setIsLoading(false);
+                    console.error("Failed to fetch reports:", error);
+                    toast({ variant: 'destructive', title: 'Error Fetching Reports', description: 'Could not retrieve your pending reports.' });
                 }
+
+                setIsLoading(false);
             } else {
                 // If no user is logged in, stop loading and redirect.
                 setIsLoading(false);
