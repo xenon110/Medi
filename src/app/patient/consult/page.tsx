@@ -154,7 +154,7 @@ export default function ConsultPage() {
                                 </CardHeader>
                             </Card>
                         ))}
-                         {doctors.length === 0 && (
+                         {doctors.length === 0 && !isLoading && (
                             <div className="text-center py-12 text-muted-foreground">
                                 <p>No doctors are currently available. Please check back later.</p>
                                 <p className="text-xs mt-2">(This may also be due to a missing database index. Please check Firebase console.)</p>
