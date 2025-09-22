@@ -14,10 +14,19 @@ service cloud.firestore {
     }
 
     match /reports/{reportId} {
+      // Allow a doctor to list reports assigned to them.
+      allow list: if request.auth != null && request.query.get('doctorId') == request.auth.uid;
+
       allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      
+      // A patient or the assigned doctor can read a single report.
       allow read: if request.auth != null && 
                   (resource.data.patientId == request.auth.uid || resource.data.doctorId == request.auth.uid);
-      allow update: if request.auth != null && (resource.data.doctorId == request.auth.uid || resource.data.patientId == request.auth.uid);
+      
+      // Only the assigned doctor can update (e.g., add notes).
+      // A patient can also update if they are sending it to a doctor.
+      allow update: if request.auth != null && 
+                     (resource.data.doctorId == request.auth.uid || request.resource.data.patientId == request.auth.uid);
     }
 
     match /emergencies/{emergencyId} {
