@@ -29,7 +29,7 @@ const statusMap: { [key in Report['status']]: { label: string; badgeClass: strin
   'pending-doctor-review': { label: 'Pending', badgeClass: 'status-pending' },
   'doctor-approved': { label: 'Reviewed', badgeClass: 'status-reviewed' },
   'doctor-modified': { label: 'Reviewed', badgeClass: 'status-reviewed' },
-  'rejected': { label: 'Disqualified', badgeClass: 'status-reviewed' }, // Or a different color
+  'rejected': { label: 'Disqualified', badgeClass: 'status-reviewed' },
   'pending-patient-input': { label: 'Draft', badgeClass: 'status-reviewed' },
 };
 
@@ -113,7 +113,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeAuth();
-  }, [router, toast, selectedCase]); // Re-added selectedCase to handle updates correctly
+  }, [router, toast]); // Removed selectedCase to prevent loops
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -198,7 +198,7 @@ export default function DoctorDashboard() {
                         </div>
                     )
                 ))}
-                 {filteredCases.length === 0 && (
+                 {filteredCases.length === 0 && !isLoading && (
                     <div className="text-center p-8 text-gray-500">
                         <Inbox size={32} className="mx-auto mb-2" />
                         <p>No {filter !== 'All' ? filter.toLowerCase() : ''} cases found.</p>
@@ -342,3 +342,5 @@ export default function DoctorDashboard() {
     </div>
   );
 }
+
+    
