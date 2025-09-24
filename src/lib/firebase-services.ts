@@ -203,6 +203,16 @@ export const sendReportToDoctor = async (reportId: string, doctorId: string) => 
     });
 };
 
+export const updateReportByDoctor = async (reportId: string, status: Report['status'], doctorNotes: string) => {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const reportRef = doc(db, 'reports', reportId);
+    await updateDoc(reportRef, {
+        status: status,
+        doctorNotes: doctorNotes
+    });
+};
+
+
 export const logEmergency = async (patientId: string) => {
     if (!db) throw new Error("Firestore is not initialized.");
     const emergenciesCollection = collection(db, 'emergencies');

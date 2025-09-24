@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
-import { Report, getUserProfile, PatientProfile, DoctorProfile } from '@/lib/firebase-services';
+import { Report, getUserProfile, PatientProfile, DoctorProfile, updateReportByDoctor } from '@/lib/firebase-services';
 import { formatDistanceToNow } from 'date-fns';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -42,6 +42,11 @@ export default function DoctorDashboard() {
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [filter, setFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
+
+  // State for doctor's response
+  const [assessment, setAssessment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeResponseTab, setActiveResponseTab] = useState<'customize' | 'approve'>('customize');
   
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -62,7 +67,6 @@ export default function DoctorDashboard() {
     });
     
     const reportsRef = collection(db, 'reports');
-    // Simplified query to only filter by doctorId. Sorting will be done client-side.
     const q = query(reportsRef, where('doctorId', '==', currentUser.uid));
 
     const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
@@ -76,7 +80,7 @@ export default function DoctorDashboard() {
           console.warn(`Could not fetch profile for patient ID: ${report.patientId}`);
           return {
             ...report,
-            patientProfile: { name: "Unknown Patient" } as PatientProfile, // Provide a fallback profile
+            patientProfile: { name: "Unknown Patient" } as PatientProfile,
             time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
             unread: report.status === 'pending-doctor-review' ? 1 : 0,
           };
@@ -92,7 +96,6 @@ export default function DoctorDashboard() {
 
       let cases = (await Promise.all(casesPromises)).filter((c): c is PatientCase => c !== null);
       
-      // Sort cases by creation date on the client side
       cases.sort((a, b) => {
         const timeA = (a.createdAt as any)?.seconds || 0;
         const timeB = (b.createdAt as any)?.seconds || 0;
@@ -102,13 +105,21 @@ export default function DoctorDashboard() {
       setPatientCases(cases);
       
       if (cases.length > 0) {
-        // If a case is already selected, try to find its updated version.
-        // Otherwise, select the first case in the sorted list.
         const currentSelectedId = selectedCase?.id;
         const updatedSelectedCase = currentSelectedId ? cases.find(c => c.id === currentSelectedId) : undefined;
-        setSelectedCase(updatedSelectedCase || cases[0]);
+        const newSelectedCase = updatedSelectedCase || cases[0];
+        
+        if (newSelectedCase) {
+          setSelectedCase(newSelectedCase);
+          setAssessment(newSelectedCase.doctorNotes || '');
+          if (newSelectedCase.status === 'doctor-approved') {
+              setActiveResponseTab('approve');
+          } else {
+              setActiveResponseTab('customize');
+          }
+        }
+
       } else {
-        // No cases found, so clear the selection.
         setSelectedCase(null);
       }
       
@@ -125,19 +136,55 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeSnap();
-  }, [router, toast, selectedCase?.id]);
+  }, [router, toast]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
     setSelectedCase(patientCase);
+    setAssessment(patientCase.doctorNotes || '');
+    if (patientCase.status === 'doctor-approved') {
+        setActiveResponseTab('approve');
+    } else {
+        setActiveResponseTab('customize');
+    }
   };
   
   const filteredCases = patientCases.filter(p => {
     if (filter === 'All') return true;
     if (filter === 'Pending') return p.status === 'pending-doctor-review';
-    if (filter === 'Reviewed') return p.status === 'doctor-approved' || p.status === 'doctor-modified';
+    if (filter === 'Reviewed') return ['doctor-approved', 'doctor-modified', 'rejected'].includes(p.status);
     return true;
   });
+
+  const handleSendAssessment = async () => {
+      if (!selectedCase) return;
+      
+      let newStatus: Report['status'];
+      let notes = assessment;
+
+      if (activeResponseTab === 'approve') {
+          newStatus = 'doctor-approved';
+          notes = assessment || 'The AI-generated report has been reviewed and approved.'
+      } else { // 'customize'
+          if (!assessment.trim()) {
+              toast({ title: 'Assessment Required', description: 'Please write your assessment before sending.', variant: 'destructive' });
+              return;
+          }
+          newStatus = 'doctor-modified';
+      }
+
+      setIsSubmitting(true);
+      try {
+          await updateReportByDoctor(selectedCase.id, newStatus, notes);
+          toast({ title: 'Success', description: 'Your assessment has been sent to the patient.' });
+      } catch (error) {
+          console.error("Failed to send assessment:", error);
+          toast({ title: 'Error', description: 'Could not send the assessment. Please try again.', variant: 'destructive' });
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
+
 
   if (isLoading) {
     return (
@@ -330,20 +377,28 @@ export default function DoctorDashboard() {
                 <div className="response-header">
                     <h3 className="response-title">Your Professional Assessment</h3>
                     <div className="response-actions">
-                        <button className="quick-action">✅ Approve AI Report</button>
-                        <button className="quick-action active">✏️ Customize</button>
-                        <button className="quick-action">❓ Request More Info</button>
+                        <button className={cn('quick-action', {'active': activeResponseTab === 'approve'})} onClick={() => setActiveResponseTab('approve')}>✅ Approve AI Report</button>
+                        <button className={cn('quick-action', {'active': activeResponseTab === 'customize'})} onClick={() => setActiveResponseTab('customize')}>✏️ Customize</button>
+                        <button className="quick-action" onClick={() => setAssessment('The submitted image is unclear. Please provide a clearer photo of the affected area.')}>❓ Request More Info</button>
                     </div>
                 </div>
 
-                <textarea className="response-editor" placeholder="Add your professional assessment, modifications, or additional recommendations..."></textarea>
+                <textarea 
+                    className="response-editor" 
+                    placeholder="Add your professional assessment, modifications, or additional recommendations..."
+                    value={assessment}
+                    onChange={(e) => setAssessment(e.target.value)}
+                    disabled={isSubmitting}
+                />
                 
                 <div className="editor-toolbar">
                    <div className="file-upload">
                         <Paperclip size={16}/>
                         <span>Attach Prescription</span>
                    </div>
-                   <button className="send-response">Send Assessment &rarr;</button>
+                   <button className="send-response" onClick={handleSendAssessment} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : <>Send Assessment &rarr;</>}
+                    </button>
                 </div>
             </div>
           </div>
@@ -359,5 +414,3 @@ export default function DoctorDashboard() {
     </div>
   );
 }
-
-    
