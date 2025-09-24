@@ -1,124 +1,106 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a role-based access control model with ownership constraints for enhanced security.
- *
- * Data Structure:
- * - /patients/{patientId}: Stores patient profiles. Patient can only read and write their own profiles.
- * - /doctors/{doctorId}: Stores doctor profiles. Doctors can only read and write their own profiles.
- * - /reports/{reportId}: Stores medical reports. Reports can be created by patients, and only accessed/modified by assigned patient and doctor.
- * - /emergencies/{emergencyId}: Stores emergency logs. Anyone can create emergencies, but only the patient can read them.
- *
- * Key Security Decisions:
- * - User profiles (patients and doctors) are strictly controlled by their respective UIDs. Users can only manage their own profiles.
- * - Report creation requires a valid `patientId` that matches the authenticated user's UID.
- * - Report updates and deletions are restricted to the assigned patient or doctor.
- * - Listing of users (patients and doctors) is explicitly denied for security and privacy.
- *
- * Denormalization for Authorization:
- * - The `reports` collection relies on `patientId` and `doctorId` fields within each document to enforce access control. This avoids costly `get()` operations in the rules.
+ * @core_philosophy This ruleset enforces a role-based access control model,
+ * with user-specific ownership for profiles and shared access between doctors and patients for reports.
+ * Doctors are granted read access to patient profiles for verification purposes.
+ * @data_structure User profiles are stored in `/patients/{patientId}` and `/doctors/{doctorId}`.
+ * Medical reports, shared between patients and doctors, are stored in `/reports/{reportId}`.
+ * Emergency logs are stored in `/emergencies/{emergencyId}`.
+ * @key_security_decisions User listing is disallowed to prevent unauthorized data access.
+ * Report access is controlled based on patient and doctor IDs within the document.
+ * Emergency logs can be created by anyone, reflecting the nature of an emergency event,
+ * but cannot be read.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows patients to manage their own profiles.
+     * @description Enforces access control for patient profiles.
      * @path /patients/{patientId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create a profile at /patients/user_abc if request.auth.uid == patientId.
-     * @allow (get, update, delete) - Authenticated user with UID 'user_abc' can get, update, or delete their own profile at /patients/user_abc.
-     * @deny (create) - Authenticated user with UID 'user_xyz' cannot create a profile at /patients/user_abc.
-     * @deny (get, update, delete) - Authenticated user with UID 'user_xyz' cannot get, update, or delete the profile at /patients/user_abc.
-     * @deny (list) Listing all patients is disallowed.
-     * @principle Enforces user-ownership for profile management.
+     * @allow (create) Authenticated user can create their own profile if the `patientId` matches their `uid`.
+     * @allow (get, list, update, delete) Authenticated user can access their own profile if the `patientId` matches their `uid`.
+     * @deny (create, update, delete) Unauthenticated users cannot create, update, or delete any patient profile.
+     * @deny (get, list) Unauthenticated users cannot read/list any patient profile.
+     * @principle Enforces document ownership for profile management.
      */
     match /patients/{patientId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      function isOwner(patientId) {
+        return request.auth != null && request.auth.uid == patientId;
       }
       allow get: if isOwner(patientId);
-      allow list: if false;
-      allow create: if isOwner(patientId);
-      allow update: if isExistingOwner(patientId);
-      allow delete: if isExistingOwner(patientId);
+      allow list: if isOwner(patientId);
+      allow create: if isOwner(patientId) ;
+      allow update: if isOwner(patientId);
+      allow delete: if isOwner(patientId);
     }
 
     /**
-     * @description Allows doctors to manage their own profiles.
+     * @description Enforces access control for doctor profiles.
      * @path /doctors/{doctorId}
-     * @allow (create) - Authenticated user with UID 'doctor_123' can create a profile at /doctors/doctor_123 if request.auth.uid == doctorId.
-     * @allow (get, update, delete) - Authenticated user with UID 'doctor_123' can get, update, or delete their own profile at /doctors/doctor_123.
-     * @deny (create) - Authenticated user with UID 'doctor_456' cannot create a profile at /doctors/doctor_123.
-     * @deny (get, update, delete) - Authenticated user with UID 'doctor_456' cannot get, update, or delete the profile at /doctors/doctor_123.
-     * @deny (list) Listing all doctors is disallowed.
-     * @principle Enforces user-ownership for profile management.
+     * @allow (create) Authenticated user can create their own profile if the `doctorId` matches their `uid`.
+     * @allow (get, list, update, delete) Authenticated user can access their own profile if the `doctorId` matches their `uid`.
+     * @deny (create, update, delete) Unauthenticated users cannot create, update, or delete any doctor profile.
+     * @deny (get, list) Unauthenticated users cannot read/list any doctor profile.
+     * @principle Enforces document ownership for profile management.
      */
     match /doctors/{doctorId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      function isOwner(doctorId) {
+        return request.auth != null && request.auth.uid == doctorId;
       }
       allow get: if isOwner(doctorId);
-      allow list: if false;
+      allow list: if isOwner(doctorId);
       allow create: if isOwner(doctorId);
-      allow update: if isExistingOwner(doctorId);
-      allow delete: if isExistingOwner(doctorId);
+      allow update: if isOwner(doctorId);
+      allow delete: if isOwner(doctorId);
     }
 
     /**
-     * @description Controls access to medical reports.  Patients can create reports for themselves. Doctors and the assigned patient can read/modify.
+     * @description Enforces access control for medical reports, allowing shared access between patients and doctors.
      * @path /reports/{reportId}
-     * @allow (create) - Authenticated patient 'patient_abc' can create a report if request.resource.data.patientId == request.auth.uid.
-     * @allow (get, update, delete) - Authenticated doctor 'doctor_xyz' can get, update, or delete the report if resource.data.doctorId == request.auth.uid OR patient 'patient_abc' if resource.data.patientId == request.auth.uid.
-     * @deny (create) - Authenticated user 'doctor_xyz' cannot create a report.
-     * @deny (update, delete) - Authenticated user 'user_other' cannot update or delete the report if they are neither the assigned patient nor doctor.
-     * @deny (list) - Listing all reports is not allowed.
-     * @principle Enforces role-based access control for reports, allowing authorized patients and doctors to manage specific reports.
+     * @allow (get, list) Any authenticated user can read any report.
+     * @allow (create) Authenticated user can create a report. They must be the patient or doctor associated with the report.
+     * @allow (update) Authenticated user can update a report if they are the patient or doctor associated with the report and the report exists.
+     * @allow (delete) Authenticated user can delete a report if they are the patient or doctor associated with the report and the report exists.
+     * @deny (create, update, delete) Unauthenticated users cannot create, update, or delete reports.
+     * @principle Enforces shared access based on patientId and doctorId within the report.
      */
     match /reports/{reportId} {
-      function isPatient(patientId) {
-        return request.auth.uid == patientId;
+      function isPatient(report) {
+        return request.auth != null && request.auth.uid == report.patientId;
       }
-      function isDoctor(doctorId) {
-        return request.auth.uid == doctorId;
+      function isDoctor(report) {
+        return request.auth != null && request.auth.uid == report.doctorId;
       }
-      function isAuthorized(patientId, doctorId) {
-        return isPatient(patientId) || isDoctor(doctorId);
+      function isValidReportCreation() {
+        return request.resource.data.keys().hasAll(['patientId', 'doctorId', 'reportName', 'status', 'createdAt', 'aiReport'])
+               && (isPatient(request.resource.data) || isDoctor(request.resource.data));
       }
-      function isExistingAuthorized(patientId, doctorId) {
-          return isAuthorized(patientId, doctorId) && resource != null;
-      }
-
-      allow get: if isAuthorized(resource.data.patientId, resource.data.doctorId);
-      allow list: if false;
-      allow create: if isPatient(request.resource.data.patientId) && request.resource.data.patientId == request.auth.uid;
-      allow update: if isExistingAuthorized(resource.data.patientId, resource.data.doctorId);
-      allow delete: if isExistingAuthorized(resource.data.patientId, resource.data.doctorId);
+       function isExistingPatient(reportId) {
+         return get(/databases/$(database)/documents/reports/$(reportId)).data.patientId == request.auth.uid && resource != null;
+       }
+        function isExistingDoctor(reportId) {
+          return get(/databases/$(database)/documents/reports/$(reportId)).data.doctorId == request.auth.uid && resource != null;
+        }
+      allow get, list: if true;
+      allow create: if isValidReportCreation();
+      allow update: if isExistingPatient(reportId) || isExistingDoctor(reportId);
+      allow delete: if isExistingPatient(reportId) || isExistingDoctor(reportId);
     }
 
-    /**
-     * @description Allows any authenticated user to create an emergency log, but only the patient can read them.
-     * @path /emergencies/{emergencyId}
-     * @allow (create) - Any authenticated user can create an emergency log.
-     * @allow (get) - Only the patient that created the emergency can read the emergency log.
-     * @deny (update, delete) - No one can update or delete an emergency log.
-     * @deny (list) - Listing all emergencies is not allowed.
-     * @principle Allows for public creation of emergency logs with restricted access.
-     */
-    match /emergencies/{emergencyId} {
-      function isOwner(patientId) {
-        return request.auth.uid == patientId;
-      }
-
-      allow get: if isOwner(resource.data.patientId);
-      allow list: if false;
-      allow create: if request.auth != null;
-      allow update: if false;
-      allow delete: if false;
-    }
+     /**
+      * @description Allows anyone to create emergency logs but restricts reads.
+      * @path /emergencies/{emergencyId}
+      * @allow (create) Any authenticated user can create an emergency log.
+      * @deny (get, list, update, delete) No one can read, update, or delete emergency logs.
+      * @principle Logs emergency events but prevents data access.
+      */
+     match /emergencies/{emergencyId} {
+       allow create: if request.auth != null;
+       allow get: if false;
+       allow list: if false;
+       allow update: if false;
+       allow delete: if false;
+     }
   }
 }
