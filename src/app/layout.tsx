@@ -22,7 +22,9 @@ export default function RootLayout({
   const pathname = usePathname();
   const isDashboard = pathname.startsWith('/doctor/dashboard');
   const isPatientDashboard = pathname.startsWith('/patient/dashboard');
-  const showHeader = !isDashboard && !isPatientDashboard;
+  const isConsultPage = pathname.startsWith('/patient/consult');
+  
+  const showHeader = !isDashboard && !isPatientDashboard && !isConsultPage;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -30,9 +32,10 @@ export default function RootLayout({
         <title>MediScan AI</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard && !isPatientDashboard, 'new-dashboard-bg': isPatientDashboard})}>
+      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard && !isPatientDashboard && !isConsultPage, 'new-dashboard-bg': isPatientDashboard})}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

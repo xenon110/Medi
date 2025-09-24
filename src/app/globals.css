@@ -5,20 +5,20 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 195 53% 96%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 262.1 83.3% 57.8%;
+    --primary: 196 42% 43%;
     --primary-foreground: 210 20% 98%;
     --secondary: 220 14.3% 95.9%;
     --secondary-foreground: 220.9 39.3% 11%;
     --muted: 220 14.3% 95.9%;
     --muted-foreground: 220 8.9% 46.1%;
-    --accent: 345.6 100% 97.3%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --accent: 174 44% 52%;
+    --accent-foreground: 210 20% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
     --success: 142.1 76.2% 36.3%;
@@ -27,7 +27,7 @@
     --warning-foreground: 240 5.9% 10%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 262.1 83.3% 57.8%;
+    --ring: 196 42% 43%;
     --radius: 0.75rem;
     --chart-1: 221 83% 53%;
     --chart-2: 175 44% 52%;
@@ -43,13 +43,13 @@
     --card-foreground: 210 20% 98%;
     --popover: 224 71.4% 4.1%;
     --popover-foreground: 210 20% 98%;
-    --primary: 263.4 95.2% 66.3%;
+    --primary: 196 42% 43%;
     --primary-foreground: 210 20% 98%;
     --secondary: 215 27.9% 16.9%;
     --secondary-foreground: 210 20% 98%;
     --muted: 215 27.9% 16.9%;
     --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
+    --accent: 174 44% 52%;
     --accent-foreground: 210 20% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
@@ -59,7 +59,7 @@
     --warning-foreground: 240 5.9% 10%;
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 263.4 95.2% 66.3%;
+    --ring: 196 42% 43%;
   }
 }
 
@@ -74,6 +74,12 @@
   }
   .text-shadow {
     text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+  body, p, button, input, textarea, a, span, div {
+     font-family: 'PT Sans', sans-serif;
   }
 }
 
@@ -215,61 +221,61 @@
   .send-response { @apply bg-gradient-primary text-white py-3 px-6 rounded-full font-semibold cursor-pointer transition-all duration-300 ml-auto hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30; }
 
 
-  /* NEW CONSULT PAGE STYLES */
-  .new-consult-bg { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: #ffffff; font-family: 'Inter', sans-serif; }
-  .new-consult-bg .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  /* NEW CONSULT PAGE STYLES - LIGHT THEME */
+  .new-consult-bg { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); color: #1e293b; font-family: 'Inter', sans-serif; }
+  .new-consult-bg .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
   .new-consult-bg .main-content { padding: 48px 0; }
-  .new-consult-bg .back-button { display: flex; align-items: center; gap: 8px; color: rgba(255, 255, 255, 0.7); text-decoration: none; margin-bottom: 32px; padding: 8px 0; font-weight: 500; transition: all 0.2s ease; width: fit-content; }
-  .new-consult-bg .back-button:hover { color: #ffffff; transform: translateX(-4px); }
+  .new-consult-bg .back-button { display: flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; margin-bottom: 32px; padding: 8px 0; font-weight: 500; transition: all 0.2s ease; width: fit-content; }
+  .new-consult-bg .back-button:hover { color: #3b82f6; transform: translateX(-4px); }
   .new-consult-bg .page-header { margin-bottom: 48px; }
-  .new-consult-bg .page-title { font-size: 32px; font-weight: 700; color: #ffffff; margin-bottom: 12px; letter-spacing: -0.5px; }
-  .new-consult-bg .page-subtitle { font-size: 16px; color: rgba(255, 255, 255, 0.7); max-width: 600px; }
+  .new-consult-bg .page-title { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .new-consult-bg .page-subtitle { font-size: 16px; color: #64748b; max-width: 600px; }
   
   .new-consult-bg .doctors-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 16px;
     margin-bottom: 48px;
   }
   
   .new-consult-bg .doctor-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     border-radius: 12px;
-    padding: 24px;
+    padding: 28px 32px;
     transition: all 0.3s ease;
     position: relative;
     backdrop-filter: blur(20px);
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: none;
   }
 
-  .new-consult-bg .doctor-card:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(59, 130, 246, 0.5); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+  .new-consult-bg .doctor-card:hover { background: #ffffff; border-color: rgba(59, 130, 246, 0.3); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
   .new-consult-bg .doctor-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent); opacity: 0; transition: opacity 0.3s ease; }
   .new-consult-bg .doctor-card:hover::before { opacity: 1; }
   
   .new-consult-bg .doctor-info { 
     display: flex; 
     align-items: center; 
-    justify-content: space-between;
-    gap: 20px; 
+    gap: 24px; 
     width: 100%;
+    justify-content: space-between;
   }
 
-  .new-consult-bg .doctor-avatar { width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 700; letter-spacing: 1px; flex-shrink: 0; }
+  .new-consult-bg .doctor-avatar { width: 64px; height: 64px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: 700; letter-spacing: 1px; flex-shrink: 0; }
   .new-consult-bg .doctor-details { flex-grow: 1; }
-  .new-consult-bg .doctor-name { font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
-  .new-consult-bg .doctor-specialty { font-size: 14px; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px; }
+  .new-consult-bg .doctor-name { font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
+  .new-consult-bg .doctor-specialty { font-size: 14px; color: #64748b; margin-bottom: 8px; }
   .new-consult-bg .doctor-rating { display: flex; align-items: center; gap: 8px; }
   .new-consult-bg .stars { display: flex; gap: 2px; }
   .new-consult-bg .star { color: #fbbf24; font-size: 14px; }
-  .new-consult-bg .rating-text { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+  .new-consult-bg .rating-text { font-size: 13px; color: #64748b; }
   
   .new-consult-bg .send-report-btn { 
     background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
     color: white; 
-    padding: 12px 24px; 
+    padding: 14px 28px; 
     border: none; border-radius: 8px; 
     font-weight: 600; 
     cursor: pointer; 
@@ -279,6 +285,8 @@
     align-items: center; 
     gap: 8px; 
     flex-shrink: 0;
+    min-width: 180px;
+    justify-content: center;
   }
   
   .new-consult-bg .send-report-btn:hover { background: linear-gradient(135deg, #2563eb, #1e40af); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
@@ -288,25 +296,25 @@
   .new-consult-bg .status-indicator.busy { background: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
   .new-consult-bg .status-indicator.offline { background: #6b7280; border-color: rgba(107, 114, 128, 0.3); }
   
-  .new-consult-bg .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(26, 26, 26, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 16px 0; z-index: 100; }
-  .new-consult-bg .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-around; align-items: center; }
-  .new-consult-bg .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255, 255, 255, 0.6); text-decoration: none; transition: color 0.2s ease; font-size: 12px; }
+  .new-consult-bg .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(0, 0, 0, 0.08); padding: 16px 0; z-index: 100; box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); }
+  .new-consult-bg .nav-container { max-width: 1400px; margin: 0 auto; padding: 0 16px; display: flex; justify-content: space-around; align-items: center; }
+  .new-consult-bg .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #64748b; text-decoration: none; transition: color 0.2s ease; font-size: 12px; }
   .new-consult-bg .nav-item.active { color: #3b82f6; }
-  .new-consult-bg .nav-item:hover { color: #ffffff; }
+  .new-consult-bg .nav-item:hover { color: #1e293b; }
   .new-consult-bg .nav-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
   @media (max-width: 768px) {
-    .new-consult-bg .container { padding: 0 16px; }
+    .new-consult-bg .container { padding: 0 12px; }
     .new-consult-bg .main-content { padding: 32px 0 80px; }
     .new-consult-bg .page-title { font-size: 28px; }
-    .new-consult-bg .doctor-card { padding: 20px; }
+    .new-consult-bg .doctor-card { padding: 20px 16px; }
     
     .new-consult-bg .doctor-info { 
       flex-direction: column;
       align-items: flex-start;
       gap: 16px;
     }
-    .new-consult-bg .send-report-btn { padding: 10px 16px; font-size: 13px; width: 100%; justify-content: center; }
+    .new-consult-bg .send-report-btn { padding: 10px 16px; font-size: 13px; width: 100%; justify-content: center; min-width: 140px; }
   }
 
 }
@@ -320,7 +328,7 @@
     background-size: 20px 20px;
   }
   .bg-gradient-primary {
-    @apply bg-gradient-to-r from-[#667eea] to-[#764ba2];
+    @apply bg-gradient-to-r from-[#72BCD4] to-[#4DB6AC];
   }
   .bg-gradient-secondary {
     @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];

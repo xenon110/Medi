@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, ChevronLeft, Star, FileDown, Home, Settings } from 'lucide-react';
+import { Loader2, Send, ChevronLeft, Star, FileDown, Home, Settings, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getDoctors, getReportsForPatient, sendReportToDoctor, DoctorProfile, Report } from '@/lib/firebase-services';
 import { auth } from '@/lib/firebase';
@@ -27,6 +27,7 @@ export default function ConsultPage() {
     const [reports, setReports] = useState<Report[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState<string | null>(null);
+    const [sentStatus, setSentStatus] = useState<{[key: string]: boolean}>({});
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [targetDoctor, setTargetDoctor] = useState<DoctorProfile | null>(null);
@@ -70,6 +71,7 @@ export default function ConsultPage() {
             toast({
                 title: "No Reports to Send",
                 description: "You don't have any new reports ready to be sent for consultation.",
+                variant: "destructive"
             });
         }
     };
@@ -82,12 +84,19 @@ export default function ConsultPage() {
         
         try {
             await sendReportToDoctor(selectedReportId, targetDoctor.uid);
+            setSentStatus(prev => ({...prev, [targetDoctor.uid]: true}));
             toast({
                 title: "Report Sent!",
                 description: `Your report has been successfully sent to ${targetDoctor.name}.`,
             });
+            // Remove the sent report from the list of available reports
             setReports(reports.filter(r => r.id !== selectedReportId));
             setSelectedReportId(null);
+
+            setTimeout(() => {
+                 setSentStatus(prev => ({...prev, [targetDoctor.uid]: false}));
+            }, 2000);
+
         } catch (error) {
             console.error("Failed to send report:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not send the report.' });
@@ -107,9 +116,9 @@ export default function ConsultPage() {
 
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <div className="new-consult-bg">
+            <div className="new-consult-bg min-h-screen">
                 <div className="container">
-                    <main className="main-content">
+                    <main className="main-content pb-24">
                         <button onClick={() => router.back()} className="back-button">
                             <ChevronLeft size={20} /> Back
                         </button>
@@ -125,30 +134,33 @@ export default function ConsultPage() {
                                     <div key={doctor.uid} className="doctor-card">
                                         <div className="status-indicator"></div>
                                         <div className="doctor-info">
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-6">
                                                 <div className="doctor-avatar">{doctor.name.split(' ').map(n => n[0]).join('')}</div>
                                                 <div className="doctor-details">
                                                     <h3 className="doctor-name">{doctor.name}</h3>
                                                     <p className="doctor-specialty">{doctor.specialization || 'Dermatology'}</p>
                                                     <div className="doctor-rating">
                                                         <div className="stars">
-                                                            <Star size={14} className="star" />
-                                                            <Star size={14} className="star" />
-                                                            <Star size={14} className="star" />
-                                                            <Star size={14} className="star" />
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star fill-current" />
                                                             <Star size={14} className="star" />
                                                         </div>
-                                                        <span className="rating-text">4.9 • 127 reviews</span>
+                                                        <span className="rating-text">4.8 • {Math.floor(Math.random() * 100 + 50)} reviews</span>
                                                     </div>
                                                 </div>
                                             </div>
                                             <button 
                                                 className="send-report-btn" 
                                                 onClick={(e) => handleSendClick(doctor, e)}
-                                                disabled={isSending === doctor.uid}
+                                                disabled={isSending === doctor.uid || sentStatus[doctor.uid]}
+                                                style={sentStatus[doctor.uid] ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
                                             >
                                                 {isSending === doctor.uid ? (
                                                     <><Loader2 size={16} className="animate-spin" /> Sending...</>
+                                                ) : sentStatus[doctor.uid] ? (
+                                                    <>✅ Sent!</>
                                                 ) : (
                                                     <><Send size={16} /> Send New Report</>
                                                 )}
@@ -163,58 +175,58 @@ export default function ConsultPage() {
                             )}
                         </div>
                     </main>
-
-                     <nav className="bottom-nav">
-                        <div className="nav-container">
-                            <Link href="/patient/dashboard" className="nav-item">
-                                <div className="nav-icon"><Home size={24}/></div>
-                                <span>Home</span>
-                            </Link>
-                            <Link href="/patient/consult" className="nav-item active">
-                                <div className="nav-icon">👨‍⚕️</div>
-                                <span>Doctors</span>
-                            </Link>
-                            <Link href="/patient/reports" className="nav-item">
-                                <div className="nav-icon"><FileDown size={24}/></div>
-                                <span>Reports</span>
-                            </Link>
-                             <Link href="/patient/settings" className="nav-item">
-                                <div className="nav-icon"><Settings size={24}/></div>
-                                <span>Settings</span>
-                            </Link>
-                        </div>
-                    </nav>
-
-                    <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white">
-                        <DialogHeader>
-                            <DialogTitle>Select a Report to Send to {targetDoctor?.name}</DialogTitle>
-                            <DialogDescription className="text-gray-400">
-                                Choose which of your pending reports you would like to send for a professional consultation.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                            <Select onValueChange={setSelectedReportId} value={selectedReportId || undefined}>
-                                <SelectTrigger className="w-full bg-gray-800 border-gray-600 text-white">
-                                    <SelectValue placeholder="Select a report..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                                    {reports.map(report => (
-                                        <SelectItem key={report.id} value={report.id} className="focus:bg-blue-500">
-                                            Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-gray-400 hover:bg-gray-700">Cancel</Button>
-                            <Button onClick={handleConfirmSend} disabled={!selectedReportId || !!isSending} className="send-report-btn">
-                                {isSending ? <Loader2 className="animate-spin" /> : 'Confirm & Send'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
                 </div>
+                 <nav className="bottom-nav">
+                    <div className="nav-container">
+                        <Link href="/patient/dashboard" className="nav-item">
+                            <div className="nav-icon"><Home size={24}/></div>
+                            <span>Home</span>
+                        </Link>
+                        <Link href="/patient/consult" className="nav-item active">
+                            <div className="nav-icon"><User size={24}/></div>
+                            <span>Doctors</span>
+                        </Link>
+                        <Link href="/patient/reports" className="nav-item">
+                            <div className="nav-icon"><FileDown size={24}/></div>
+                            <span>Reports</span>
+                        </Link>
+                         <Link href="/patient/settings" className="nav-item">
+                            <div className="nav-icon"><Settings size={24}/></div>
+                            <span>Settings</span>
+                        </Link>
+                    </div>
+                </nav>
             </div>
+
+
+            <DialogContent className="bg-background border-border text-foreground">
+                <DialogHeader>
+                    <DialogTitle>Select a report to send to {targetDoctor?.name}</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
+                        Choose one of your pending reports for consultation.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Select onValueChange={setSelectedReportId} value={selectedReportId || undefined}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a report..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {reports.map(report => (
+                                <SelectItem key={report.id} value={report.id}>
+                                    Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleString()}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmSend} disabled={!selectedReportId || !!isSending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        {isSending ? <Loader2 className="animate-spin" /> : 'Confirm & Send'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
         </Dialog>
     );
 }
