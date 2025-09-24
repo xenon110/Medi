@@ -41,79 +41,73 @@ export default function DoctorDashboard() {
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [filter, setFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'doctor' | 'patient' | null>(null);
   
   useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged(user => {
-      if (user && db) {
-        setIsLoading(true);
-        getUserProfile(user.uid).then(profile => {
-          if (profile && profile.role === 'doctor') {
-            setUserRole('doctor');
+    // The layout now guarantees that only authenticated doctors can access this page.
+    // We can directly get the current user.
+    const currentUser = auth.currentUser;
 
-            const reportsRef = collection(db, 'reports');
-            const q = query(reportsRef, where('doctorId', '==', user.uid), orderBy('createdAt', 'desc'));
-
-            const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
-              const casesPromises = querySnapshot.docs.map(async (doc) => {
-                const report = { id: doc.id, ...doc.data() } as Report;
-                if (!report.patientId) return null;
-
-                const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
-                
-                if (!patientProfile) return null;
-
-                return {
-                  ...report,
-                  patientProfile: patientProfile,
-                  time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
-                  unread: report.status === 'pending-doctor-review' ? 1 : 0,
-                };
-              });
-
-              const cases = (await Promise.all(casesPromises)).filter((c): c is PatientCase => c !== null);
-              
-              setPatientCases(cases);
-              
-              // Logic to update or set the selected case
-              if (selectedCase) {
-                 const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
-                 setSelectedCase(updatedSelectedCase || cases[0] || null);
-              } else if (cases.length > 0) {
-                 setSelectedCase(cases[0]);
-              } else {
-                 setSelectedCase(null);
-              }
-              
-              setIsLoading(false);
-
-            }, (error) => {
-              console.error("Error fetching reports in real-time:", error);
-              if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.code === 'failed-precondition') {
-                toast({ title: 'Permissions Error', description: 'Could not fetch reports. Please check Firestore rules and indexes.', variant: 'destructive' });
-              } else {
-                toast({ title: 'Error', description: 'A problem occurred while fetching patient cases.', variant: 'destructive' });
-              }
-              setIsLoading(false);
-            });
-
-            return () => unsubscribeSnap();
-          } else {
-             router.push('/login?role=patient');
-          }
-        }).catch(err => {
-            console.error("Error getting user profile:", err);
-            toast({ title: "Authentication Error", description: "Could not verify your profile.", variant: "destructive"});
-            setIsLoading(false);
-            router.push('/login?role=doctor');
-        });
-      } else {
+    if (!currentUser || !db) {
+        toast({ title: 'Error', description: 'Could not authenticate user.', variant: 'destructive' });
         router.push('/login?role=doctor');
+        return;
+    }
+
+    setIsLoading(true);
+    
+    const reportsRef = collection(db, 'reports');
+    // Query for reports assigned to the current doctor's UID.
+    const q = query(reportsRef, where('doctorId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+
+    const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
+      const casesPromises = querySnapshot.docs.map(async (doc) => {
+        const report = { id: doc.id, ...doc.data() } as Report;
+        if (!report.patientId) return null;
+
+        // Fetch the profile for the patient associated with the report.
+        const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
+        
+        if (!patientProfile) return null;
+
+        return {
+          ...report,
+          patientProfile: patientProfile,
+          time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
+          unread: report.status === 'pending-doctor-review' ? 1 : 0,
+        };
+      });
+
+      // Await all promises and filter out any null results.
+      const cases = (await Promise.all(casesPromises)).filter((c): c is PatientCase => c !== null);
+      
+      setPatientCases(cases);
+      
+      // Update the selected case if it's still in the list, otherwise select the first case.
+      if (selectedCase) {
+         const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
+         setSelectedCase(updatedSelectedCase || cases[0] || null);
+      } else if (cases.length > 0) {
+         setSelectedCase(cases[0]);
+      } else {
+         setSelectedCase(null);
       }
+      
+      setIsLoading(false);
+
+    }, (error) => {
+      console.error("Error fetching reports in real-time:", error);
+      if (error.code === 'permission-denied' || error.code === 'unauthenticated') {
+        toast({ title: 'Permissions Error', description: 'Could not fetch reports. Please check your Firestore rules.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Error', description: 'A problem occurred while fetching patient cases.', variant: 'destructive' });
+      }
+      setIsLoading(false);
+      router.push('/login?role=doctor');
     });
 
-    return () => unsubscribeAuth();
-  }, [router, toast, selectedCase]);
+    // Cleanup the real-time listener on unmount.
+    return () => unsubscribeSnap();
+  }, [router, toast, selectedCase?.id]); // Depend on selectedCase.id to avoid re-running on every selection change
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -342,5 +336,3 @@ export default function DoctorDashboard() {
     </div>
   );
 }
-
-    
