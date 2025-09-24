@@ -1,53 +1,59 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Doctors collection
-    match /doctors/{doctorId} {
-      allow read: if request.auth != null && 
-                  (resource.data.verificationStatus == "approved" || request.auth.uid == doctorId);
-      allow write: if request.auth != null && request.auth.uid == doctorId;
+    // Helper functions
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    function isPatient() {
+      return isAuth() && get(/databases/$(database)/documents/patients/$(request.auth.uid)).data.role == 'patient';
     }
 
-    // Patients collection
+    function isDoctor() {
+      return isAuth() && get(/databases/$(database)/documents/doctors/$(request.auth.uid)).data.role == 'doctor';
+    }
+    
+    // PATIENTS can create and read their own profile
     match /patients/{patientId} {
-      allow read, write: if request.auth != null && request.auth.uid == patientId;
+      allow read, create: if isAuth() && request.auth.uid == patientId;
     }
 
-    // Reports collection
+    // DOCTORS can read their own profile and patients can read doctor profiles
+    match /doctors/{doctorId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.uid == doctorId;
+    }
+    
+    // EMERGENCIES can only be created by authenticated patients
+    match /emergencies/{emergencyId} {
+        allow create: if isPatient() && request.resource.data.patientId == request.auth.uid;
+        allow read, write: if false;
+    }
+
+    // REPORTS
     match /reports/{reportId} {
-      
-      // Patients can create a report for themselves
-      allow create: if request.auth != null &&
-                    request.resource.data.patientId == request.auth.uid;
+      // READ: Patients can read their own reports. Doctors can read reports assigned to them.
+      allow read: if isAuth() && (
+                    (isPatient() && resource.data.patientId == request.auth.uid) ||
+                    (isDoctor() && resource.data.doctorId == request.auth.uid)
+                  );
 
-      // Reading a single report
-      allow get: if request.auth != null &&
-                        (resource.data.patientId == request.auth.uid ||
-                         resource.data.doctorId == request.auth.uid);
+      // CREATE: A patient can create a report for themselves.
+      allow create: if isPatient() && request.resource.data.patientId == request.auth.uid;
 
-      // Updating a report
-      allow update: if request.auth != null &&
-                    (
-                      // Doctor can update a report assigned to them
-                      resource.data.doctorId == request.auth.uid || 
-                      // Patient can update a report (e.g. to send to a doctor)
-                      (resource.data.patientId == request.auth.uid && request.resource.data.doctorId != null)
+      // UPDATE:
+      // - A patient can update their own report to assign a doctorId (send to doctor).
+      // - A doctor can update a report assigned to them (review, add notes).
+      allow update: if isAuth() && (
+                      (isPatient() && resource.data.patientId == request.auth.uid && request.resource.data.doctorId != null) ||
+                      (isDoctor() && resource.data.doctorId == request.auth.uid)
                     );
 
-      // Listing reports securely using queries
-      allow list: if request.auth != null &&
-                  (
-                    // Patient can list only their reports
-                    (request.query.where('patientId', '==', request.auth.uid)) ||
-                    // Doctor can list only reports assigned to them
-                    (request.query.where('doctorId', '==', request.auth.uid))
-                  );
-    }
-
-    // Emergencies collection
-    match /emergencies/{emergencyId} {
-      allow create: if request.auth != null;
+      // DELETE: Nobody can delete reports for data integrity.
+      allow delete: if false;
     }
   }
 }
