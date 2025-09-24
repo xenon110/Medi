@@ -28,7 +28,6 @@
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 196 42% 43%;
-    --radius: 0.75rem;
     --chart-1: 221 83% 53%;
     --chart-2: 175 44% 52%;
     --chart-3: 0 72% 51%;
@@ -85,17 +84,17 @@
 
 @layer components {
   /* PATIENT DASHBOARD STYLES */
-  .new-dashboard-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  .new-dashboard-bg { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
 
   .header { @apply flex justify-between items-center py-5 mb-8; }
-  /* .logo { @apply flex items-center gap-2.5 text-white text-2xl font-bold; } */
+  .logo { @apply flex items-center gap-2.5 text-slate-800 text-2xl font-bold; }
   .logo-icon { @apply w-10 h-10 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-xl flex items-center justify-center font-bold text-white; }
   .nav { @apply flex gap-8 items-center; }
-  .nav a { @apply text-white/90 font-medium transition-all duration-300 hover:text-cyan-300 hover:drop-shadow-[0_0_10px_rgba(0,245,255,0.5)]; }
-  /* .emergency-btn {@apply bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] text-white py-3 px-6 rounded-full font-bold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(255,65,108,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(255,65,108,0.5)]; } */
+  .nav a { @apply text-slate-600/90 font-medium transition-all duration-300 hover:text-cyan-500 hover:drop-shadow-[0_0_10px_rgba(0,245,255,0.5)]; }
+  .emergency-btn {@apply bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] text-white py-3 px-6 rounded-full font-bold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(255,65,108,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(255,65,108,0.5)]; }
 
   .main-content { @apply grid md:grid-cols-2 gap-8 mb-8; }
-  /* .card { @apply bg-white/95 backdrop-blur-2xl rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_45px_rgba(0,0,0,0.2)]; } */
+  .card { @apply bg-white rounded-2xl p-8 shadow-lg border border-slate-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl; }
   .card-title { @apply flex items-center gap-4 mb-4 text-2xl font-bold text-gray-800; }
   .card-icon { @apply w-12 h-12 rounded-2xl flex items-center justify-center text-2xl; }
   .upload-icon { @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white; }
@@ -119,10 +118,10 @@
   .send-btn { @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white py-3 px-8 rounded-full font-bold cursor-pointer transition-all duration-300 flex-grow shadow-[0_4px_15px_rgba(102,126,234,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(102,126,234,0.5)] disabled:opacity-50 disabled:cursor-not-allowed; }
   .analyze-btn { @apply bg-gradient-to-r from-[#f093fb] to-[#f5576c] text-white p-4 rounded-full font-bold cursor-pointer w-full text-base transition-all duration-300 shadow-[0_4px_15px_rgba(240,147,251,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(240,147,251,0.5)] disabled:opacity-50 disabled:cursor-not-allowed mt-4; }
 
-  .reports-section { @apply bg-white/95 backdrop-blur-2xl rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20; }
+  .reports-section { @apply bg-white rounded-2xl p-8 shadow-lg border border-slate-200/50; }
   .reports-title { @apply flex items-center gap-4 mb-4 text-2xl font-bold text-gray-800; }
   .reports-icon { @apply w-12 h-12 bg-gradient-to-r from-[#ffecd2] to-[#fcb69f] rounded-2xl flex items-center justify-center text-2xl text-[#ff7849]; }
-  .report-item { @apply flex justify-between items-center p-5 bg-gradient-to-r from-[rgba(102,126,234,0.05)] to-[rgba(116,75,162,0.05)] rounded-2xl mt-5 transition-all duration-300 hover:bg-gradient-to-r hover:from-[rgba(102,126,234,0.1)] hover:to-[rgba(116,75,162,0.1)] hover:translate-x-1; }
+  .report-item { @apply flex justify-between items-center p-5 bg-slate-100/50 rounded-2xl mt-5 transition-all duration-300 hover:bg-slate-200/50 hover:translate-x-1; }
   .report-info h3 { @apply text-gray-800 mb-1 font-semibold; }
   .report-status { @apply text-amber-600 text-sm font-medium; }
   .view-btn { @apply bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white py-2.5 px-5 rounded-full cursor-pointer font-medium transition-all duration-300 shadow-[0_2px_10px_rgba(102,126,234,0.3)] hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(102,126,234,0.5)]; }
@@ -222,13 +221,13 @@
 
 
   /* NEW CONSULT PAGE STYLES */
-  .new-consult-bg { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); color: #1e293b; font-family: 'Inter', sans-serif; }
+  .new-consult-bg { color: #1e293b; }
   .new-consult-bg .main-content { padding: 48px 0; }
-  .new-consult-bg .back-button { display: flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; margin-bottom: 32px; padding: 8px 0; font-weight: 500; transition: all 0.2s ease; width: fit-content; }
-  .new-consult-bg .back-button:hover { color: #3b82f6; transform: translateX(-4px); }
   .new-consult-bg .page-header { margin-bottom: 48px; text-align: center; }
   .new-consult-bg .page-title { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px; }
   .new-consult-bg .page-subtitle { font-size: 16px; color: #64748b; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .new-consult-bg .back-button { display: flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; margin-bottom: 32px; padding: 8px 0; font-weight: 500; transition: all 0.2s ease; width: fit-content; }
+  .new-consult-bg .back-button:hover { color: #3b82f6; transform: translateX(-4px); }
 
   .doctors-grid {
     display: grid;
@@ -527,12 +526,12 @@
         transition: all 0.3s;
     }
     .patient-btn {
-        background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
-        color: white;
+      background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+      color: white;
     }
     .doctor-btn {
-        background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
-        color: white;
+      background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
+      color: white;
     }
     .login-btn:hover {
         transform: translateY(-2px);
@@ -641,6 +640,9 @@
   .bg-gradient-primary {
     @apply bg-gradient-to-r from-[#72BCD4] to-[#4DB6AC];
   }
+   .bg-gradient-login {
+    @apply bg-gradient-to-r from-[#7C3AED] to-[#5B21B6];
+  }
   .bg-gradient-secondary {
     @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];
   }
@@ -651,3 +653,5 @@
      background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
   }
 }
+this is the total code i have tried just see where it can fit and put it there but do not change any other page except the first home page and its css
+This code has some error so check it properly and apply it
