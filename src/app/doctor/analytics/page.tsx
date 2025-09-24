@@ -148,44 +148,44 @@ export default function DoctorAnalytics() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card>
+                    <Card className="bg-blue-100 border-blue-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Reports Received</CardTitle>
-                            <Activity className="h-4 w-4 text-muted-foreground" />
+                            <CardTitle className="text-sm font-medium text-blue-800">Total Reports Received</CardTitle>
+                            <Activity className="h-4 w-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.total}</div>
-                            <p className="text-xs text-muted-foreground">All-time patient reports</p>
+                            <div className="text-2xl font-bold text-blue-900">{stats.total}</div>
+                            <p className="text-xs text-blue-700">All-time patient reports</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-amber-100 border-amber-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                            <Clock className="h-4 w-4 text-muted-foreground text-amber-500" />
+                            <CardTitle className="text-sm font-medium text-amber-800">Pending Review</CardTitle>
+                            <Clock className="h-4 w-4 text-amber-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.pending}</div>
-                            <p className="text-xs text-muted-foreground">Reports waiting for your assessment</p>
+                            <div className="text-2xl font-bold text-amber-900">{stats.pending}</div>
+                            <p className="text-xs text-amber-700">Reports waiting for your assessment</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-green-100 border-green-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Reviewed Cases</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-muted-foreground text-green-500" />
+                            <CardTitle className="text-sm font-medium text-green-800">Reviewed Cases</CardTitle>
+                            <CheckCircle className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.reviewed}</div>
-                            <p className="text-xs text-muted-foreground">Reports you have approved or modified</p>
+                            <div className="text-2xl font-bold text-green-900">{stats.reviewed}</div>
+                            <p className="text-xs text-green-700">Reports you have approved or modified</p>
                         </CardContent>
                     </Card>
-                     <Card>
+                     <Card className="bg-red-100 border-red-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Disqualified / More Info</CardTitle>
-                            <XCircle className="h-4 w-4 text-muted-foreground text-red-500" />
+                            <CardTitle className="text-sm font-medium text-red-800">Disqualified / More Info</CardTitle>
+                            <XCircle className="h-4 w-4 text-red-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.rejected}</div>
-                            <p className="text-xs text-muted-foreground">Reports needing patient follow-up</p>
+                            <div className="text-2xl font-bold text-red-900">{stats.rejected}</div>
+                            <p className="text-xs text-red-700">Reports needing patient follow-up</p>
                         </CardContent>
                     </Card>
                 </div>
