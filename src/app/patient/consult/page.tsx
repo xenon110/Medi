@@ -46,7 +46,11 @@ export default function ConsultPage() {
 
                 try {
                     const fetchedReports = await getReportsForPatient(user.uid);
-                    setReports(fetchedReports.filter(r => r.status === 'pending-patient-input'));
+                    const pendingReports = fetchedReports.filter(r => r.status === 'pending-patient-input');
+                    setReports(pendingReports);
+                    if (pendingReports.length > 0) {
+                        setSelectedReportId(pendingReports[0].id); // Pre-select the first pending report
+                    }
                 } catch (error) {
                     console.error("Failed to fetch reports:", error);
                     toast({ variant: 'destructive', title: 'Error Fetching Reports', description: 'Could not retrieve your pending reports.' });
@@ -70,8 +74,9 @@ export default function ConsultPage() {
         } else {
             toast({
                 title: "No Reports to Send",
-                description: "You don't have any new reports ready to be sent for consultation.",
-                variant: "destructive"
+                description: "You don't have any new reports ready for consultation. Please create one from the dashboard.",
+                variant: "destructive",
+                action: <Button onClick={() => router.push('/patient/dashboard')}>Go to Dashboard</Button>
             });
         }
     };
@@ -91,11 +96,8 @@ export default function ConsultPage() {
             });
             // Remove the sent report from the list of available reports
             setReports(reports.filter(r => r.id !== selectedReportId));
-            setSelectedReportId(null);
+            setSelectedReportId(reports.length > 1 ? reports.filter(r => r.id !== selectedReportId)[0].id : null);
 
-            setTimeout(() => {
-                 setSentStatus(prev => ({...prev, [targetDoctor.uid]: false}));
-            }, 2000);
 
         } catch (error) {
             console.error("Failed to send report:", error);
@@ -117,7 +119,7 @@ export default function ConsultPage() {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <div className="new-consult-bg min-h-screen">
-                <div className="px-4">
+                <div className="page-container">
                     <main className="main-content">
                         <button onClick={() => router.back()} className="back-button">
                             <ChevronLeft size={20} /> Back
@@ -154,13 +156,10 @@ export default function ConsultPage() {
                                             <button 
                                                 className="send-report-btn" 
                                                 onClick={(e) => handleSendClick(doctor, e)}
-                                                disabled={isSending === doctor.uid || sentStatus[doctor.uid]}
-                                                style={sentStatus[doctor.uid] ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+                                                disabled={isSending === doctor.uid || reports.length === 0}
                                             >
                                                 {isSending === doctor.uid ? (
                                                     <><Loader2 size={16} className="animate-spin" /> Sending...</>
-                                                ) : sentStatus[doctor.uid] ? (
-                                                    <>✅ Sent!</>
                                                 ) : (
                                                     <><Send size={16} /> Send New Report</>
                                                 )}
@@ -194,7 +193,7 @@ export default function ConsultPage() {
                         <SelectContent>
                             {reports.map(report => (
                                 <SelectItem key={report.id} value={report.id}>
-                                    Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleString()}
+                                    {report.reportName || `Report from ${new Date((report.createdAt as any).seconds * 1000).toLocaleString()}`}
                                 </SelectItem>
                             ))}
                         </SelectContent>

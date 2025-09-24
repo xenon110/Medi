@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp, orderBy } from 'firebase/firestore';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { symptomChat } from '@/ai/flows/symptom-chat';
@@ -31,6 +31,7 @@ export default function PatientDashboard() {
   const [imageValidationError, setImageValidationError] = useState<string | null>(null);
   const [isImageValidating, setIsImageValidating] = useState(false);
   const [isImageReady, setIsImageReady] = useState(false);
+  const [reportName, setReportName] = useState('');
   
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function PatientDashboard() {
 
           if (db) {
             const reportsRef = collection(db, 'reports');
-            const q = query(reportsRef, where('patientId', '==', firebaseUser.uid));
+            const q = query(reportsRef, where('patientId', '==', firebaseUser.uid), orderBy('createdAt', 'desc'));
             
             const unsubscribeSnap = onSnapshot(q, (querySnapshot) => {
               const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
@@ -98,6 +99,7 @@ export default function PatientDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setReportName(file.name.split('.')[0] || `Report ${new Date().toLocaleDateString()}`);
     setIsImageValidating(true);
     setIsImageReady(false);
     setImageValidationError(null);
@@ -153,6 +155,10 @@ export default function PatientDashboard() {
         showNotification("Please upload a valid image before analyzing.", true);
         return;
     }
+    if (!reportName.trim()) {
+      showNotification("Please provide a name for your report.", true);
+      return;
+    }
 
     setIsAnalyzing(true);
     showNotification("🔬 Starting comprehensive analysis...");
@@ -172,7 +178,7 @@ export default function PatientDashboard() {
         skinTone: user.skinTone || 'not specified',
       });
       
-      const savedReport = await saveReport(user.uid, result);
+      const savedReport = await saveReport(user.uid, reportName, result);
 
       sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
@@ -338,6 +344,20 @@ export default function PatientDashboard() {
                     )}
                 </div>
                 <input type="file" id="fileInput" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload}/>
+            
+                {isImageReady && (
+                    <div className="mt-4">
+                        <label htmlFor="reportName" className="font-semibold text-gray-700">Report Name</label>
+                        <Input
+                            id="reportName"
+                            type="text"
+                            value={reportName}
+                            onChange={(e) => setReportName(e.target.value)}
+                            placeholder="e.g., 'Rash on my arm'"
+                            className="mt-1"
+                        />
+                    </div>
+                )}
             </div>
 
             {/* AI Assistant */}
@@ -400,7 +420,7 @@ export default function PatientDashboard() {
             {recentReports.length > 0 ? recentReports.map((report) => (
                 <div key={report.id} className="report-item">
                     <div className="report-info">
-                        <h3>Report from {formatReportDate(report.createdAt)}</h3>
+                        <h3>{report.reportName || `Report from ${formatReportDate(report.createdAt)}`}</h3>
                         <div className="report-status">{getStatusText(report.status)}</div>
                     </div>
                     <button className="view-btn" onClick={() => {
