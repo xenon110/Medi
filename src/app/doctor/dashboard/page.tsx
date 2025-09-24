@@ -17,7 +17,7 @@ import { auth, db } from '@/lib/firebase';
 import { Report, getUserProfile, PatientProfile, DoctorProfile, updateReportByDoctor } from '@/lib/firebase-services';
 import { formatDistanceToNow } from 'date-fns';
 import { collection, query, where, onSnapshot, orderBy, Unsubscribe } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 
 type PatientCase = Report & {
@@ -34,9 +34,10 @@ const statusMap: { [key in Report['status']]: { label: string; badgeClass: strin
 };
 
 
-export default function DoctorDashboard({ handleSignOut }: { handleSignOut: () => Promise<void> }) {
+export default function DoctorDashboard() {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [patientCases, setPatientCases] = useState<PatientCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
@@ -182,6 +183,15 @@ export default function DoctorDashboard({ handleSignOut }: { handleSignOut: () =
       }
   };
 
+  const handleSignOut = async () => {
+    if (auth) {
+        await auth.signOut();
+        toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
+        router.push('/login?role=doctor');
+    }
+  };
+
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
@@ -195,23 +205,32 @@ export default function DoctorDashboard({ handleSignOut }: { handleSignOut: () =
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('');
   };
+  
+  const sidebarNavItems = [
+    { href: '/doctor/dashboard', icon: MessageSquare, title: 'Patient Cases' },
+    { href: '/doctor/analytics', icon: LayoutGrid, title: 'Analytics' },
+    { href: '#', icon: Calendar, title: 'Calendar' },
+    { href: '#', icon: FileText, title: 'Documents' },
+    { href: '/doctor/settings', icon: Settings, title: 'Settings' },
+  ];
+
 
   return (
     <div className="dashboard-container">
         {/* Sidebar */}
         <div className="sidebar">
-            <div className="logo-sidebar">M</div>
+            <Link href="/doctor/dashboard" className="logo-sidebar">M</Link>
             <nav className="sidebar-nav">
-                <div className="nav-item active" title="Patient Cases"><MessageSquare size={24} /></div>
-                <div className="nav-item" title="Analytics"><LayoutGrid size={24} /></div>
-                <div className="nav-item" title="Calendar"><Calendar size={24} /></div>
-                <div className="nav-item" title="Documents"><FileText size={24} /></div>
-                <div className="nav-item" title="Settings"><Settings size={24} /></div>
+               {sidebarNavItems.map(item => (
+                  <Link href={item.href} key={item.title} className={cn('nav-item', { active: pathname === item.href })} title={item.title}>
+                      <item.icon size={24} />
+                  </Link>
+               ))}
             </nav>
             <div className="flex flex-col gap-2 items-center mt-auto">
-                <div className="user-profile" title="Dr. Profile">
+                <Link href="/doctor/profile" className="user-profile" title="Dr. Profile">
                   <User size={24} />
-                </div>
+                </Link>
                  <button onClick={handleSignOut} className="nav-item !w-10 !h-10" title="Sign Out">
                     <LogOut size={22} />
                 </button>
@@ -414,4 +433,5 @@ export default function DoctorDashboard({ handleSignOut }: { handleSignOut: () =
   );
 }
 
+    
     

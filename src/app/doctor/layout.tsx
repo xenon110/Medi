@@ -2,12 +2,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
 import { useToast } from '@/hooks/use-toast';
 import DoctorDashboard from './dashboard/page';
+import DoctorAnalytics from './analytics/page';
 
 export default function DoctorLayout({
   children,
@@ -15,6 +16,7 @@ export default function DoctorLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -56,13 +58,6 @@ export default function DoctorLayout({
     return () => unsubscribe();
   }, [router, toast]);
 
-  const handleSignOut = async () => {
-    if (auth) {
-        await auth.signOut();
-        toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
-        router.push('/login?role=doctor');
-    }
-  };
 
   if (isLoading) {
     return (
@@ -82,19 +77,14 @@ export default function DoctorLayout({
     );
   }
 
-  // Pass handleSignOut to the specific page component that needs it.
-  // This example assumes `children` is `DoctorDashboard`. 
-  // A more complex setup might use React Context.
-  const childrenWithProps = React.Children.map(children, child => {
-    if (React.isValidElement(child) && child.type === DoctorDashboard) {
-      return React.cloneElement(child, { handleSignOut } as any);
-    }
-    // For other pages like profile/settings, they won't get the prop
-    // unless explicitly handled, which is fine if they don't need it.
-    return child;
-  });
+  const isDashboardPage = pathname === '/doctor/dashboard';
 
-  return <>{childrenWithProps}</>;
+  // Render DoctorDashboard directly for its specific route and children for others
+  if (isDashboardPage) {
+    return <DoctorDashboard />;
+  }
+
+  return <>{children}</>;
 }
 
     
