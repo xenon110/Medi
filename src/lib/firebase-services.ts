@@ -196,8 +196,7 @@ export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> =
 export const getDoctors = async (): Promise<DoctorProfile[]> => {
   if (!db) throw new Error("Firestore is not initialized.");
   const doctorsCollection = collection(db, 'doctors');
-  const q = query(doctorsCollection, where("verificationStatus", "==", "approved"), orderBy("name"));
-  const querySnapshot = await getDocs(q);
+  const querySnapshot = await getDocs(doctorsCollection);
   return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as DoctorProfile));
 };
 
