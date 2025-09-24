@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, AlertTriangle, FileText, Pill, Home, Stethoscope, Languages, ChevronLeft } from 'lucide-react';
+import { Loader2, AlertTriangle, FileText, Pill, Home, Stethoscope, Languages, ChevronLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { Report } from '@/lib/firebase-services';
 import { translateReport, TranslateReportOutput } from '@/ai/flows/translate-report';
 import { Separator } from '@/components/ui/separator';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type TranslatedReport = Omit<TranslateReportOutput, 'potentialConditions'> & {
   potentialConditions: { name: string; description: string }[];
@@ -25,7 +27,11 @@ export default function ReportPage() {
   const [translatedReport, setTranslatedReport] = useState<TranslatedReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const reportContentRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     try {
@@ -64,6 +70,38 @@ export default function ReportPage() {
       });
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!reportContentRef.current) return;
+    
+    setIsDownloading(true);
+    toast({ title: 'Preparing Download', description: 'Generating PDF, please wait...' });
+
+    try {
+      const canvas = await html2canvas(reportContentRef.current, {
+        scale: 2, // Increase scale for better resolution
+        useCORS: true,
+        backgroundColor: null, // Use the actual background
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const reportDate = report?.createdAt ? new Date((report.createdAt as any).seconds * 1000).toISOString().split('T')[0] : 'report';
+      pdf.save(`MediSkin-Report-${reportDate}.pdf`);
+
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      toast({ variant: 'destructive', title: 'Download Failed', description: 'Could not generate the PDF file.' });
+    } finally {
+       setIsDownloading(false);
     }
   };
 
@@ -114,11 +152,11 @@ export default function ReportPage() {
   return (
     <div className="bg-gradient-subtle min-h-screen py-10 px-4">
         <div className="max-w-4xl mx-auto">
-            <Card className="bg-card/90 backdrop-blur-lg shadow-2xl shadow-primary/10">
+            <Card className="bg-card/90 backdrop-blur-lg shadow-2xl shadow-primary/10" ref={reportContentRef}>
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <Button variant="outline" size="sm" onClick={() => router.push('/patient/dashboard')} className="mb-4">
+                            <Button variant="outline" size="sm" onClick={() => router.push('/patient/dashboard')} className="mb-4 print-hidden">
                                 <ChevronLeft className="mr-2 h-4 w-4" />
                                 Back to Dashboard
                             </Button>
@@ -129,20 +167,26 @@ export default function ReportPage() {
                                 This report is AI-generated. Always consult a qualified dermatologist for a final diagnosis.
                             </CardDescription>
                         </div>
-                        <div className="flex flex-col items-start sm:items-end gap-2">
-                             <Select onValueChange={handleTranslate} disabled={isTranslating}>
-                                <SelectTrigger className="w-[180px]">
-                                    <Languages className="mr-2 h-4 w-4" />
-                                    <SelectValue placeholder="Translate..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="en">English</SelectItem>
-                                    <SelectItem value="es">Español</SelectItem>
-                                    <SelectItem value="hi">हिन्दी</SelectItem>
-                                    <SelectItem value="bn">বাংলা</SelectItem>
-                                    <SelectItem value="ta">தமிழ்</SelectItem>
-                                </SelectContent>
-                            </Select>
+                        <div className="flex flex-col items-start sm:items-end gap-2 print-hidden">
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading}>
+                                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4"/>}
+                                    Download PDF
+                                </Button>
+                                 <Select onValueChange={handleTranslate} disabled={isTranslating}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <Languages className="mr-2 h-4 w-4" />
+                                        <SelectValue placeholder="Translate..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="en">English</SelectItem>
+                                        <SelectItem value="es">Español</SelectItem>
+                                        <SelectItem value="hi">हिन्दी</SelectItem>
+                                        <SelectItem value="bn">বাংলা</SelectItem>
+                                        <SelectItem value="ta">தமிழ்</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             {isTranslating && <span className="text-sm text-muted-foreground flex items-center gap-1"><Loader2 className="h-4 w-4 animate-spin"/> Translating...</span>}
                         </div>
                     </div>
@@ -202,9 +246,8 @@ export default function ReportPage() {
                         </section>
                     </div>
 
-                    {/* Doctor Consultation */}
                     {report.aiReport.doctorConsultationSuggestion && (
-                         <div className="!mt-12 text-center">
+                         <div className="!mt-12 text-center print-hidden">
                              <Card className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 inline-block">
                                 <h3 className="text-xl font-bold mb-2">Doctor Consultation Recommended</h3>
                                 <p className="text-muted-foreground mb-4">Based on the analysis, we recommend sharing this report with a doctor.</p>
@@ -220,5 +263,7 @@ export default function ReportPage() {
     </div>
   );
 }
+
+    
 
     
