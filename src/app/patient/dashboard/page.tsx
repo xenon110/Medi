@@ -114,8 +114,6 @@ export default function PatientDashboard() {
     toast({ title: 'Message sent to AI assistant' });
 
     try {
-      // The AI will refine the symptoms, but for this UI, we just confirm it was sent.
-      // A more complex UI could show the refined symptoms back to the user.
       await assistWithSymptomInputs({ symptomQuery: symptomInput });
       toast({ title: '🤖 AI has processed your symptoms.', description: 'You can now proceed with the analysis.' });
     } catch (error) {
@@ -306,7 +304,9 @@ export default function PatientDashboard() {
                     </button>
                     <button 
                       className="send-btn" 
-                      onClick={handleSymptomSubmit}
+                      onClick={() => {
+                        toast({ title: 'Send button clicked!'});
+                      }}
                       disabled={isChatbotLoading || !symptomInput.trim()}
                     >
                       {isChatbotLoading ? <Loader2 className="animate-spin mx-auto" /> : 'Send'}
