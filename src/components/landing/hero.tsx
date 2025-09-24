@@ -16,7 +16,7 @@ const Hero = () => {
             <div className="feature-btn">🌍 Multi-Language</div>
         </div>
         
-        <a onClick={() => router.push('/payment')} className="cta-btn cursor-pointer">Start Your Analysis</a>
+        <a onClick={() => router.push('/signup?role=patient')} className="cta-btn cursor-pointer">Start Your Free Analysis</a>
     </section>
   );
 };

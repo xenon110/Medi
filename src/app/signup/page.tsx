@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { FileUp, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createUserProfile } from '@/lib/firebase-services';
 import { indianStates } from '@/lib/indian-states';
@@ -72,6 +72,22 @@ export default function SignupPage() {
     }
 
     try {
+        // Check if email already exists
+        const signInMethods = await fetchSignInMethodsForEmail(auth, data.email);
+        if (signInMethods.length > 0) {
+            toast({
+                title: 'Account Exists',
+                description: 'This email is already registered. Redirecting to payment page.',
+            });
+            if (role === 'doctor') {
+                router.push('/doctor/payment');
+            } else {
+                router.push('/payment');
+            }
+            setIsLoading(false);
+            return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;
 
@@ -92,7 +108,6 @@ export default function SignupPage() {
         toast({ title: 'Account Created', description: 'You have been successfully signed up!' });
 
         if (role === 'doctor') {
-            // For doctors, you might want a verification pending page instead
             router.push('/doctor/dashboard');
         } else {
             router.push('/patient/dashboard');
@@ -100,6 +115,7 @@ export default function SignupPage() {
     } catch (error: any) {
         console.error('Signup error:', error);
         let description = 'An unexpected error occurred. Please try again.';
+        // This specific error might not be needed anymore due to the check above, but it's good for fallback.
         if (error.code === 'auth/email-already-in-use') {
           description = 'This email address is already in use. Please log in or use a different email.';
         }
