@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Loader2, Send, ChevronLeft, Star, FileDown, Home, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getDoctors, getReportsForPatient, sendReportToDoctor, DoctorProfile, Report } from '@/lib/firebase-services';
@@ -17,7 +16,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import Link from 'next/link';
 
@@ -127,19 +125,21 @@ export default function ConsultPage() {
                                     <div key={doctor.uid} className="doctor-card">
                                         <div className="status-indicator"></div>
                                         <div className="doctor-info">
-                                            <div className="doctor-avatar">{doctor.name.split(' ').map(n => n[0]).join('')}</div>
-                                            <div className="doctor-details">
-                                                <h3 className="doctor-name">{doctor.name}</h3>
-                                                <p className="doctor-specialty">{doctor.specialization || 'Dermatology'}</p>
-                                                <div className="doctor-rating">
-                                                    <div className="stars">
-                                                        <Star size={14} className="star" />
-                                                        <Star size={14} className="star" />
-                                                        <Star size={14} className="star" />
-                                                        <Star size={14} className="star" />
-                                                        <Star size={14} className="star" />
+                                            <div className="flex items-center gap-4">
+                                                <div className="doctor-avatar">{doctor.name.split(' ').map(n => n[0]).join('')}</div>
+                                                <div className="doctor-details">
+                                                    <h3 className="doctor-name">{doctor.name}</h3>
+                                                    <p className="doctor-specialty">{doctor.specialization || 'Dermatology'}</p>
+                                                    <div className="doctor-rating">
+                                                        <div className="stars">
+                                                            <Star size={14} className="star" />
+                                                            <Star size={14} className="star" />
+                                                            <Star size={14} className="star" />
+                                                            <Star size={14} className="star" />
+                                                            <Star size={14} className="star" />
+                                                        </div>
+                                                        <span className="rating-text">4.9 • 127 reviews</span>
                                                     </div>
-                                                    <span className="rating-text">4.9 • 127 reviews</span>
                                                 </div>
                                             </div>
                                             <button 
