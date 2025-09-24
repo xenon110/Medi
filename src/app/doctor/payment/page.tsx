@@ -278,7 +278,7 @@ export default function DoctorPaymentPage() {
 
                     <div className="plans-grid">
                         {/* Monthly Plan */}
-                        <div className="plan-card" onClick={handlePlanSelection}>
+                        <div className="plan-card">
                             <div className="plan-icon">🩺</div>
                             <div className="plan-price">
                                 <span className="plan-currency">₹</span>99
@@ -297,11 +297,11 @@ export default function DoctorPaymentPage() {
                                 <li>Basic analytics</li>
                             </ul>
                             
-                            <button className="plan-btn">Start Trial</button>
+                            <button className="plan-btn" onClick={handlePlanSelection}>Start Trial</button>
                         </div>
 
                         {/* 6 Month Plan */}
-                        <div className="plan-card popular" onClick={handlePlanSelection}>
+                        <div className="plan-card popular">
                             <div className="savings-badge">Save 50%</div>
                             <div className="plan-icon">⭐</div>
                             <div className="plan-price">
@@ -322,11 +322,11 @@ export default function DoctorPaymentPage() {
                                 <li>Multi-clinic management</li>
                             </ul>
                             
-                            <button className="plan-btn">Choose Plan</button>
+                            <button className="plan-btn" onClick={handlePlanSelection}>Choose Plan</button>
                         </div>
 
                         {/* Annual Plan */}
-                        <div className="plan-card" onClick={handlePlanSelection}>
+                        <div className="plan-card">
                             <div className="best-value-badge">Best Value</div>
                             <div className="plan-icon">👨‍⚕️</div>
                             <div className="plan-price">
@@ -349,7 +349,7 @@ export default function DoctorPaymentPage() {
                                 <li>Training & onboarding</li>
                             </ul>
                             
-                            <button className="plan-btn">Contact Sales</button>
+                            <button className="plan-btn" onClick={handlePlanSelection}>Contact Sales</button>
                         </div>
                     </div>
 
