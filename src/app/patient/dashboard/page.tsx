@@ -2,12 +2,12 @@
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
-import { Bot, CheckCircle, Loader2, Sparkles, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock, User, LogOut, ArrowUp, File, ClipboardList, Siren } from 'lucide-react';
+import { Bot, CheckCircle, Loader2, Sparkles, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock, User, LogOut, ArrowUp, File, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { symptomChat } from '@/ai/flows/symptom-chat';
@@ -198,6 +198,30 @@ export default function PatientDashboard() {
         default: return 'Unknown Status';
     }
   };
+
+  const formatReportDate = (createdAt: any): string => {
+    if (!createdAt) {
+        return 'Date not available';
+    }
+    // Check if it's a Firestore Timestamp object with a toDate method
+    if (typeof createdAt.toDate === 'function') {
+        return createdAt.toDate().toLocaleDateString();
+    }
+    // Check if it's a plain object with seconds and nanoseconds (from JSON serialization)
+    if (typeof createdAt.seconds === 'number') {
+        return new Date(createdAt.seconds * 1000).toLocaleDateString();
+    }
+    // Fallback for other unexpected formats
+    try {
+      const date = new Date(createdAt);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString();
+      }
+    } catch (e) {
+      // ignore
+    }
+    return 'Invalid Date';
+  };
   
   const handleEmergencyClick = async () => {
     const user = auth.currentUser;
@@ -376,7 +400,7 @@ export default function PatientDashboard() {
             {recentReports.length > 0 ? recentReports.map((report) => (
                 <div key={report.id} className="report-item">
                     <div className="report-info">
-                        <h3>Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h3>
+                        <h3>Report from {formatReportDate(report.createdAt)}</h3>
                         <div className="report-status">{getStatusText(report.status)}</div>
                     </div>
                     <button className="view-btn" onClick={() => {
@@ -397,5 +421,3 @@ export default function PatientDashboard() {
     </>
   );
 }
-
-    
