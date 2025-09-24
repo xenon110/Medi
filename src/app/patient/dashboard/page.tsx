@@ -1,16 +1,13 @@
 
-
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
-import { Bot, CheckCircle, Loader2, Sparkles, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock, User, LogOut } from 'lucide-react';
+import { Bot, CheckCircle, Loader2, Sparkles, Upload, Camera, Mic, Send, Stethoscope, FileText, Clock, User, LogOut, ArrowUp, File, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import type { UserInfo } from 'firebase/auth';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
@@ -18,6 +15,8 @@ import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
 import { generateInitialReport } from '@/ai/flows/generate-initial-report';
 import { auth, db } from '@/lib/firebase';
 import { getUserProfile, saveReport, Report, PatientProfile } from '@/lib/firebase-services';
+import { cn } from '@/lib/utils';
+
 
 export default function PatientDashboard() {
   const { toast } = useToast();
@@ -27,11 +26,12 @@ export default function PatientDashboard() {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [imageValidationError, setImageValidationError] = useState<string | null>(null);
   const [isImageValidating, setIsImageValidating] = useState(false);
+  const [isImageReady, setIsImageReady] = useState(false);
   
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
 
   const [recentReports, setRecentReports] = useState<Report[]>([]);
   
@@ -43,7 +43,7 @@ export default function PatientDashboard() {
         const profile = await getUserProfile(firebaseUser.uid);
         if (profile) {
           if (profile.role === 'doctor') {
-            router.push('/doctor/dashboard'); // Redirect doctor away
+            router.push('/doctor/dashboard');
             return;
           }
           setUser(profile as PatientProfile);
@@ -78,6 +78,7 @@ export default function PatientDashboard() {
     if (!file) return;
 
     setIsImageValidating(true);
+    setIsImageReady(false);
     setImageValidationError(null);
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -86,18 +87,18 @@ export default function PatientDashboard() {
         const validation = await validateImageUpload({ photoDataUri: dataUrl });
         if (validation.isValid) {
           setImageDataUri(dataUrl);
-          setImageValidationError(null);
+          setIsImageReady(true);
           toast({
-            title: "Image is valid!",
-            description: "You can now describe your symptoms.",
+            title: "Image Uploaded!",
+            description: "Your image is ready for analysis.",
           });
         } else {
-          setImageValidationError(validation.reason || 'Invalid image. Please upload a clear photo of a skin condition.');
+          setImageValidationError(validation.reason || 'Invalid image.');
           setImageDataUri(null);
         }
       } catch (error) {
         console.error(error);
-        setImageValidationError('An error occurred during image validation.');
+        setImageValidationError('Validation error occurred.');
         toast({ variant: "destructive", title: "Validation Error" });
       } finally {
         setIsImageValidating(false);
@@ -108,34 +109,20 @@ export default function PatientDashboard() {
   
   const handleSymptomSubmit = async () => {
     if (!symptomInput.trim() || isChatbotLoading) return;
-
-    const userMessage = { sender: 'user', text: symptomInput };
-    setChatMessages(prev => [...prev, userMessage]);
     setIsChatbotLoading(true);
-    
+    toast({ title: 'Message sent to AI assistant' });
+
     try {
-      const response = await assistWithSymptomInputs({ symptomQuery: symptomInput });
-      const aiMessage = {
-        sender: 'ai',
-        text: (
-          <div className="space-y-2">
-            <p>{response.refinedSymptoms}</p>
-            <p className="font-semibold">Any of these apply?</p>
-            <div className="flex flex-col items-start gap-1">
-              {response.suggestedQuestions.map((q, i) => (
-                <Button key={i} size="sm" variant="outline" className="h-auto py-1 px-2 text-xs" onClick={() => setSymptomInput(q)}>{q}</Button>
-              ))}
-            </div>
-          </div>
-        ),
-      };
-      setChatMessages(prev => [...prev, aiMessage]);
+      // We don't have a visual chat history in this UI,
+      // but we'll still call the flow for symptom refinement.
+      // The output could be used in a future version.
+      await assistWithSymptomInputs({ symptomQuery: symptomInput });
+      setSymptomInput(''); // Clear input on success
+      toast({ title: '🤖 AI is analyzing your symptoms...' });
     } catch (error) {
-      const errorMessage = { sender: 'system', text: 'Sorry, I had trouble understanding. Please try again.' };
-      setChatMessages(prev => [...prev, errorMessage]);
+      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process symptoms.' });
       console.error(error);
     } finally {
-      setSymptomInput('');
       setIsChatbotLoading(false);
     }
   };
@@ -151,12 +138,12 @@ export default function PatientDashboard() {
     }
 
     setIsAnalyzing(true);
-    const allSymptoms = chatMessages.filter(m => m.sender === 'user').map(m => m.text).join('. ');
-
+    toast({ title: '🔬 Starting comprehensive analysis...' });
+    
     try {
       const result = await generateInitialReport({
         photoDataUri: imageDataUri,
-        symptomInputs: allSymptoms || 'No symptoms described.',
+        symptomInputs: symptomInput || 'No symptoms described.',
         age: user.age || 30,
         gender: user.gender || 'not specified',
         region: user.region || 'not specified',
@@ -185,150 +172,156 @@ export default function PatientDashboard() {
       setIsAnalyzing(false);
     }
   };
-  
-  const getFormattedDate = (timestamp: any): string => {
-    if (!timestamp) return 'Date not available';
-    // Firestore Timestamps can be objects with seconds and nanoseconds
-    if (timestamp.seconds) {
-      return new Date(timestamp.seconds * 1000).toLocaleDateString();
-    }
-    // Or they might already be Date objects
-    return new Date(timestamp).toLocaleDateString();
-  };
 
+  const getStatusText = (status: Report['status']) => {
+    switch (status) {
+        case 'pending-doctor-review': return 'Pending Doctor Review';
+        case 'doctor-approved': return 'Approved by Doctor';
+        case 'doctor-modified': return 'Reviewed by Doctor';
+        case 'rejected': return 'Disqualified by Doctor';
+        case 'pending-patient-input': return 'Ready for Doctor Consultation';
+        default: return 'Unknown Status';
+    }
+  };
 
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-subtle">
-        <Loader2 className="animate-spin text-primary" size={48} />
+      <div className="flex h-screen w-screen items-center justify-center new-dashboard-bg">
+        <Loader2 className="animate-spin text-white" size={48} />
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-subtle min-h-screen">
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Welcome, {user?.name || 'Patient'}!</h1>
-            <p className="text-muted-foreground">Get started by uploading an image for a new analysis.</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column: Image Upload & Reports */}
-            <div className="lg:col-span-2 space-y-8">
-                 <Card className="shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Camera /> Upload Skin Image</CardTitle>
-                        <CardDescription>Upload a clear image of your skin condition for AI analysis.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div 
-                            className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            {isImageValidating ? (
-                                <>
-                                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                                    <p className="font-semibold">Validating Image...</p>
-                                    <p className="text-sm text-muted-foreground">Please wait while we check your photo.</p>
-                                </>
-                            ) : imageValidationError ? (
-                                <div className="text-center text-destructive">
-                                    <CheckCircle className="w-12 h-12 mx-auto mb-4" />
-                                    <p className="font-semibold">Image Invalid</p>
-                                    <p className="text-sm mb-4">{imageValidationError}</p>
-                                    <Button variant="destructive">Try Again</Button>
-                                </div>
-                            ) : imageDataUri ? (
-                                <div className="text-center text-green-600">
-                                    <CheckCircle className="w-12 h-12 mx-auto mb-4" />
-                                    <p className="font-semibold">Image Ready!</p>
-                                    <p className="text-sm text-muted-foreground">You can now describe your symptoms or analyze.</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <Upload className="w-12 h-12 text-muted-foreground mb-4"/>
-                                    <p className="font-semibold">Click to upload or drag and drop</p>
-                                    <p className="text-sm text-muted-foreground">PNG, JPG up to 10MB</p>
-                                    <Input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        id="fileInput"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                    />
-                                </>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><FileText /> Recent Reports</CardTitle>
-                        <CardDescription>Review your past skin analysis reports.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {recentReports.map((report) => (
-                                <div key={report.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                                    <div>
-                                        <h4 className="font-semibold">Report from {getFormattedDate(report.createdAt)}</h4>
-                                        <p className="text-sm text-muted-foreground capitalize">{report.status.replace(/-/g, ' ')}</p>
-                                    </div>
-                                    <Button variant="outline" size="sm" onClick={() => router.push('/patient/report')}>View Report</Button>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+    <div className="new-dashboard-bg min-h-screen">
+      <div className="max-w-6xl mx-auto p-5">
+        
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            
+            {/* Left Card: Upload */}
+            <div className="card-glass">
+                <div className="card-title">
+                    <div className="card-icon bg-gradient-to-br from-purple-500 to-indigo-600">
+                        <Camera className="text-white"/>
+                    </div>
+                    Upload Skin Image
+                </div>
+                <p className="card-subtitle">Upload a clear image of your skin condition for AI analysis.</p>
+                
+                <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
+                    {isImageValidating ? (
+                        <>
+                           <Loader2 className="w-20 h-20 text-purple-500 animate-spin" />
+                           <div className="upload-text">Validating...</div>
+                           <div className="upload-subtext">Please wait while we check your image.</div>
+                        </>
+                    ) : isImageReady ? (
+                        <>
+                           <div className="upload-icon-large bg-gradient-to-br from-green-400 to-cyan-500">
+                               <CheckCircle size={36}/>
+                           </div>
+                           <div className="upload-text">Image Ready!</div>
+                           <div className="upload-subtext">You can now describe symptoms or analyze.</div>
+                        </>
+                    ) : imageValidationError ? (
+                         <>
+                           <div className="upload-icon-large bg-gradient-to-br from-red-500 to-orange-500">
+                               <Upload size={36}/>
+                           </div>
+                           <div className="upload-text text-red-600">{imageValidationError}</div>
+                           <div className="upload-subtext">Please try another image.</div>
+                        </>
+                    ) : (
+                        <>
+                           <div className="upload-icon-large">
+                               <ArrowUp size={36}/>
+                           </div>
+                           <div className="upload-text">Click to upload or drag and drop</div>
+                           <div className="upload-subtext">PNG, JPG up to 10MB</div>
+                        </>
+                    )}
+                </div>
+                <Input type="file" id="fileInput" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload}/>
             </div>
 
-            {/* Right Column: AI Assistant */}
-            <div className="lg:col-span-1">
-                <Card className="shadow-lg hover:shadow-xl transition-shadow h-full flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Bot/> AI Assistant</CardTitle>
-                        <CardDescription>Chat with our AI to describe your symptoms.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-                        <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-primary text-primary-foreground rounded-full"><Bot size={16}/></div>
-                                <div className="bg-muted p-3 rounded-lg">
-                                    <p className="text-sm">Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
-                                </div>
-                            </div>
-                            {/* Chat messages would be rendered here */}
-                        </div>
-                        <div className="mt-auto pt-4 border-t">
-                            <Textarea
-                                placeholder="Describe your symptoms..."
-                                value={symptomInput}
-                                onChange={(e) => setSymptomInput(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSymptomSubmit())}
-                                className="mb-2"
-                            />
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="icon"><Mic/></Button>
-                                <Button onClick={handleSymptomSubmit} disabled={!symptomInput.trim() || isChatbotLoading}>
-                                    {isChatbotLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
-                                    Send
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                         <Button onClick={handleAnalyze} disabled={isAnalyzing || !imageDataUri} className="w-full">
-                            {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                            Analyze Now
+            {/* Right Card: AI Assistant */}
+            <div className="card-glass flex flex-col">
+                <div className="card-title">
+                    <div className="card-icon bg-gradient-to-br from-pink-500 to-red-500">
+                        <Bot className="text-white"/>
+                    </div>
+                    AI Assistant
+                </div>
+                <p className="card-subtitle">Chat with our AI to describe your symptoms.</p>
+                
+                <div className="ai-message">
+                    <div className="ai-avatar">AI</div>
+                    <p>Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
+                </div>
+
+                <div className="mt-4 flex-grow flex flex-col">
+                    <Textarea 
+                        className="symptom-input flex-grow" 
+                        placeholder="Describe your symptoms..."
+                        value={symptomInput}
+                        onChange={(e) => setSymptomInput(e.target.value)}
+                    />
+                    <div className="flex gap-4 mt-4">
+                        <button className={cn("voice-btn", isVoiceActive && "active")} onClick={() => setIsVoiceActive(!isVoiceActive)}>
+                            {isVoiceActive ? '🔴' : <Mic />}
+                        </button>
+                        <Button 
+                            className="send-btn" 
+                            onClick={handleSymptomSubmit}
+                            disabled={isChatbotLoading || !symptomInput.trim()}
+                        >
+                            {isChatbotLoading ? <Loader2 className="animate-spin" /> : 'Send'}
                         </Button>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </div>
+
+                <Button 
+                    className="analyze-btn mt-4" 
+                    onClick={handleAnalyze}
+                    disabled={isAnalyzing || !isImageReady}
+                >
+                    {isAnalyzing ? <Loader2 className="animate-spin" /> : <Sparkles className="mr-2"/>}
+                    Analyze Now
+                </Button>
+            </div>
+        </div>
+
+        {/* Recent Reports Section */}
+        <div className="card-glass">
+            <div className="card-title">
+                <div className="card-icon bg-gradient-to-br from-orange-400 to-yellow-500">
+                    <ClipboardList className="text-white"/>
+                </div>
+                Recent Reports
+            </div>
+            <p className="card-subtitle">Review your past skin analysis reports.</p>
+            
+            <div className="space-y-4">
+                {recentReports.length > 0 ? recentReports.map((report) => (
+                    <div key={report.id} className="report-item">
+                        <div className="report-info">
+                            <h3>Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h3>
+                            <div className="report-status">{getStatusText(report.status)}</div>
+                        </div>
+                        <Button className="view-btn" onClick={() => {
+                            sessionStorage.setItem('latestReport', JSON.stringify(report));
+                            router.push('/patient/report');
+                        }}>View Report</Button>
+                    </div>
+                )) : (
+                    <p className="text-center text-gray-500 py-8">No reports found.</p>
+                )}
             </div>
         </div>
       </div>
     </div>
   );
 }
+
+    
