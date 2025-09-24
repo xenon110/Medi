@@ -32,7 +32,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard})}>
+      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard && !isPatientDashboard})}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -41,7 +41,7 @@ export default function RootLayout({
         >
           <div className={cn("flex flex-col min-h-screen", {"bg-transparent": isDashboard})}>
             {showHeader && <Header />}
-            <main className={cn("flex-1", {"pt-16": showHeader && !isPatientDashboard})}>{children}</main>
+            <main className={cn("flex-1", {"pt-24": showHeader})}>{children}</main>
           </div>
           <Toaster />
         </ThemeProvider>
