@@ -133,7 +133,7 @@ export default function ConsultPage() {
                         <div className="doctors-grid">
                             {doctors.length > 0 ? (
                                 doctors.map((doctor) => (
-                                    <div key={doctor.uid} className="doctor-card">
+                                    <div key={doctor.uid} className="doctor-card" onClick={() => handleSendClick(doctor)}>
                                         <div className="status-indicator"></div>
                                         <div className="doctor-info">
                                             <div className="flex items-center gap-6">
@@ -155,7 +155,7 @@ export default function ConsultPage() {
                                             </div>
                                             <button 
                                                 className="send-report-btn" 
-                                                onClick={() => handleSendClick(doctor)}
+                                                onClick={(e) => { e.stopPropagation(); handleSendClick(doctor); }}
                                                 disabled={isSending === doctor.uid || reports.length === 0}
                                             >
                                                 {isSending === doctor.uid ? (
