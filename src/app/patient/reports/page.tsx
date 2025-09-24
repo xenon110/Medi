@@ -9,8 +9,10 @@ import { Clock, CheckCircle, XCircle, FileDown, Eye, Send, ChevronLeft, Loader2 
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Report, getReportsForPatient } from '@/lib/firebase-services';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+
 
 type ReportStatusFilter = 'pending-patient-input' | 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected';
 
@@ -30,24 +32,30 @@ export default function MyReportsPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
+    const unsubscribeAuth = auth.onAuthStateChanged(user => {
+      if (user && db) {
         setIsLoading(true);
-        getReportsForPatient(user.uid)
-          .then(fetchedReports => {
-            setReports(fetchedReports);
-            setIsLoading(false);
-          })
-          .catch(err => {
-            console.error(err);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch reports.' });
-            setIsLoading(false);
-          });
-      } else {
+        const reportsRef = collection(db, 'reports');
+        const q = query(reportsRef, where('patientId', '==', user.uid));
+
+        const unsubscribeSnap = onSnapshot(q, (querySnapshot) => {
+          let fetchedReports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+          fetchedReports.sort((a, b) => ((b.createdAt as any).seconds || 0) - ((a.createdAt as any).seconds || 0));
+          setReports(fetchedReports);
+          setIsLoading(false);
+        }, (err) => {
+          console.error(err);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch reports in real-time.' });
+          setIsLoading(false);
+        });
+
+        return () => unsubscribeSnap();
+      } else if (!user) {
         router.push('/login?role=patient');
       }
     });
-    return () => unsubscribe();
+
+    return () => unsubscribeAuth();
   }, [router, toast]);
 
 
@@ -171,3 +179,5 @@ export default function MyReportsPage() {
     </div>
   );
 }
+
+    

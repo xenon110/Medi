@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, a,{ useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, User, ChevronLeft, Inbox, CheckCircle, Clock, XCircle, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Report, getReportsForPatient, DoctorProfile } from '@/lib/firebase-services';
-import { auth } from '@/lib/firebase';
+import { Report, getReportsForPatient, DoctorProfile, PatientProfile } from '@/lib/firebase-services';
+import { auth, db } from '@/lib/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
 
 type ReportsByDoctor = {
@@ -29,11 +30,28 @@ export default function MyInfoPage() {
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
+    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+      if (user && db) {
         setIsLoading(true);
-        try {
-          const allReports = await getReportsForPatient(user.uid);
+        
+        const reportsRef = collection(db, 'reports');
+        const q = query(reportsRef, where('patientId', '==', user.uid));
+
+        const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
+          const reportsPromises = querySnapshot.docs.map(async (doc) => {
+            const report = { id: doc.id, ...doc.data() } as Report;
+            if (report.doctorId) {
+              const doctorProfile = await getReportsForPatient(report.doctorId) as DoctorProfile | null;
+              if (doctorProfile) {
+                  report.doctorProfile = doctorProfile;
+              }
+            }
+            return report;
+          });
+
+          const allReports = await Promise.all(reportsPromises);
+          
+          allReports.sort((a, b) => ((b.createdAt as any).seconds || 0) - ((a.createdAt as any).seconds || 0));
 
           const reportsByDoc: ReportsByDoctor = {};
           const unassigned: Report[] = [];
@@ -62,19 +80,22 @@ export default function MyInfoPage() {
           setStats({ pending: pendingCount, approved: approvedCount, rejected: rejectedCount });
           setReportsByDoctor(reportsByDoc);
           setUnassignedReports(unassigned);
-
-        } catch (error) {
-          console.error("Failed to fetch reports:", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your report history.' });
-        } finally {
           setIsLoading(false);
-        }
-      } else {
+
+        }, (error) => {
+          console.error("Failed to fetch reports in real-time:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your report history.' });
+          setIsLoading(false);
+        });
+
+        return () => unsubscribeSnap();
+
+      } else if (!user) {
         router.push('/login?role=patient');
       }
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, [router, toast]);
 
   const getStatusConfig = (status: Report['status']) => {
@@ -221,3 +242,4 @@ export default function MyInfoPage() {
   );
 }
 
+    

@@ -76,19 +76,11 @@ export default function DoctorDashboard() {
 
         const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
         
-        if (!patientProfile) {
-          console.warn(`Could not fetch profile for patient ID: ${report.patientId}`);
-          return {
-            ...report,
-            patientProfile: { name: "Unknown Patient" } as PatientProfile,
-            time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
-            unread: report.status === 'pending-doctor-review' ? 1 : 0,
-          };
-        }
+        const patientName = patientProfile?.name;
 
         return {
           ...report,
-          patientProfile: patientProfile,
+          patientProfile: patientProfile ?? { name: 'Unknown Patient' } as PatientProfile,
           time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
           unread: report.status === 'pending-doctor-review' ? 1 : 0,
         };
@@ -243,24 +235,22 @@ export default function DoctorDashboard() {
 
             <div className="patients-container">
                 {filteredCases.map((pCase) => (
-                    pCase.patientProfile && (
-                        <div 
-                          key={pCase.id} 
-                          className={cn('patient-item', { 'active': selectedCase?.id === pCase.id })}
-                          onClick={() => handleSelectCase(pCase)}
-                        >
-                            <div className="patient-avatar">{getPatientInitials(pCase.patientProfile.name)}</div>
-                            <div className="patient-info">
-                                <div className="patient-name">{pCase.patientProfile.name || 'Unknown Patient'}</div>
-                                <p className="patient-condition">Dermatology Case</p>
-                                <p className="patient-time">{pCase.time}</p>
-                            </div>
-                            <div className="patient-status">
-                                {statusMap[pCase.status] && <div className={cn('status-badge', statusMap[pCase.status].badgeClass)}>{statusMap[pCase.status].label}</div>}
-                                {pCase.unread > 0 && <div className="unread-count">{pCase.unread}</div>}
-                            </div>
+                    <div 
+                      key={pCase.id} 
+                      className={cn('patient-item', { 'active': selectedCase?.id === pCase.id })}
+                      onClick={() => handleSelectCase(pCase)}
+                    >
+                        <div className="patient-avatar">{getPatientInitials(pCase.patientProfile?.name)}</div>
+                        <div className="patient-info">
+                            <div className="patient-name">{pCase.patientProfile?.name || 'Unknown Patient'}</div>
+                            <p className="patient-condition">Dermatology Case</p>
+                            <p className="patient-time">{pCase.time}</p>
                         </div>
-                    )
+                        <div className="patient-status">
+                            {statusMap[pCase.status] && <div className={cn('status-badge', statusMap[pCase.status].badgeClass)}>{statusMap[pCase.status].label}</div>}
+                            {pCase.unread > 0 && <div className="unread-count">{pCase.unread}</div>}
+                        </div>
+                    </div>
                 ))}
                  {filteredCases.length === 0 && !isLoading && (
                     <div className="text-center p-8 text-gray-500">
@@ -414,3 +404,5 @@ export default function DoctorDashboard() {
     </div>
   );
 }
+
+    
