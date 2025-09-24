@@ -66,7 +66,12 @@ export default function DoctorDashboard() {
         
         if (!patientProfile) {
           console.warn(`Could not fetch profile for patient ID: ${report.patientId}`);
-          return null; 
+          return {
+            ...report,
+            patientProfile: { name: "Unknown Patient" } as PatientProfile, // Provide a fallback profile
+            time: report.createdAt ? formatDistanceToNow(new Date((report.createdAt as any).seconds * 1000), { addSuffix: true }) : 'N/A',
+            unread: report.status === 'pending-doctor-review' ? 1 : 0,
+          };
         }
 
         return {
@@ -135,6 +140,11 @@ export default function DoctorDashboard() {
     );
   }
 
+  const getPatientInitials = (name: string | undefined) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('');
+  };
+
   return (
     <div className="dashboard-container">
         {/* Sidebar */}
@@ -184,9 +194,9 @@ export default function DoctorDashboard() {
                           className={cn('patient-item', { 'active': selectedCase?.id === pCase.id })}
                           onClick={() => handleSelectCase(pCase)}
                         >
-                            <div className="patient-avatar">{pCase.patientProfile.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div className="patient-avatar">{getPatientInitials(pCase.patientProfile.name)}</div>
                             <div className="patient-info">
-                                <div className="patient-name">{pCase.patientProfile.name}</div>
+                                <div className="patient-name">{pCase.patientProfile.name || 'Unknown Patient'}</div>
                                 <p className="patient-condition">Dermatology Case</p>
                                 <p className="patient-time">{pCase.time}</p>
                             </div>
@@ -211,10 +221,10 @@ export default function DoctorDashboard() {
           <div className="chat-panel">
             <div className="chat-header">
                 <div className="chat-patient-info">
-                    <div className="chat-avatar">{selectedCase.patientProfile.name.split(' ').map(n => n[0]).join('')}</div>
+                    <div className="chat-avatar">{getPatientInitials(selectedCase.patientProfile.name)}</div>
                     <div className="chat-patient-details">
-                        <h3 id="chat-patient-name">{selectedCase.patientProfile.name}</h3>
-                        <p id="chat-patient-condition">Dermatology Case • Age: {selectedCase.patientProfile.age} • {selectedCase.patientProfile.gender}</p>
+                        <h3 id="chat-patient-name">{selectedCase.patientProfile.name || 'Unknown Patient'}</h3>
+                        <p id="chat-patient-condition">Dermatology Case • Age: {selectedCase.patientProfile.age || 'N/A'} • {selectedCase.patientProfile.gender || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="chat-actions">
@@ -237,27 +247,27 @@ export default function DoctorDashboard() {
                             <div className="details-grid">
                                 <div className="detail-item">
                                     <div className="detail-label">Patient Name</div>
-                                    <div className="detail-value">{selectedCase.patientProfile.name}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.name || 'N/A'}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Age</div>
-                                    <div className="detail-value">{selectedCase.patientProfile.age} years</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.age || 'N/A'} years</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Gender</div>
-                                    <div className="detail-value">{selectedCase.patientProfile.gender}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.gender || 'N/A'}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Region</div>
-                                    <div className="detail-value">{selectedCase.patientProfile.region}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.region || 'N/A'}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Skin Tone</div>
-                                    <div className="detail-value">{selectedCase.patientProfile.skinTone}</div>
+                                    <div className="detail-value">{selectedCase.patientProfile.skinTone || 'N/A'}</div>
                                 </div>
                                 <div className="detail-item">
                                     <div className="detail-label">Submitted</div>
-                                    <div className="detail-value">{new Date((selectedCase.createdAt as any).seconds * 1000).toLocaleString()}</div>
+                                    <div className="detail-value">{selectedCase.createdAt && (selectedCase.createdAt as any).seconds ? new Date((selectedCase.createdAt as any).seconds * 1000).toLocaleString() : 'N/A'}</div>
                                 </div>
                             </div>
                         </div>
