@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, User, MessageSquare, LayoutGrid, Calendar, Settings, FileText, LogOut, Activity, BarChart, PieChartIcon } from 'lucide-react';
+import { Loader2, User, MessageSquare, LayoutGrid, Calendar, Settings, FileText, LogOut, Activity, BarChart, PieChartIcon, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -234,5 +234,3 @@ export default function DoctorAnalytics() {
     </div>
   );
 }
-
-    
