@@ -94,7 +94,21 @@ export default function ReportPage() {
       });
       
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      const reportDate = report?.createdAt ? new Date((report.createdAt as any).seconds * 1000).toISOString().split('T')[0] : 'report';
+      
+      let reportDate = "report";
+      if (report?.createdAt) {
+        // Handle Firestore Timestamp (object with seconds)
+        if ((report.createdAt as any).seconds) {
+          reportDate = new Date((report.createdAt as any).seconds * 1000)
+            .toISOString()
+            .split("T")[0];
+        } 
+        // Handle standard Date object
+        else if (report.createdAt instanceof Date) {
+          reportDate = report.createdAt.toISOString().split("T")[0];
+        }
+      }
+
       pdf.save(`MediSkin-Report-${reportDate}.pdf`);
 
     } catch (err) {
