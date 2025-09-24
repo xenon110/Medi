@@ -1,11 +1,10 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 195 53% 96%;
+    --background: 220 13% 98%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
@@ -221,7 +220,7 @@
 
 
   /* NEW CONSULT PAGE STYLES */
-  .new-consult-bg { color: #1e293b; }
+  .new-consult-bg { color: #1e293b; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
   .new-consult-bg .main-content { padding: 48px 0; }
   .new-consult-bg .page-header { margin-bottom: 48px; text-align: center; }
   .new-consult-bg .page-title { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px; }
@@ -526,11 +525,11 @@
         transition: all 0.3s;
     }
     .patient-btn {
-      background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+      background: linear-gradient(135deg, #7C3AED, #6D28D9);
       color: white;
     }
     .doctor-btn {
-      background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
+      background: linear-gradient(135deg, #6D28D9, #5B21B6);
       color: white;
     }
     .login-btn:hover {
@@ -647,7 +646,7 @@
     @apply bg-gradient-to-r from-[#4facfe] to-[#00f2fe];
   }
   .bg-gradient-subtle {
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
   }
   .dark .bg-gradient-subtle {
      background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
@@ -655,3 +654,5 @@
 }
 this is the total code i have tried just see where it can fit and put it there but do not change any other page except the first home page and its css
 This code has some error so check it properly and apply it
+
+and after this just change my first page look from dark mode to white mode and that is it
