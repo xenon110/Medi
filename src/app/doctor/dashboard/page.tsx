@@ -43,8 +43,6 @@ export default function DoctorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // The layout now guarantees that only authenticated doctors can access this page.
-    // We can directly get the current user.
     const currentUser = auth.currentUser;
 
     if (!currentUser || !db) {
@@ -56,18 +54,20 @@ export default function DoctorDashboard() {
     setIsLoading(true);
     
     const reportsRef = collection(db, 'reports');
-    // Query for reports assigned to the current doctor's UID.
-    const q = query(reportsRef, where('doctorId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+    // Simplified query to only filter by doctorId. Sorting will be done client-side.
+    const q = query(reportsRef, where('doctorId', '==', currentUser.uid));
 
     const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
       const casesPromises = querySnapshot.docs.map(async (doc) => {
         const report = { id: doc.id, ...doc.data() } as Report;
         if (!report.patientId) return null;
 
-        // Fetch the profile for the patient associated with the report.
         const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
         
-        if (!patientProfile) return null;
+        if (!patientProfile) {
+          console.warn(`Could not fetch profile for patient ID: ${report.patientId}`);
+          return null; 
+        }
 
         return {
           ...report,
@@ -77,19 +77,26 @@ export default function DoctorDashboard() {
         };
       });
 
-      // Await all promises and filter out any null results.
-      const cases = (await Promise.all(casesPromises)).filter((c): c is PatientCase => c !== null);
+      let cases = (await Promise.all(casesPromises)).filter((c): c is PatientCase => c !== null);
       
+      // Sort cases by creation date on the client side
+      cases.sort((a, b) => {
+        const timeA = (a.createdAt as any)?.seconds || 0;
+        const timeB = (b.createdAt as any)?.seconds || 0;
+        return timeB - timeA;
+      });
+
       setPatientCases(cases);
       
-      // Update the selected case if it's still in the list, otherwise select the first case.
-      if (selectedCase) {
-         const updatedSelectedCase = cases.find(c => c.id === selectedCase.id);
-         setSelectedCase(updatedSelectedCase || cases[0] || null);
-      } else if (cases.length > 0) {
-         setSelectedCase(cases[0]);
+      if (cases.length > 0) {
+        // If a case is already selected, try to find its updated version.
+        // Otherwise, select the first case in the sorted list.
+        const currentSelectedId = selectedCase?.id;
+        const updatedSelectedCase = currentSelectedId ? cases.find(c => c.id === currentSelectedId) : undefined;
+        setSelectedCase(updatedSelectedCase || cases[0]);
       } else {
-         setSelectedCase(null);
+        // No cases found, so clear the selection.
+        setSelectedCase(null);
       }
       
       setIsLoading(false);
@@ -97,17 +104,15 @@ export default function DoctorDashboard() {
     }, (error) => {
       console.error("Error fetching reports in real-time:", error);
       if (error.code === 'permission-denied' || error.code === 'unauthenticated') {
-        toast({ title: 'Permissions Error', description: 'Could not fetch reports. Please check your Firestore rules.', variant: 'destructive' });
+        toast({ title: 'Permissions Error', description: 'Missing or insufficient permissions. Please check your Firestore security rules.', variant: 'destructive' });
       } else {
         toast({ title: 'Error', description: 'A problem occurred while fetching patient cases.', variant: 'destructive' });
       }
       setIsLoading(false);
-      router.push('/login?role=doctor');
     });
 
-    // Cleanup the real-time listener on unmount.
     return () => unsubscribeSnap();
-  }, [router, toast, selectedCase?.id]); // Depend on selectedCase.id to avoid re-running on every selection change
+  }, [router, toast]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
