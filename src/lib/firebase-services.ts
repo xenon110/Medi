@@ -218,7 +218,7 @@ export const updateReportByDoctor = async (reportId: string, status: Report['sta
 export const updateDoctorProfile = async (uid: string, data: Partial<DoctorProfile>) => {
     if (!db) throw new Error("Firestore is not initialized.");
     const doctorRef = doc(db, 'doctors', uid);
-    await updateDoc(doctorRef, data);
+    await setDoc(doctorRef, data, { merge: true });
 };
 
 export const uploadProfilePicture = async (uid: string, file: File): Promise<string> => {
