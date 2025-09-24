@@ -81,10 +81,10 @@
   /* PATIENT DASHBOARD STYLES */
   .new-dashboard-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
-  .header { @apply flex justify-between items-center py-5 mb-8 flex-wrap; }
+  .header { @apply flex justify-between items-center py-5 mb-8; }
   .logo { @apply flex items-center gap-2.5 text-white text-2xl font-bold; }
   .logo-icon { @apply w-10 h-10 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-xl flex items-center justify-center font-bold text-white; }
-  .nav { @apply flex gap-8 items-center flex-wrap; }
+  .nav { @apply flex gap-8 items-center; }
   .nav a { @apply text-white/90 font-medium transition-all duration-300 hover:text-cyan-300 hover:drop-shadow-[0_0_10px_rgba(0,245,255,0.5)]; }
   .emergency-btn {@apply bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] text-white py-3 px-6 rounded-full font-bold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(255,65,108,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(255,65,108,0.5)]; }
 
@@ -237,3 +237,5 @@
      background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
   }
 }
+
+    

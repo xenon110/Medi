@@ -130,7 +130,8 @@ export default function PatientDashboard() {
     if (!symptomInput.trim()) return;
     
     const userMessage = symptomInput.trim();
-    setChatHistory(prev => [...prev, { sender: 'user', text: userMessage }]);
+    const newChatHistory = [...chatHistory, { sender: 'user', text: userMessage }];
+    setChatHistory(newChatHistory);
     setSymptomInput('');
     setIsChatbotLoading(true);
 
@@ -238,11 +239,9 @@ export default function PatientDashboard() {
     const btn = document.querySelector('.voice-btn');
     if (btn) {
         if (!isVoiceActive) {
-            btn.style.background = 'linear-gradient(45deg, #ff4b2b, #ff416c)';
             btn.innerHTML = '🔴';
             showNotification("🎤 Voice recording started");
         } else {
-            btn.style.background = 'linear-gradient(45deg, #ff9a9e, #fecfef)';
             btn.innerHTML = '🎤';
             showNotification("⏹️ Voice recording stopped");
         }
@@ -398,3 +397,5 @@ export default function PatientDashboard() {
     </>
   );
 }
+
+    
