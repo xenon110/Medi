@@ -51,7 +51,7 @@ const LoginOptions = () => {
                     {doctorFeatures.map(feature => <li key={feature}>{feature}</li>)}
                 </ul>
                 
-                <button className="login-btn doctor-btn" onClick={() => router.push('/login?role=doctor')}>Login as Doctor</button>
+                <button className="login-btn doctor-btn" onClick={() => router.push('/doctor/payment')}>Login as Doctor</button>
             </div>
         </div>
     </section>
