@@ -6,7 +6,6 @@ import { Bot, CheckCircle, Loader2, Sparkles, Upload, Camera, Mic, Send, Stethos
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
@@ -17,7 +16,6 @@ import { auth, db } from '@/lib/firebase';
 import { getUserProfile, saveReport, Report, PatientProfile, logEmergency } from '@/lib/firebase-services';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-
 
 export default function PatientDashboard() {
   const { toast } = useToast();
@@ -71,6 +69,15 @@ export default function PatientDashboard() {
         router.push('/login?role=patient');
       }
     });
+
+    // Show initial welcome notification
+     setTimeout(() => {
+        toast({
+            title: "🎉 Welcome to MEDISKIN AI!",
+            description: "Upload an image to get started.",
+        });
+    }, 1000);
+
     return () => unsubscribeAuth();
   }, [router, toast]);
 
@@ -90,7 +97,7 @@ export default function PatientDashboard() {
           setImageDataUri(dataUrl);
           setIsImageReady(true);
           toast({
-            title: "Image Uploaded!",
+            title: "✅ Image Uploaded!",
             description: "Your image is ready for analysis.",
           });
         } else {
@@ -109,13 +116,16 @@ export default function PatientDashboard() {
   };
   
   const handleSymptomSubmit = async () => {
-    if (!symptomInput.trim() || isChatbotLoading) return;
+    if (!symptomInput.trim()) return;
+    
     setIsChatbotLoading(true);
-    toast({ title: 'Message sent to AI assistant' });
+    toast({ title: '📤 Message sent to AI assistant' });
 
     try {
+      // We don't need to do anything with the response, just let the user know it was sent.
       await assistWithSymptomInputs({ symptomQuery: symptomInput });
       toast({ title: '🤖 AI has processed your symptoms.', description: 'You can now proceed with the analysis.' });
+      setSymptomInput(''); // Clear input after sending
     } catch (error) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process symptoms.' });
       console.error(error);
@@ -123,6 +133,7 @@ export default function PatientDashboard() {
       setIsChatbotLoading(false);
     }
   };
+
 
   const handleAnalyze = async () => {
     if (!imageDataUri || !user?.uid) {
@@ -152,7 +163,7 @@ export default function PatientDashboard() {
       sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
       toast({
-        title: "Analysis Complete",
+        title: "📊 Analysis Complete!",
         description: "Redirecting to your report...",
       });
       
@@ -222,54 +233,54 @@ export default function PatientDashboard() {
     <div className="new-dashboard-bg min-h-screen">
       <div className="container">
         {/* Header */}
-        <header className="header">
-            <div className="logo">
-                <div className="logo-icon"><Stethoscope/></div>
+        <header className="dashboard-header">
+            <div className="dashboard-logo">
+                <div className="dashboard-logo-icon"><Stethoscope/></div>
                 <span>MEDISKIN</span>
             </div>
-            <nav className="nav">
+            <nav className="dashboard-nav">
                 <Link href="/#features">Features</Link>
                 <Link href="/patient/reports">My Reports</Link>
                 <Link href="/patient/consult">Consult</Link>
                 <Link href="/help">Contact</Link>
-                <button className="emergency-btn" onClick={handleEmergencyClick}>🚨 Emergency</button>
+                <button className="dashboard-emergency-btn" onClick={handleEmergencyClick}>🚨 Emergency</button>
             </nav>
         </header>
 
         {/* Main Content */}
-        <div className="main-content">
+        <div className="dashboard-main-content">
             {/* Upload Skin Image */}
-            <div className="card">
-                <div className="card-title">
-                    <div className="card-icon upload-icon"><Camera/></div>
+            <div className="dashboard-card">
+                <div className="dashboard-card-title">
+                    <div className="dashboard-card-icon dashboard-upload-icon"><Camera/></div>
                     Upload Skin Image
                 </div>
-                <p className="card-subtitle">Upload a clear image of your skin condition for AI analysis.</p>
+                <p className="dashboard-card-subtitle">Upload a clear image of your skin condition for AI analysis.</p>
                 
-                <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
+                <div className="dashboard-upload-area" onClick={() => fileInputRef.current?.click()}>
                    {isImageValidating ? (
                         <>
-                           <div className="upload-icon-large"><Loader2 className="animate-spin" /></div>
-                           <div className="upload-text">Validating...</div>
-                           <div className="upload-subtext">Please wait while we check your image.</div>
+                           <div className="dashboard-upload-icon-large"><Loader2 className="animate-spin" /></div>
+                           <div className="dashboard-upload-text">Validating...</div>
+                           <div className="dashboard-upload-subtext">Please wait while we check your image.</div>
                         </>
                     ) : isImageReady ? (
                         <>
-                           <div className="upload-icon-large" style={{background: 'linear-gradient(45deg, #2edc76, #02e4a0)'}}><CheckCircle/></div>
-                           <div className="upload-text">Image Ready!</div>
-                           <div className="upload-subtext">You can now describe symptoms or analyze.</div>
+                           <div className="dashboard-upload-icon-large" style={{background: 'linear-gradient(45deg, #2edc76, #02e4a0)'}}><CheckCircle/></div>
+                           <div className="dashboard-upload-text">Image Ready!</div>
+                           <div className="dashboard-upload-subtext">You can now describe symptoms or analyze.</div>
                         </>
                     ) : imageValidationError ? (
                          <>
-                           <div className="upload-icon-large" style={{background: 'linear-gradient(45deg, #ff4b2b, #ff7849)'}}><Upload/></div>
-                           <div className="upload-text text-red-600">{imageValidationError}</div>
-                           <div className="upload-subtext">Please try another image.</div>
+                           <div className="dashboard-upload-icon-large" style={{background: 'linear-gradient(45deg, #ff4b2b, #ff7849)'}}><Upload/></div>
+                           <div className="dashboard-upload-text text-red-600">{imageValidationError}</div>
+                           <div className="dashboard-upload-subtext">Please try another image.</div>
                         </>
                     ) : (
                         <>
-                           <div className="upload-icon-large"><ArrowUp/></div>
-                           <div className="upload-text">Click to upload or drag and drop</div>
-                           <div className="upload-subtext">PNG, JPG up to 10MB</div>
+                           <div className="dashboard-upload-icon-large"><ArrowUp/></div>
+                           <div className="dashboard-upload-text">Click to upload or drag and drop</div>
+                           <div className="dashboard-upload-subtext">PNG, JPG up to 10MB</div>
                         </>
                     )}
                 </div>
@@ -277,36 +288,34 @@ export default function PatientDashboard() {
             </div>
 
             {/* AI Assistant */}
-            <div className="card ai-assistant">
-                <div className="card-title">
-                    <div className="card-icon ai-icon"><Bot/></div>
+            <div className="dashboard-card dashboard-ai-assistant">
+                <div className="dashboard-card-title">
+                    <div className="dashboard-card-icon dashboard-ai-icon"><Bot/></div>
                     AI Assistant
                 </div>
-                <p className="card-subtitle">Chat with our AI to describe your symptoms.</p>
+                <p className="dashboard-card-subtitle">Chat with our AI to describe your symptoms.</p>
                 
-                <div className="ai-message">
-                    <div className="ai-avatar">AI</div>
+                <div className="dashboard-ai-message">
+                    <div className="dashboard-ai-avatar">AI</div>
                     <p>Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
                 </div>
 
-                <div className="input-area">
+                <div className="dashboard-input-area">
                     <textarea 
-                        className="symptom-input" 
+                        className="dashboard-symptom-input" 
                         placeholder="Describe your symptoms..."
                         value={symptomInput}
                         onChange={(e) => setSymptomInput(e.target.value)}
                     ></textarea>
                 </div>
 
-                <div className="input-actions">
-                    <button className="voice-btn" onClick={() => setIsVoiceActive(!isVoiceActive)}>
+                <div className="dashboard-input-actions mb-4">
+                    <button className="dashboard-voice-btn" onClick={() => setIsVoiceActive(!isVoiceActive)}>
                         {isVoiceActive ? '🔴' : <Mic/>}
                     </button>
                     <button 
-                      className="send-btn" 
-                      onClick={() => {
-                        toast({ title: 'Send button clicked!'});
-                      }}
+                      className="dashboard-send-btn" 
+                      onClick={handleSymptomSubmit}
                       disabled={isChatbotLoading || !symptomInput.trim()}
                     >
                       {isChatbotLoading ? <Loader2 className="animate-spin mx-auto" /> : 'Send'}
@@ -314,7 +323,7 @@ export default function PatientDashboard() {
                 </div>
 
                 <button 
-                  className="analyze-btn" 
+                  className="dashboard-analyze-btn" 
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || !isImageReady}
                 >
@@ -324,20 +333,20 @@ export default function PatientDashboard() {
         </div>
 
         {/* Recent Reports */}
-        <div className="reports-section">
-            <div className="reports-title">
-                <div className="reports-icon"><ClipboardList/></div>
+        <div className="dashboard-reports-section">
+            <div className="dashboard-reports-title">
+                <div className="dashboard-reports-icon"><ClipboardList/></div>
                 Recent Reports
             </div>
-            <p className="card-subtitle">Review your past skin analysis reports.</p>
+            <p className="dashboard-card-subtitle">Review your past skin analysis reports.</p>
             
             {recentReports.length > 0 ? recentReports.map((report) => (
-                <div key={report.id} className="report-item">
-                    <div className="report-info">
+                <div key={report.id} className="dashboard-report-item">
+                    <div className="dashboard-report-info">
                         <h3>Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h3>
-                        <div className="report-status">{getStatusText(report.status)}</div>
+                        <div className="dashboard-report-status">{getStatusText(report.status)}</div>
                     </div>
-                    <button className="view-btn" onClick={() => {
+                    <button className="dashboard-view-btn" onClick={() => {
                         sessionStorage.setItem('latestReport', JSON.stringify(report));
                         router.push('/patient/report');
                     }}>View Report</button>
