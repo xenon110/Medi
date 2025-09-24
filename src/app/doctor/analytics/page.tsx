@@ -148,7 +148,7 @@ export default function DoctorAnalytics() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card className="bg-blue-100 border-blue-200">
+                    <Card className="bg-blue-100 border-blue-200 rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-blue-800">Total Reports Received</CardTitle>
                             <Activity className="h-4 w-4 text-blue-600" />
@@ -158,7 +158,7 @@ export default function DoctorAnalytics() {
                             <p className="text-xs text-blue-700">All-time patient reports</p>
                         </CardContent>
                     </Card>
-                    <Card className="bg-amber-100 border-amber-200">
+                    <Card className="bg-amber-100 border-amber-200 rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-amber-800">Pending Review</CardTitle>
                             <Clock className="h-4 w-4 text-amber-600" />
@@ -168,7 +168,7 @@ export default function DoctorAnalytics() {
                             <p className="text-xs text-amber-700">Reports waiting for your assessment</p>
                         </CardContent>
                     </Card>
-                    <Card className="bg-green-100 border-green-200">
+                    <Card className="bg-green-100 border-green-200 rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-green-800">Reviewed Cases</CardTitle>
                             <CheckCircle className="h-4 w-4 text-green-600" />
@@ -178,7 +178,7 @@ export default function DoctorAnalytics() {
                             <p className="text-xs text-green-700">Reports you have approved or modified</p>
                         </CardContent>
                     </Card>
-                     <Card className="bg-red-100 border-red-200">
+                     <Card className="bg-red-100 border-red-200 rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-red-800">Disqualified / More Info</CardTitle>
                             <XCircle className="h-4 w-4 text-red-600" />
@@ -192,7 +192,7 @@ export default function DoctorAnalytics() {
                 
                 {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    <Card className="lg:col-span-3">
+                    <Card className="lg:col-span-3 rounded-xl">
                          <CardHeader>
                             <CardTitle className="flex items-center gap-2"><BarChart/> Weekly Activity</CardTitle>
                             <CardDescription>Number of reports received per day this week.</CardDescription>
@@ -208,7 +208,7 @@ export default function DoctorAnalytics() {
                             </ResponsiveContainer>
                          </CardContent>
                     </Card>
-                     <Card className="lg:col-span-2">
+                     <Card className="lg:col-span-2 rounded-xl">
                          <CardHeader>
                             <CardTitle className="flex items-center gap-2"><PieChartIcon/> Report Status Breakdown</CardTitle>
                             <CardDescription>A summary of all your report statuses.</CardDescription>
@@ -234,3 +234,5 @@ export default function DoctorAnalytics() {
     </div>
   );
 }
+
+    
