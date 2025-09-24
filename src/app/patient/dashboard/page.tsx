@@ -10,12 +10,17 @@ import { Input } from '@/components/ui/input';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
-import { assistWithSymptomInputs } from '@/ai/flows/assist-with-symptom-inputs';
+import { symptomChat } from '@/ai/flows/symptom-chat';
 import { generateInitialReport } from '@/ai/flows/generate-initial-report';
 import { auth, db } from '@/lib/firebase';
 import { getUserProfile, saveReport, Report, PatientProfile, logEmergency } from '@/lib/firebase-services';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+
+interface ChatMessage {
+  sender: 'ai' | 'user';
+  text: string;
+}
 
 export default function PatientDashboard() {
   const { toast } = useToast();
@@ -31,6 +36,10 @@ export default function PatientDashboard() {
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    { sender: 'ai', text: "Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you." }
+  ]);
 
   const [recentReports, setRecentReports] = useState<Report[]>([]);
   
@@ -118,24 +127,16 @@ export default function PatientDashboard() {
   const handleSymptomSubmit = async () => {
     if (!symptomInput.trim()) return;
     
+    const userMessage = symptomInput.trim();
+    setChatHistory(prev => [...prev, { sender: 'user', text: userMessage }]);
+    setSymptomInput('');
     setIsChatbotLoading(true);
-    toast({ title: '📤 Message sent to AI assistant' });
 
     try {
-      // The AI will process the symptoms. We don't need to use the response here,
-      // but we wait for it to complete. The main goal is to let the user know
-      // their input was received and processed.
-      await assistWithSymptomInputs({ symptomQuery: symptomInput });
-
-      toast({ 
-        title: '🤖 AI has processed your symptoms.', 
-        description: 'You can add more details or click "Analyze Now" when ready.' 
-      });
-      
-      // We are not clearing the input so the user can add more text if they wish.
-      // setSymptomInput(''); 
-
+      const result = await symptomChat({ message: userMessage });
+      setChatHistory(prev => [...prev, { sender: 'ai', text: result.response }]);
     } catch (error) {
+      setChatHistory(prev => [...prev, { sender: 'ai', text: "I'm sorry, I encountered an error. Please try again." }]);
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process symptoms.' });
       console.error(error);
     } finally {
@@ -157,10 +158,15 @@ export default function PatientDashboard() {
     setIsAnalyzing(true);
     toast({ title: '🔬 Starting comprehensive analysis...' });
     
+    const fullSymptomText = chatHistory
+      .filter(m => m.sender === 'user')
+      .map(m => m.text)
+      .join('\n');
+
     try {
       const result = await generateInitialReport({
         photoDataUri: imageDataUri,
-        symptomInputs: symptomInput || 'No symptoms described.',
+        symptomInputs: fullSymptomText || 'No symptoms described.',
         age: user.age || 30,
         gender: user.gender || 'not specified',
         region: user.region || 'not specified',
@@ -238,6 +244,8 @@ export default function PatientDashboard() {
     );
   }
 
+  const latestAiMessage = chatHistory.slice().reverse().find(m => m.sender === 'ai')?.text;
+
   return (
     <div className="new-dashboard-bg min-h-screen">
       <div className="container pt-24">
@@ -306,7 +314,7 @@ export default function PatientDashboard() {
                 
                 <div className="dashboard-ai-message">
                     <div className="dashboard-ai-avatar">AI</div>
-                    <p>Hello! I'm your MEDISKIN AI assistant. Please upload an image and describe your symptoms. The more details you provide, the better I can assist you.</p>
+                    <p>{latestAiMessage}</p>
                 </div>
 
                 <div className="dashboard-input-area">
@@ -315,6 +323,12 @@ export default function PatientDashboard() {
                         placeholder="Describe your symptoms..."
                         value={symptomInput}
                         onChange={(e) => setSymptomInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSymptomSubmit();
+                          }
+                        }}
                     ></textarea>
                 </div>
 
