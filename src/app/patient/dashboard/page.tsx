@@ -122,10 +122,19 @@ export default function PatientDashboard() {
     toast({ title: '📤 Message sent to AI assistant' });
 
     try {
-      // We don't need to do anything with the response, just let the user know it was sent.
+      // The AI will process the symptoms. We don't need to use the response here,
+      // but we wait for it to complete. The main goal is to let the user know
+      // their input was received and processed.
       await assistWithSymptomInputs({ symptomQuery: symptomInput });
-      toast({ title: '🤖 AI has processed your symptoms.', description: 'You can now proceed with the analysis.' });
-      setSymptomInput(''); // Clear input after sending
+
+      toast({ 
+        title: '🤖 AI has processed your symptoms.', 
+        description: 'You can add more details or click "Analyze Now" when ready.' 
+      });
+      
+      // We are not clearing the input so the user can add more text if they wish.
+      // setSymptomInput(''); 
+
     } catch (error) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process symptoms.' });
       console.error(error);
@@ -231,7 +240,7 @@ export default function PatientDashboard() {
 
   return (
     <div className="new-dashboard-bg min-h-screen">
-      <div className="container">
+      <div className="container pt-24">
         {/* Header */}
         <header className="dashboard-header">
             <div className="dashboard-logo">
