@@ -134,9 +134,19 @@ export const saveReport = async (patientId: string, reportName: string, reportDa
 export const getReportsForPatient = async (patientId: string): Promise<Report[]> => {
     if (!db) throw new Error("Firestore is not initialized.");
     const reportsCollection = collection(db, 'reports');
-    const q = query(reportsCollection, where("patientId", "==", patientId), orderBy("createdAt", "desc"));
+    const q = query(reportsCollection, where("patientId", "==", patientId));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+    
+    const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+    
+    // Sort reports by creation date client-side
+    reports.sort((a, b) => {
+        const timeA = (a.createdAt as any)?.seconds || 0;
+        const timeB = (b.createdAt as any)?.seconds || 0;
+        return timeB - timeA;
+    });
+
+    return reports;
 };
 
 export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> => {

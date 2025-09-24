@@ -59,10 +59,17 @@ export default function PatientDashboard() {
 
           if (db) {
             const reportsRef = collection(db, 'reports');
-            const q = query(reportsRef, where('patientId', '==', firebaseUser.uid), orderBy('createdAt', 'desc'));
+            // Simplified query, sorting will be done on the client
+            const q = query(reportsRef, where('patientId', '==', firebaseUser.uid));
             
             const unsubscribeSnap = onSnapshot(q, (querySnapshot) => {
-              const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+              let reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+              // Sort reports by creation date client-side
+              reports.sort((a, b) => {
+                const timeA = (a.createdAt as any)?.seconds || 0;
+                const timeB = (b.createdAt as any)?.seconds || 0;
+                return timeB - timeA;
+              });
               setRecentReports(reports);
             }, (error) => {
               console.error("Error fetching patient reports in real-time:", error);
@@ -178,7 +185,7 @@ export default function PatientDashboard() {
         skinTone: user.skinTone || 'not specified',
       });
       
-      const savedReport = await saveReport(user.uid, reportName, result);
+      const savedReport = await saveReport(user.uid, reportName.trim(), result);
 
       sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
