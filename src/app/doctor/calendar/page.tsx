@@ -94,6 +94,17 @@ export default function DoctorCalendar() {
     }
   };
 
+  const DayWithNoteIndicator = ({ date, ...props }: { date: Date, children: React.ReactNode }) => {
+    const dateKey = format(date, 'yyyy-MM-dd');
+    const hasNote = !!notes[dateKey];
+    return (
+      <div className="relative w-full h-full flex items-center justify-center">
+        {props.children}
+        {hasNote && <span className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>}
+      </div>
+    );
+  };
+
   const sidebarNavItems = [
     { href: '/doctor/dashboard', icon: MessageSquare, title: 'Patient Cases' },
     { href: '/doctor/analytics', icon: LayoutGrid, title: 'Analytics' },
@@ -143,7 +154,7 @@ export default function DoctorCalendar() {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Calendar View */}
-                  <Card className="lg:col-span-2 rounded-xl">
+                  <Card className="lg:col-span-2 rounded-xl shadow-md">
                     <CardContent className="p-2 md:p-6">
                       <Calendar
                         mode="single"
@@ -153,34 +164,29 @@ export default function DoctorCalendar() {
                         className="w-full"
                         classNames={{
                           day_selected: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
-                          day_today: "bg-accent/50 text-accent-foreground",
+                          day_today: "bg-accent text-accent-foreground rounded-full",
+                          day_outside: "text-muted-foreground/50",
+                          head_cell: "text-muted-foreground font-semibold",
+                          caption_label: "text-lg font-bold"
                         }}
                         components={{
-                            DayContent: ({ date, ...props }) => {
-                                const dateKey = format(date, 'yyyy-MM-dd');
-                                const hasNote = !!notes[dateKey];
-                                return (
-                                    <div className="relative w-full h-full flex items-center justify-center">
-                                      {props.children}
-                                      {hasNote && <span className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-green-500 rounded-full"></span>}
-                                    </div>
-                                );
-                            }
+                          // @ts-ignore
+                          DayContent: DayWithNoteIndicator,
                         }}
                       />
                     </CardContent>
                   </Card>
                   
                   {/* Notes Section */}
-                  <Card className="rounded-xl">
+                  <Card className="rounded-xl shadow-md">
                     <CardHeader>
-                      <CardTitle>Notes for {selectedDate ? format(selectedDate, 'PPP') : '...'}</CardTitle>
-                      <CardDescription>Add or edit your private notes for the selected day.</CardDescription>
+                      <CardTitle className="text-xl">Notes for {selectedDate ? format(selectedDate, 'PPP') : '...'}</CardTitle>
+                      <CardDescription>Add or edit private notes for the selected day.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Textarea
                         placeholder="Write your notes here..."
-                        className="min-h-[300px] text-base"
+                        className="min-h-[300px] text-base border-2 focus:border-primary focus:ring-primary/20"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         disabled={!selectedDate}
@@ -197,3 +203,5 @@ export default function DoctorCalendar() {
     </div>
   );
 }
+
+    
