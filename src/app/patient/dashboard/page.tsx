@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
@@ -356,7 +357,7 @@ export default function PatientDashboard() {
                 </div>
 
                 <button 
-                  className="analyze-btn" 
+                  className="analyze-btn mt-4" 
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || !isImageReady}
                 >
