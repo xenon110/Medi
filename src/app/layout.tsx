@@ -22,7 +22,7 @@ export default function RootLayout({
   const pathname = usePathname();
   const isDashboard = pathname.startsWith('/doctor/dashboard');
   const isPatientDashboard = pathname.startsWith('/patient/dashboard');
-  const showHeader = !isDashboard;
+  const showHeader = !isDashboard && !isPatientDashboard;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -32,7 +32,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard && !isPatientDashboard})}>
+      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard && !isPatientDashboard, 'new-dashboard-bg': isPatientDashboard})}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
