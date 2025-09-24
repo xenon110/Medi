@@ -281,7 +281,7 @@ export default function DoctorPaymentPage() {
                         <div className="plan-card">
                             <div className="plan-icon">🩺</div>
                             <div className="plan-price">
-                                <span className="plan-currency">₹</span>99
+                                <span className="plan-currency">₹</span>1
                             </div>
                             <div className="plan-duration">Per Month</div>
                             <div className="plan-title">Starter Practice</div>
