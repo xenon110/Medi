@@ -306,6 +306,7 @@ export default function PatientDashboard() {
             </div>
             <nav className="nav">
                 <Link href="/#features">Features</Link>
+                <Link href="/patient/my-info">My Info</Link>
                 <Link href="/patient/reports">My Reports</Link>
                 <Link href="/patient/consult">Consult</Link>
                 <Link href="/help">Contact</Link>

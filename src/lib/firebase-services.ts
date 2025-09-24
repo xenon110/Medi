@@ -100,6 +100,7 @@ export type Report = {
   patientId: string;
   patientProfile?: PatientProfile;
   doctorId?: string | null;
+  doctorProfile?: DoctorProfile;
   aiReport: GenerateInitialReportOutput;
   status: 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected' | 'pending-patient-input';
   createdAt: FieldValue | Timestamp | { seconds: number, nanoseconds: number };
@@ -136,8 +137,19 @@ export const getReportsForPatient = async (patientId: string): Promise<Report[]>
     const reportsCollection = collection(db, 'reports');
     const q = query(reportsCollection, where("patientId", "==", patientId));
     const querySnapshot = await getDocs(q);
+
+    const reportsPromises = querySnapshot.docs.map(async (docSnapshot) => {
+      const report = { id: docSnapshot.id, ...docSnapshot.data() } as Report;
+      if (report.doctorId) {
+        const doctorProfile = await getUserProfile(report.doctorId) as DoctorProfile | null;
+        if (doctorProfile) {
+            report.doctorProfile = doctorProfile;
+        }
+      }
+      return report;
+    });
     
-    const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
+    let reports = await Promise.all(reportsPromises);
     
     // Sort reports by creation date client-side
     reports.sort((a, b) => {
