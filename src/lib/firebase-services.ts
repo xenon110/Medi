@@ -98,6 +98,7 @@ export type Report = {
   id: string;
   patientId: string;
   patientProfile?: PatientProfile;
+  title: string;
   doctorId?: string | null;
   aiReport: GenerateInitialReportOutput;
   status: 'pending-doctor-review' | 'doctor-approved' | 'doctor-modified' | 'rejected' | 'pending-patient-input';
@@ -106,13 +107,14 @@ export type Report = {
   prescription?: string;
 }
 
-export const saveReport = async (patientId: string, reportData: GenerateInitialReportOutput): Promise<Report> => {
+export const saveReport = async (patientId: string, title: string, reportData: GenerateInitialReportOutput): Promise<Report> => {
     if (!db) throw new Error("Firestore is not initialized.");
 
     const reportsCollection = collection(db, 'reports');
     
     const newReportData = {
         patientId: patientId,
+        title: title,
         aiReport: reportData,
         status: 'pending-patient-input' as const,
         createdAt: serverTimestamp(),
@@ -187,3 +189,5 @@ export const logEmergency = async (patientId: string) => {
         timestamp: serverTimestamp()
     });
 };
+
+    

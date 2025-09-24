@@ -32,6 +32,7 @@ export default function PatientDashboard() {
   const [isImageValidating, setIsImageValidating] = useState(false);
   const [isImageReady, setIsImageReady] = useState(false);
   
+  const [reportTitle, setReportTitle] = useState('');
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -79,12 +80,16 @@ export default function PatientDashboard() {
       }
     });
 
-    // Show initial welcome notification
      setTimeout(() => {
-        toast({
-            title: "🎉 Welcome to MEDISKIN AI!",
-            description: "Upload an image to get started.",
-        });
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+        if(notification && notificationText) {
+            notificationText.textContent = "🎉 Welcome to MEDISKIN AI! Upload an image to get started.";
+            notification.style.display = 'flex';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
     }, 1000);
 
     return () => unsubscribeAuth();
@@ -105,18 +110,16 @@ export default function PatientDashboard() {
         if (validation.isValid) {
           setImageDataUri(dataUrl);
           setIsImageReady(true);
-          toast({
-            title: "✅ Image Uploaded!",
-            description: "Your image is ready for analysis.",
-          });
+          showNotification(`✅ File "${file.name}" uploaded successfully!`);
         } else {
           setImageValidationError(validation.reason || 'Invalid image.');
           setImageDataUri(null);
+          showNotification(`❌ ${validation.reason || 'Invalid image.'}`, true);
         }
       } catch (error) {
         console.error(error);
         setImageValidationError('Validation error occurred.');
-        toast({ variant: "destructive", title: "Validation Error" });
+        showNotification('❌ Validation error occurred.', true);
       } finally {
         setIsImageValidating(false);
       }
@@ -137,7 +140,7 @@ export default function PatientDashboard() {
       setChatHistory(prev => [...prev, { sender: 'ai', text: result.response }]);
     } catch (error) {
       setChatHistory(prev => [...prev, { sender: 'ai', text: "I'm sorry, I encountered an error. Please try again." }]);
-      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process symptoms.' });
+      showNotification("🤖 I'm sorry, I encountered an error. Please try again.", true);
       console.error(error);
     } finally {
       setIsChatbotLoading(false);
@@ -147,16 +150,16 @@ export default function PatientDashboard() {
 
   const handleAnalyze = async () => {
     if (!imageDataUri || !user?.uid) {
-        toast({
-            variant: "destructive",
-            title: "Cannot Analyze",
-            description: "Please upload a valid image before starting the analysis.",
-        });
+        showNotification("Please upload a valid image before analyzing.", true);
+        return;
+    }
+     if (!reportTitle.trim()) {
+        showNotification("Please provide a title for your report.", true);
         return;
     }
 
     setIsAnalyzing(true);
-    toast({ title: '🔬 Starting comprehensive analysis...' });
+    showNotification("🔬 Starting comprehensive analysis...");
     
     const fullSymptomText = chatHistory
       .filter(m => m.sender === 'user')
@@ -173,24 +176,17 @@ export default function PatientDashboard() {
         skinTone: user.skinTone || 'not specified',
       });
       
-      const savedReport = await saveReport(user.uid, result);
+      const savedReport = await saveReport(user.uid, reportTitle, result);
 
       sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
-      toast({
-        title: "📊 Analysis Complete!",
-        description: "Redirecting to your report...",
-      });
+      showNotification("📊 Analysis Complete! Redirecting to your report...");
       
       router.push(`/patient/report`);
 
     } catch (error) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description: "An error occurred while analyzing your data.",
-      });
+      showNotification("Analysis Failed: An error occurred while analyzing your data.", true);
     } finally {
       setIsAnalyzing(false);
     }
@@ -212,27 +208,49 @@ export default function PatientDashboard() {
     if (user) {
       try {
         await logEmergency(user.uid);
-        toast({
-          variant: 'destructive',
-          title: '🚨 Emergency Logged',
-          description: 'Your emergency has been logged. For immediate assistance, please call your local emergency number or visit the nearest hospital.',
-          duration: 7000,
-        });
+        showNotification('🚨 Emergency Logged. Please call your local emergency number for immediate assistance.', true);
       } catch (error) {
         console.error("Failed to log emergency:", error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Could not log emergency. Please call for help directly.',
-        });
+        showNotification('Could not log emergency. Please call for help directly.', true);
       }
     } else {
-       toast({
-        variant: 'destructive',
-        title: '🚨 Please Log In',
-        description: 'You must be logged in to report an emergency. For immediate medical emergencies, please call your local emergency number.',
-        duration: 7000,
-      });
+       showNotification('🚨 Please Log In to report an emergency.', true);
+    }
+  };
+
+  const showNotification = (text: string, isError = false) => {
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+    if (notification && notificationText) {
+      notificationText.textContent = text;
+      notification.style.background = isError ? 'linear-gradient(45deg, #ff4b2b, #ff416c)' : 'linear-gradient(45deg, #2edc76, #02e4a0)';
+      notification.style.display = 'flex';
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 4000);
+    }
+  };
+
+  const closeNotification = () => {
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.style.display = 'none';
+    }
+  };
+
+  const toggleVoice = () => {
+    setIsVoiceActive(!isVoiceActive);
+    const btn = document.querySelector('.voice-btn');
+    if (btn) {
+        if (!isVoiceActive) {
+            btn.style.background = 'linear-gradient(45deg, #ff4b2b, #ff416c)';
+            btn.innerHTML = '🔴';
+            showNotification("🎤 Voice recording started");
+        } else {
+            btn.style.background = 'linear-gradient(45deg, #ff9a9e, #fecfef)';
+            btn.innerHTML = '🎤';
+            showNotification("⏹️ Voice recording stopped");
+        }
     }
   };
 
@@ -247,79 +265,88 @@ export default function PatientDashboard() {
   const latestAiMessage = chatHistory.slice().reverse().find(m => m.sender === 'ai')?.text;
 
   return (
-    <div className="new-dashboard-bg min-h-screen">
+    <>
       <div className="container pt-24">
         {/* Header */}
-        <header className="dashboard-header">
-            <div className="dashboard-logo">
-                <div className="dashboard-logo-icon"><Stethoscope/></div>
+        <header className="header">
+            <div className="logo">
+                <div className="logo-icon">🏥</div>
                 <span>MEDISKIN</span>
             </div>
-            <nav className="dashboard-nav">
+            <nav className="nav">
                 <Link href="/#features">Features</Link>
                 <Link href="/patient/reports">My Reports</Link>
                 <Link href="/patient/consult">Consult</Link>
                 <Link href="/help">Contact</Link>
-                <button className="dashboard-emergency-btn" onClick={handleEmergencyClick}>🚨 Emergency</button>
+                <button className="emergency-btn" onClick={handleEmergencyClick}>🚨 Emergency</button>
             </nav>
         </header>
 
         {/* Main Content */}
-        <div className="dashboard-main-content">
+        <div className="main-content">
             {/* Upload Skin Image */}
-            <div className="dashboard-card">
-                <div className="dashboard-card-title">
-                    <div className="dashboard-card-icon dashboard-upload-icon"><Camera/></div>
+            <div className="card">
+                <div className="card-title">
+                    <div className="card-icon upload-icon">📷</div>
                     Upload Skin Image
                 </div>
-                <p className="dashboard-card-subtitle">Upload a clear image of your skin condition for AI analysis.</p>
+                <p className="card-subtitle">Upload a clear image of your skin condition for AI analysis.</p>
                 
-                <div className="dashboard-upload-area" onClick={() => fileInputRef.current?.click()}>
+                <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
                    {isImageValidating ? (
                         <>
-                           <div className="dashboard-upload-icon-large"><Loader2 className="animate-spin" /></div>
-                           <div className="dashboard-upload-text">Validating...</div>
-                           <div className="dashboard-upload-subtext">Please wait while we check your image.</div>
+                           <div className="upload-icon-large"><Loader2 className="animate-spin" /></div>
+                           <div className="upload-text">Validating...</div>
+                           <div className="upload-subtext">Please wait while we check your image.</div>
                         </>
                     ) : isImageReady ? (
                         <>
-                           <div className="dashboard-upload-icon-large" style={{background: 'linear-gradient(45deg, #2edc76, #02e4a0)'}}><CheckCircle/></div>
-                           <div className="dashboard-upload-text">Image Ready!</div>
-                           <div className="dashboard-upload-subtext">You can now describe symptoms or analyze.</div>
+                           <div className="upload-icon-large" style={{background: 'linear-gradient(45deg, #2edc76, #02e4a0)'}}><CheckCircle/></div>
+                           <div className="upload-text">Image Ready!</div>
+                           <div className="upload-subtext">You can now describe symptoms or analyze.</div>
                         </>
                     ) : imageValidationError ? (
                          <>
-                           <div className="dashboard-upload-icon-large" style={{background: 'linear-gradient(45deg, #ff4b2b, #ff7849)'}}><Upload/></div>
-                           <div className="dashboard-upload-text text-red-600">{imageValidationError}</div>
-                           <div className="dashboard-upload-subtext">Please try another image.</div>
+                           <div className="upload-icon-large" style={{background: 'linear-gradient(45deg, #ff4b2b, #ff7849)'}}><Upload/></div>
+                           <div className="upload-text text-red-600">{imageValidationError}</div>
+                           <div className="upload-subtext">Please try another image.</div>
                         </>
                     ) : (
                         <>
-                           <div className="dashboard-upload-icon-large"><ArrowUp/></div>
-                           <div className="dashboard-upload-text">Click to upload or drag and drop</div>
-                           <div className="dashboard-upload-subtext">PNG, JPG up to 10MB</div>
+                           <div className="upload-icon-large">⬆️</div>
+                           <div className="upload-text">Click to upload or drag and drop</div>
+                           <div className="upload-subtext">PNG, JPG up to 10MB</div>
                         </>
                     )}
                 </div>
-                <Input type="file" id="fileInput" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload}/>
+                <input type="file" id="fileInput" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload}/>
+                <div className="input-area mt-4">
+                     <input
+                        type="text"
+                        className="symptom-input !min-h-0 h-12"
+                        placeholder="Give your report a title (e.g., 'Rash on left arm')"
+                        value={reportTitle}
+                        onChange={(e) => setReportTitle(e.target.value)}
+                    />
+                </div>
             </div>
 
             {/* AI Assistant */}
-            <div className="dashboard-card dashboard-ai-assistant">
-                <div className="dashboard-card-title">
-                    <div className="dashboard-card-icon dashboard-ai-icon"><Bot/></div>
+            <div className="card ai-assistant">
+                <div className="card-title">
+                    <div className="card-icon ai-icon">🤖</div>
                     AI Assistant
                 </div>
-                <p className="dashboard-card-subtitle">Chat with our AI to describe your symptoms.</p>
+                <p className="card-subtitle">Chat with our AI to describe your symptoms.</p>
                 
-                <div className="dashboard-ai-message">
-                    <div className="dashboard-ai-avatar">AI</div>
+                <div className="ai-message">
+                    <div className="ai-avatar">AI</div>
                     <p>{latestAiMessage}</p>
                 </div>
 
-                <div className="dashboard-input-area">
+                <div className="input-area">
                     <textarea 
-                        className="dashboard-symptom-input" 
+                        className="symptom-input" 
                         placeholder="Describe your symptoms..."
                         value={symptomInput}
                         onChange={(e) => setSymptomInput(e.target.value)}
@@ -332,12 +359,10 @@ export default function PatientDashboard() {
                     ></textarea>
                 </div>
 
-                <div className="dashboard-input-actions mb-4">
-                    <button className="dashboard-voice-btn" onClick={() => setIsVoiceActive(!isVoiceActive)}>
-                        {isVoiceActive ? '🔴' : <Mic/>}
-                    </button>
+                <div className="input-actions">
+                    <button className="voice-btn" onClick={toggleVoice}>🎤</button>
                     <button 
-                      className="dashboard-send-btn" 
+                      className="send-btn" 
                       onClick={handleSymptomSubmit}
                       disabled={isChatbotLoading || !symptomInput.trim()}
                     >
@@ -346,30 +371,30 @@ export default function PatientDashboard() {
                 </div>
 
                 <button 
-                  className="dashboard-analyze-btn" 
+                  className="analyze-btn" 
                   onClick={handleAnalyze}
-                  disabled={isAnalyzing || !isImageReady}
+                  disabled={isAnalyzing || !isImageReady || !reportTitle.trim()}
                 >
-                  {isAnalyzing ? <Loader2 className="animate-spin mx-auto" /> : <><Sparkles className="inline-block mr-2"/> Analyze Now</>}
+                  {isAnalyzing ? <Loader2 className="animate-spin mx-auto" /> : <>✨ Analyze Now</>}
                 </button>
             </div>
         </div>
 
         {/* Recent Reports */}
-        <div className="dashboard-reports-section">
-            <div className="dashboard-reports-title">
-                <div className="dashboard-reports-icon"><ClipboardList/></div>
+        <div className="reports-section">
+            <div className="reports-title">
+                <div className="reports-icon">📋</div>
                 Recent Reports
             </div>
-            <p className="dashboard-card-subtitle">Review your past skin analysis reports.</p>
+            <p className="card-subtitle">Review your past skin analysis reports.</p>
             
             {recentReports.length > 0 ? recentReports.map((report) => (
-                <div key={report.id} className="dashboard-report-item">
-                    <div className="dashboard-report-info">
-                        <h3>Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h3>
-                        <div className="dashboard-report-status">{getStatusText(report.status)}</div>
+                <div key={report.id} className="report-item">
+                    <div className="report-info">
+                        <h3>{report.title || `Report from ${new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}`}</h3>
+                        <div className="report-status">{getStatusText(report.status)}</div>
                     </div>
-                    <button className="dashboard-view-btn" onClick={() => {
+                    <button className="view-btn" onClick={() => {
                         sessionStorage.setItem('latestReport', JSON.stringify(report));
                         router.push('/patient/report');
                     }}>View Report</button>
@@ -379,6 +404,13 @@ export default function PatientDashboard() {
             )}
         </div>
       </div>
-    </div>
+      <div id="notification" className="notification" style={{display: 'none'}}>
+        <span>🔔</span>
+        <span id="notificationText"></span>
+        <button className="notification-close" onClick={closeNotification}>×</button>
+      </div>
+    </>
   );
 }
+
+    
