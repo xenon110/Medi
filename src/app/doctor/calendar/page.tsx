@@ -94,16 +94,17 @@ export default function DoctorCalendar() {
     }
   };
 
-  const DayWithNoteIndicator = ({ date, ...props }: { date: Date, children: React.ReactNode }) => {
+  const DayWithNoteIndicator = ({ date, children }: { date: Date } & React.HTMLAttributes<HTMLDivElement>) => {
     const dateKey = format(date, 'yyyy-MM-dd');
     const hasNote = !!notes[dateKey];
     return (
       <div className="relative w-full h-full flex items-center justify-center">
-        {props.children}
+        {children}
         {hasNote && <span className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>}
       </div>
     );
   };
+  
 
   const sidebarNavItems = [
     { href: '/doctor/dashboard', icon: MessageSquare, title: 'Patient Cases' },
@@ -155,13 +156,12 @@ export default function DoctorCalendar() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Calendar View */}
                   <Card className="lg:col-span-2 rounded-xl shadow-md">
-                    <CardContent className="p-2 md:p-6">
+                    <CardContent className="p-2 md:p-6 flex justify-center">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
                         onSelect={setSelectedDate}
                         onMonthChange={setCurrentMonth}
-                        className="w-full"
                         classNames={{
                           day_selected: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
                           day_today: "bg-accent text-accent-foreground rounded-full",
@@ -170,7 +170,6 @@ export default function DoctorCalendar() {
                           caption_label: "text-lg font-bold"
                         }}
                         components={{
-                          // @ts-ignore
                           DayContent: DayWithNoteIndicator,
                         }}
                       />
@@ -203,5 +202,3 @@ export default function DoctorCalendar() {
     </div>
   );
 }
-
-    
