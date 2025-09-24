@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip, Send, CheckCircle, Pencil, Loader2, Inbox, XCircle, ThumbsUp, Search, Stethoscope, FileText, Edit3, MessageSquare, LayoutGrid, Calendar, Settings, User, Phone, MoreVertical, Star, Bot, Home, Pill, AlertTriangle } from 'lucide-react';
+import { Paperclip, Send, CheckCircle, Pencil, Loader2, Inbox, XCircle, ThumbsUp, Search, Stethoscope, FileText, Edit3, MessageSquare, LayoutGrid, Calendar, Settings, User, Phone, MoreVertical, Star, Bot, Home, Pill, AlertTriangle, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -177,6 +177,14 @@ export default function DoctorDashboard() {
       }
   };
 
+  const handleSignOut = async () => {
+    if (auth) {
+        await auth.signOut();
+        toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
+        router.push('/login?role=doctor');
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -204,8 +212,13 @@ export default function DoctorDashboard() {
                 <div className="nav-item" title="Documents"><FileText size={24} /></div>
                 <div className="nav-item" title="Settings"><Settings size={24} /></div>
             </nav>
-            <div className="user-profile" title="Dr. Profile">
-              <User size={24} />
+            <div className="flex flex-col gap-2 items-center mt-auto">
+                <div className="user-profile" title="Dr. Profile">
+                  <User size={24} />
+                </div>
+                 <button onClick={handleSignOut} className="nav-item !w-10 !h-10" title="Sign Out">
+                    <LogOut size={22} />
+                </button>
             </div>
         </div>
 
