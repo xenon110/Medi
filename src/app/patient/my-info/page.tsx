@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Report, getReportsForPatient, DoctorProfile, PatientProfile } from '@/lib/firebase-services';
+import { Report, getReportsForPatient, DoctorProfile, PatientProfile, getUserProfile } from '@/lib/firebase-services';
 import { auth, db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Separator } from '@/components/ui/separator';
@@ -41,7 +41,7 @@ export default function MyInfoPage() {
           const reportsPromises = querySnapshot.docs.map(async (doc) => {
             const report = { id: doc.id, ...doc.data() } as Report;
             if (report.doctorId) {
-              const doctorProfile = await getReportsForPatient(report.doctorId) as DoctorProfile | null;
+              const doctorProfile = await getUserProfile(report.doctorId) as DoctorProfile | null;
               if (doctorProfile) {
                   report.doctorProfile = doctorProfile;
               }
@@ -241,5 +241,3 @@ export default function MyInfoPage() {
     </div>
   );
 }
-
-    
