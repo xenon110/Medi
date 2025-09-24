@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
@@ -32,7 +31,6 @@ export default function PatientDashboard() {
   const [isImageValidating, setIsImageValidating] = useState(false);
   const [isImageReady, setIsImageReady] = useState(false);
   
-  const [reportTitle, setReportTitle] = useState('');
   const [symptomInput, setSymptomInput] = useState('');
   const [isChatbotLoading, setIsChatbotLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -153,10 +151,6 @@ export default function PatientDashboard() {
         showNotification("Please upload a valid image before analyzing.", true);
         return;
     }
-     if (!reportTitle.trim()) {
-        showNotification("Please provide a title for your report.", true);
-        return;
-    }
 
     setIsAnalyzing(true);
     showNotification("🔬 Starting comprehensive analysis...");
@@ -176,7 +170,7 @@ export default function PatientDashboard() {
         skinTone: user.skinTone || 'not specified',
       });
       
-      const savedReport = await saveReport(user.uid, reportTitle, result);
+      const savedReport = await saveReport(user.uid, result);
 
       sessionStorage.setItem('latestReport', JSON.stringify(savedReport));
 
@@ -320,15 +314,6 @@ export default function PatientDashboard() {
                     )}
                 </div>
                 <input type="file" id="fileInput" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload}/>
-                <div className="input-area mt-4">
-                     <input
-                        type="text"
-                        className="symptom-input !min-h-0 h-12"
-                        placeholder="Give your report a title (e.g., 'Rash on left arm')"
-                        value={reportTitle}
-                        onChange={(e) => setReportTitle(e.target.value)}
-                    />
-                </div>
             </div>
 
             {/* AI Assistant */}
@@ -373,7 +358,7 @@ export default function PatientDashboard() {
                 <button 
                   className="analyze-btn" 
                   onClick={handleAnalyze}
-                  disabled={isAnalyzing || !isImageReady || !reportTitle.trim()}
+                  disabled={isAnalyzing || !isImageReady}
                 >
                   {isAnalyzing ? <Loader2 className="animate-spin mx-auto" /> : <>✨ Analyze Now</>}
                 </button>
@@ -391,7 +376,7 @@ export default function PatientDashboard() {
             {recentReports.length > 0 ? recentReports.map((report) => (
                 <div key={report.id} className="report-item">
                     <div className="report-info">
-                        <h3>{report.title || `Report from ${new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}`}</h3>
+                        <h3>Report from {new Date((report.createdAt as any).seconds * 1000).toLocaleDateString()}</h3>
                         <div className="report-status">{getStatusText(report.status)}</div>
                     </div>
                     <button className="view-btn" onClick={() => {
@@ -412,5 +397,3 @@ export default function PatientDashboard() {
     </>
   );
 }
-
-    
