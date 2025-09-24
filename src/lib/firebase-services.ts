@@ -43,6 +43,14 @@ export type CreateUserProfileData = {
   experience?: number;
 };
 
+export type DoctorNote = {
+  id: string;
+  doctorId: string;
+  date: string; // YYYY-MM-DD
+  note: string;
+  createdAt: FieldValue | Timestamp;
+};
+
 
 // This function creates a user document in Firestore in the correct collection.
 export const createUserProfile = async (uid: string, data: CreateUserProfileData) => {
@@ -174,9 +182,6 @@ export const getReportsForDoctor = async (doctorId: string): Promise<Report[]> =
     for (const docSnapshot of querySnapshot.docs) {
       const report = { id: docSnapshot.id, ...docSnapshot.data() } as Report;
       if (report.patientId) {
-        // Fetching patient profile might fail if rules are too strict.
-        // It's better to fetch this on the backend or adjust rules.
-        // For now, let's try fetching and handle potential nulls.
         const patientProfile = await getUserProfile(report.patientId) as PatientProfile | null;
         if (patientProfile) {
             report.patientProfile = patientProfile;
@@ -246,4 +251,35 @@ export const logEmergency = async (patientId: string) => {
     });
 };
 
+export const saveDoctorNote = async (doctorId: string, date: string, note: string) => {
+    if (!db) throw new Error("Firestore is not initialized.");
+    const noteId = `${doctorId}_${date}`;
+    const noteRef = doc(db, 'doctorNotes', noteId);
+    await setDoc(noteRef, {
+        doctorId,
+        date,
+        note,
+        createdAt: serverTimestamp(),
+    }, { merge: true });
+};
+
+export const getDoctorNotesForMonth = async (doctorId: string, year: number, month: number): Promise<DoctorNote[]> => {
+    if (!db) return [];
     
+    // Construct start and end dates for the month
+    const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextYear = month === 11 ? year + 1 : year;
+    const endDate = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-01`;
+
+    const notesCollection = collection(db, 'doctorNotes');
+    const q = query(
+        notesCollection,
+        where('doctorId', '==', doctorId),
+        where('date', '>=', startDate),
+        where('date', '<', endDate)
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DoctorNote));
+};
