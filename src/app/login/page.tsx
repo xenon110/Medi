@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
 import { cn } from '@/lib/utils';
@@ -58,35 +59,46 @@ export default function LoginPage() {
         if (!userProfile) {
           throw new Error("Unable to find user profile.");
         }
-
-        toast({ title: 'Login Successful', description: 'Welcome back!' });
-
+        
+        // Role-based redirection logic
         if (role === 'doctor' && userProfile.role === 'doctor') {
+            toast({ title: 'Login Successful', description: 'Welcome back, Doctor!' });
             router.push('/doctor/dashboard');
         } else if (role === 'patient' && userProfile.role === 'patient') {
+            toast({ title: 'Login Successful', description: 'Welcome back!' });
             router.push('/patient/dashboard');
         } else {
+             // If roles don't match, sign out and show an error
              await auth.signOut();
              throw new Error(`This account is not a ${role} account. Please use the correct login form.`);
         }
-    } catch (error: any) {
-        console.error('Login error:', error.code, error.message);
+    } catch (error) {
         let description = 'An unexpected error occurred. Please try again.';
-        switch (error.code) {
-            case 'auth/user-not-found':
-            case 'auth/invalid-email':
-                description = 'No account found with this email address.';
-                break;
-            case 'auth/wrong-password':
-            case 'auth/invalid-credential':
-                description = 'Incorrect password. Please try again.';
-                break;
-            case 'auth/too-many-requests':
-                description = 'Access to this account has been temporarily disabled due to many failed login attempts. You can reset your password or try again later.';
-                break;
-            default:
-                description = error.message;
+
+        if (error instanceof FirebaseError) {
+            console.error('Firebase Login Error:', error.code, error.message);
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/invalid-email':
+                    description = 'No account found with this email address.';
+                    break;
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    description = 'Incorrect password. Please try again.';
+                    break;
+                case 'auth/too-many-requests':
+                    description = 'Access to this account has been temporarily disabled due to many failed login attempts. You can reset your password or try again later.';
+                    break;
+                default:
+                    description = 'An error occurred during login. Please check your credentials.';
+            }
+        } else if (error instanceof Error) {
+            console.error('Generic Login Error:', error.message);
+            description = error.message;
+        } else {
+            console.error('Unknown Login Error:', error);
         }
+
         toast({
             variant: 'destructive',
             title: 'Login Failed',
