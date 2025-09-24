@@ -527,11 +527,11 @@
         transition: all 0.3s;
     }
     .patient-btn {
-        background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
+        background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
         color: white;
     }
     .doctor-btn {
-        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+        background: linear-gradient(135deg, #6D28D9 0%, #5B21B6 100%);
         color: white;
     }
     .login-btn:hover {
