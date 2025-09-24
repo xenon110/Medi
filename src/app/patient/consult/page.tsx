@@ -117,63 +117,65 @@ export default function ConsultPage() {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <div className="new-consult-bg min-h-screen">
-                <main className="main-content px-4 md:px-6">
-                    <button onClick={() => router.back()} className="back-button">
-                        <ChevronLeft size={20} /> Back
-                    </button>
+                <div className="px-4">
+                    <main className="main-content">
+                        <button onClick={() => router.back()} className="back-button">
+                            <ChevronLeft size={20} /> Back
+                        </button>
 
-                    <div className="page-header">
-                        <h1 className="page-title">Consult a Doctor</h1>
-                        <p className="page-subtitle">Send a new report to our network of professionals for review.</p>
-                    </div>
+                        <div className="page-header">
+                            <h1 className="page-title">Consult a Doctor</h1>
+                            <p className="page-subtitle">Send a new report to our network of professionals for review.</p>
+                        </div>
 
-                    <div className="doctors-grid">
-                        {doctors.length > 0 ? (
-                            doctors.map((doctor) => (
-                                <div key={doctor.uid} className="doctor-card">
-                                    <div className="status-indicator"></div>
-                                    <div className="doctor-info">
-                                        <div className="flex items-center gap-6">
-                                            <div className="doctor-avatar">{doctor.name.split(' ').map(n => n[0]).join('')}</div>
-                                            <div className="doctor-details">
-                                                <h3 className="doctor-name">{doctor.name}</h3>
-                                                <p className="doctor-specialty">{doctor.specialization || 'Dermatology'}</p>
-                                                <div className="doctor-rating">
-                                                    <div className="stars">
-                                                        <Star size={14} className="star fill-current" />
-                                                        <Star size={14} className="star fill-current" />
-                                                        <Star size={14} className="star fill-current" />
-                                                        <Star size={14} className="star fill-current" />
-                                                        <Star size={14} className="star" />
+                        <div className="doctors-grid">
+                            {doctors.length > 0 ? (
+                                doctors.map((doctor) => (
+                                    <div key={doctor.uid} className="doctor-card">
+                                        <div className="status-indicator"></div>
+                                        <div className="doctor-info">
+                                            <div className="flex items-center gap-6">
+                                                <div className="doctor-avatar">{doctor.name.split(' ').map(n => n[0]).join('')}</div>
+                                                <div className="doctor-details">
+                                                    <h3 className="doctor-name">{doctor.name}</h3>
+                                                    <p className="doctor-specialty">{doctor.specialization || 'Dermatology'}</p>
+                                                    <div className="doctor-rating">
+                                                        <div className="stars">
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star fill-current" />
+                                                            <Star size={14} className="star" />
+                                                        </div>
+                                                        <span className="rating-text">4.8 • {Math.floor(Math.random() * 100 + 50)} reviews</span>
                                                     </div>
-                                                    <span className="rating-text">4.8 • {Math.floor(Math.random() * 100 + 50)} reviews</span>
                                                 </div>
                                             </div>
+                                            <button 
+                                                className="send-report-btn" 
+                                                onClick={(e) => handleSendClick(doctor, e)}
+                                                disabled={isSending === doctor.uid || sentStatus[doctor.uid]}
+                                                style={sentStatus[doctor.uid] ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+                                            >
+                                                {isSending === doctor.uid ? (
+                                                    <><Loader2 size={16} className="animate-spin" /> Sending...</>
+                                                ) : sentStatus[doctor.uid] ? (
+                                                    <>✅ Sent!</>
+                                                ) : (
+                                                    <><Send size={16} /> Send New Report</>
+                                                )}
+                                            </button>
                                         </div>
-                                        <button 
-                                            className="send-report-btn" 
-                                            onClick={(e) => handleSendClick(doctor, e)}
-                                            disabled={isSending === doctor.uid || sentStatus[doctor.uid]}
-                                            style={sentStatus[doctor.uid] ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
-                                        >
-                                            {isSending === doctor.uid ? (
-                                                <><Loader2 size={16} className="animate-spin" /> Sending...</>
-                                            ) : sentStatus[doctor.uid] ? (
-                                                <>✅ Sent!</>
-                                            ) : (
-                                                <><Send size={16} /> Send New Report</>
-                                            )}
-                                        </button>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <p>No doctors are currently available. Please check back later.</p>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <p>No doctors are currently available. Please check back later.</p>
-                            </div>
-                        )}
-                    </div>
-                </main>
+                            )}
+                        </div>
+                    </main>
+                </div>
             </div>
 
 

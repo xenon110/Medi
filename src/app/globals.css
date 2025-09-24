@@ -223,18 +223,18 @@
 
   /* NEW CONSULT PAGE STYLES - LIGHT THEME */
   .new-consult-bg { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); color: #1e293b; font-family: 'Inter', sans-serif; }
-  .new-consult-bg .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
   .new-consult-bg .main-content { padding: 48px 0; }
   .new-consult-bg .back-button { display: flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; margin-bottom: 32px; padding: 8px 0; font-weight: 500; transition: all 0.2s ease; width: fit-content; }
   .new-consult-bg .back-button:hover { color: #3b82f6; transform: translateX(-4px); }
-  .new-consult-bg .page-header { margin-bottom: 48px; }
+  .new-consult-bg .page-header { margin-bottom: 48px; text-align: center; }
   .new-consult-bg .page-title { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px; }
-  .new-consult-bg .page-subtitle { font-size: 16px; color: #64748b; max-width: 600px; }
+  .new-consult-bg .page-subtitle { font-size: 16px; color: #64748b; max-width: 600px; margin-left: auto; margin-right: auto; }
   
   .new-consult-bg .doctors-grid {
     display: grid;
     gap: 16px;
     margin-bottom: 48px;
+    width: 100%;
   }
   
   .new-consult-bg .doctor-card {
@@ -248,7 +248,6 @@
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     width: 100%;
-    max-width: none;
   }
 
   .new-consult-bg .doctor-card:hover { background: #ffffff; border-color: rgba(59, 130, 246, 0.3); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
@@ -297,7 +296,6 @@
   .new-consult-bg .status-indicator.offline { background: #6b7280; border-color: rgba(107, 114, 128, 0.3); }
   
   @media (max-width: 768px) {
-    .new-consult-bg .container { padding: 0 12px; }
     .new-consult-bg .main-content { padding: 32px 0 80px; }
     .new-consult-bg .page-title { font-size: 28px; }
     .new-consult-bg .doctor-card { padding: 20px 16px; }
