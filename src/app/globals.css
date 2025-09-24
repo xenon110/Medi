@@ -224,8 +224,25 @@
   .new-consult-bg .page-header { margin-bottom: 48px; }
   .new-consult-bg .page-title { font-size: 32px; font-weight: 700; color: #ffffff; margin-bottom: 12px; letter-spacing: -0.5px; }
   .new-consult-bg .page-subtitle { font-size: 16px; color: rgba(255, 255, 255, 0.7); max-width: 600px; }
-  .new-consult-bg .doctors-grid { display: grid; gap: 16px; margin-bottom: 48px; }
-  .new-consult-bg .doctor-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; transition: all 0.3s ease; position: relative; backdrop-filter: blur(20px); cursor: pointer; }
+  .new-consult-bg .doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .new-consult-bg .doctor-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    backdrop-filter: blur(20px);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
   .new-consult-bg .doctor-card:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(59, 130, 246, 0.5); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
   .new-consult-bg .doctor-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent); opacity: 0; transition: opacity 0.3s ease; }
   .new-consult-bg .doctor-card:hover::before { opacity: 1; }
