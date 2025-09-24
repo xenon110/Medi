@@ -54,13 +54,20 @@ export default function LoginPage() {
         const user = userCredential.user;
 
         const userProfile = await getUserProfile(user.uid);
+        
+        if (!userProfile) {
+          throw new Error("Unable to find user profile.");
+        }
 
         toast({ title: 'Login Successful', description: 'Welcome back!' });
 
-        if (userProfile?.role === 'doctor') {
+        if (role === 'doctor' && userProfile.role === 'doctor') {
             router.push('/doctor/dashboard');
-        } else {
+        } else if (role === 'patient' && userProfile.role === 'patient') {
             router.push('/patient/dashboard');
+        } else {
+             await auth.signOut();
+             throw new Error(`This account is not a ${role} account. Please use the correct login form.`);
         }
     } catch (error: any) {
         console.error('Login error:', error.code, error.message);
@@ -91,7 +98,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-subtle">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-login">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Login</CardTitle>
@@ -130,7 +137,7 @@ export default function LoginPage() {
               />
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-4">
-              <Button type="submit" disabled={isLoading} className={cn("w-full", role === 'patient' ? 'patient-btn' : 'doctor-btn')}>
+              <Button type="submit" disabled={isLoading} className="w-full bg-gradient-login text-white">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Login'}
               </Button>
               <div className="text-center text-sm text-muted-foreground">
