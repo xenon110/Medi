@@ -23,8 +23,21 @@ export default function RootLayout({
   const isDashboard = pathname.startsWith('/doctor/dashboard');
   const isPatientDashboard = pathname.startsWith('/patient/dashboard');
   const isConsultPage = pathname.startsWith('/patient/consult');
+  const isLandingPage = pathname === '/';
   
-  const showHeader = !isDashboard && !isPatientDashboard && !isConsultPage;
+  const showHeader = !isDashboard && !isPatientDashboard && !isConsultPage && !isLandingPage;
+
+  let bodyClassName = 'font-sans antialiased min-h-screen bg-background';
+  if (isLandingPage) {
+    bodyClassName += ' landing-body';
+  } else if (isPatientDashboard) {
+    bodyClassName += ' new-dashboard-bg';
+  } else if (isConsultPage) {
+    bodyClassName += ' new-consult-bg';
+  } else {
+    bodyClassName += ' bg-gradient-subtle';
+  }
+
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -35,7 +48,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn('font-sans antialiased', 'min-h-screen bg-background', {'bg-gradient-subtle': !isDashboard && !isPatientDashboard && !isConsultPage, 'new-dashboard-bg': isPatientDashboard})}>
+      <body className={cn(bodyClassName)}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -44,7 +57,7 @@ export default function RootLayout({
         >
           <div className={cn("flex flex-col min-h-screen", {"bg-transparent": isDashboard})}>
             {showHeader && <Header />}
-            <main className={cn("flex-1", {"pt-24": showHeader})}>{children}</main>
+            <main className={cn("flex-1", {"pt-24": showHeader && !isLandingPage})}>{children}</main>
           </div>
           <Toaster />
         </ThemeProvider>
