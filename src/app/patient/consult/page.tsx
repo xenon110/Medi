@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, ChevronLeft, Star } from 'lucide-react';
+import { Loader2, Send, ChevronLeft, Star, Stethoscope } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getDoctors, getReportsForPatient, sendReportToDoctor, DoctorProfile, Report } from '@/lib/firebase-services';
 import { auth } from '@/lib/firebase';
@@ -17,8 +17,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import Link from 'next/link';
-
 
 export default function ConsultPage() {
     const { toast } = useToast();
@@ -27,7 +25,6 @@ export default function ConsultPage() {
     const [reports, setReports] = useState<Report[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState<string | null>(null);
-    const [sentStatus, setSentStatus] = useState<{[key: string]: boolean}>({});
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [targetDoctor, setTargetDoctor] = useState<DoctorProfile | null>(null);
@@ -37,28 +34,30 @@ export default function ConsultPage() {
             if (user) {
                 setIsLoading(true);
                 try {
-                    const fetchedDoctors = await getDoctors();
+                    const [fetchedDoctors, fetchedReports] = await Promise.all([
+                        getDoctors(),
+                        getReportsForPatient(user.uid)
+                    ]);
+                    
                     setDoctors(fetchedDoctors);
-                } catch (error) {
-                    console.error("Failed to fetch doctors:", error);
-                    toast({ variant: 'destructive', title: 'Error Fetching Doctors', description: 'Could not retrieve the list of available doctors.' });
-                }
 
-                try {
-                    const fetchedReports = await getReportsForPatient(user.uid);
                     const pendingReports = fetchedReports.filter(r => r.status === 'pending-patient-input');
                     setReports(pendingReports);
                     if (pendingReports.length > 0) {
                         setSelectedReportId(pendingReports[0].id); // Pre-select the first pending report
                     }
-                } catch (error) {
-                    console.error("Failed to fetch reports:", error);
-                    toast({ variant: 'destructive', title: 'Error Fetching Reports', description: 'Could not retrieve your pending reports.' });
-                }
 
-                setIsLoading(false);
+                } catch (error: any) {
+                    console.error("Failed to fetch initial data:", error);
+                    toast({ 
+                        variant: 'destructive', 
+                        title: 'Error Loading Page', 
+                        description: error.message || 'Could not retrieve doctors or reports. Check your connection and security rules.' 
+                    });
+                } finally {
+                    setIsLoading(false);
+                }
             } else {
-                setIsLoading(false);
                 router.push('/login?role=patient');
             }
         });
@@ -66,8 +65,7 @@ export default function ConsultPage() {
         return () => unsubscribe();
     }, [toast, router]);
 
-    const handleSendClick = (doctor: DoctorProfile, event: React.MouseEvent) => {
-        event.stopPropagation();
+    const handleSendClick = (doctor: DoctorProfile) => {
         if (reports.length > 0) {
             setTargetDoctor(doctor);
             setIsDialogOpen(true);
@@ -89,19 +87,18 @@ export default function ConsultPage() {
         
         try {
             await sendReportToDoctor(selectedReportId, targetDoctor.uid);
-            setSentStatus(prev => ({...prev, [targetDoctor.uid]: true}));
+            
             toast({
                 title: "Report Sent!",
-                description: `Your report has been successfully sent to ${targetDoctor.name}.`,
+                description: `Your report has been successfully sent to Dr. ${targetDoctor.name}.`,
             });
-            // Remove the sent report from the list of available reports
+            // Immediately update the UI to reflect the change
             setReports(reports.filter(r => r.id !== selectedReportId));
             setSelectedReportId(reports.length > 1 ? reports.filter(r => r.id !== selectedReportId)[0].id : null);
 
-
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to send report:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not send the report.' });
+            toast({ variant: 'destructive', title: 'Error Sending Report', description: error.message || 'Could not send the report.' });
         } finally {
             setIsSending(null);
             setTargetDoctor(null);
@@ -111,13 +108,16 @@ export default function ConsultPage() {
     if (isLoading) {
         return (
             <div className="flex h-screen items-center justify-center new-consult-bg">
-                <Loader2 className="animate-spin text-primary" size={48} />
+                <div className="text-center">
+                    <Loader2 className="animate-spin text-primary mx-auto" size={48} />
+                    <p className="mt-4 text-lg text-slate-600">Fetching available doctors...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <>
             <div className="new-consult-bg min-h-screen">
                 <div className="page-container">
                     <main className="main-content">
@@ -139,7 +139,7 @@ export default function ConsultPage() {
                                             <div className="flex items-center gap-6">
                                                 <div className="doctor-avatar">{doctor.name.split(' ').map(n => n[0]).join('')}</div>
                                                 <div className="doctor-details">
-                                                    <h3 className="doctor-name">{doctor.name}</h3>
+                                                    <h3 className="doctor-name">Dr. {doctor.name}</h3>
                                                     <p className="doctor-specialty">{doctor.specialization || 'Dermatology'}</p>
                                                     <div className="doctor-rating">
                                                         <div className="stars">
@@ -155,7 +155,7 @@ export default function ConsultPage() {
                                             </div>
                                             <button 
                                                 className="send-report-btn" 
-                                                onClick={(e) => handleSendClick(doctor, e)}
+                                                onClick={() => handleSendClick(doctor)}
                                                 disabled={isSending === doctor.uid || reports.length === 0}
                                             >
                                                 {isSending === doctor.uid ? (
@@ -168,8 +168,10 @@ export default function ConsultPage() {
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-12 text-muted-foreground">
-                                    <p>No doctors are currently available. Please check back later.</p>
+                                <div className="text-center py-16 text-slate-500 col-span-full bg-white/50 rounded-xl">
+                                    <Stethoscope size={48} className="mx-auto mb-4 text-slate-400" />
+                                    <h3 className="text-xl font-semibold text-slate-700">No Doctors Available</h3>
+                                    <p>We couldn't find any approved doctors at the moment. Please check back later.</p>
                                 </div>
                             )}
                         </div>
@@ -178,34 +180,36 @@ export default function ConsultPage() {
             </div>
 
 
-            <DialogContent className="bg-background border-border text-foreground">
-                <DialogHeader>
-                    <DialogTitle>Select a report to send to {targetDoctor?.name}</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
-                        Choose one of your pending reports for consultation.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-4">
-                    <Select onValueChange={setSelectedReportId} value={selectedReportId || undefined}>
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a report..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {reports.map(report => (
-                                <SelectItem key={report.id} value={report.id}>
-                                    {report.reportName || `Report from ${new Date((report.createdAt as any).seconds * 1000).toLocaleString()}`}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleConfirmSend} disabled={!selectedReportId || !!isSending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        {isSending ? <Loader2 className="animate-spin" /> : 'Confirm & Send'}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                 <DialogContent className="bg-background border-border text-foreground">
+                    <DialogHeader>
+                        <DialogTitle>Select a report to send to Dr. {targetDoctor?.name}</DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            Choose one of your pending reports for consultation.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Select onValueChange={setSelectedReportId} value={selectedReportId || undefined}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select a report..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {reports.map(report => (
+                                    <SelectItem key={report.id} value={report.id}>
+                                        {report.reportName || `Report from ${new Date((report.createdAt as any).seconds * 1000).toLocaleString()}`}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleConfirmSend} disabled={!selectedReportId || !!isSending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                            {isSending ? <Loader2 className="animate-spin" /> : 'Confirm & Send'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
