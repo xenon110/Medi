@@ -10,9 +10,10 @@ import { ArrowLeft, ArrowRight, CheckCircle, FileText, FlaskConical, Stethoscope
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export async function generateStaticParams() {
-  return KNOWLEDGE_BASE.map((article) => ({
+  const paths = KNOWLEDGE_BASE.map((article) => ({
     category: article.slug,
   }));
+  return paths;
 }
 
 export default function KnowledgePage({ params }: { params: { category: string } }) {
