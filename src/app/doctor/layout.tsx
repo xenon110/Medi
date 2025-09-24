@@ -7,9 +7,6 @@ import { Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
 import { useToast } from '@/hooks/use-toast';
-import DoctorDashboard from './dashboard/page';
-import DoctorAnalytics from './analytics/page';
-import DoctorCalendar from './calendar/page';
 
 export default function DoctorLayout({
   children,
@@ -17,7 +14,6 @@ export default function DoctorLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -33,7 +29,7 @@ export default function DoctorLayout({
             toast({
               variant: 'destructive',
               title: 'Access Denied',
-              description: 'This account is not authorized to view the doctor dashboard.',
+              description: 'This account is not authorized for the doctor dashboard.',
             });
             await auth.signOut();
             router.push('/login?role=patient'); 
@@ -51,6 +47,7 @@ export default function DoctorLayout({
             setIsLoading(false);
         }
       } else {
+        // No user is signed in.
         router.push('/login?role=doctor');
         setIsLoading(false);
       }
@@ -70,23 +67,14 @@ export default function DoctorLayout({
   }
 
   if (!isAuthorized) {
+    // While loading is false, the useEffect hook might still be running or redirecting.
+    // Show a loading/redirecting state to prevent brief flashes of content.
     return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <p className="ml-4 text-lg">Redirecting...</p>
       </div>
     );
-  }
-
-  const isDashboardPage = pathname === '/doctor/dashboard';
-  const isCalendarPage = pathname === '/doctor/calendar';
-
-  if (isDashboardPage) {
-    return <DoctorDashboard />;
-  }
-
-  if (isCalendarPage) {
-    return <DoctorCalendar />;
   }
 
   return <>{children}</>;

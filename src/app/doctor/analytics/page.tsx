@@ -32,7 +32,7 @@ export default function DoctorAnalytics() {
     const currentUser = auth.currentUser;
 
     if (!currentUser || !db) {
-      toast({ title: 'Error', description: 'Could not authenticate user.', variant: 'destructive' });
+       // This should be handled by the layout now, but as a fallback.
       router.push('/login?role=doctor');
       return;
     }
