@@ -1,27 +1,23 @@
 /**
- * @fileoverview Firestore Security Rules for the medical report application.
+ * @file Firestore Security Rules
+ * @version 2
  *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles
- * (patients and doctors) and restricts access to medical reports based on
- * patient/doctor relationships. All write operations are protected by
- * authentication and authorization checks.
+ * @description This ruleset enforces a user-ownership model for patient and doctor profiles,
+ *              allowing authenticated users to manage their own profiles.
+ *              Medical reports are publicly readable but writable only by associated patients or doctors.
+ *              Emergency logs can be created by any authenticated user.
  *
  * Data Structure:
- * - /patients/{patientId}: Stores patient profiles. Only the authenticated user with matching uid can read/write their profile.
- * - /doctors/{doctorId}: Stores doctor profiles.  Only the authenticated user with matching uid can read/write their profile.
- * - /reports/{reportId}: Stores medical reports. Reports can only be created with a valid patientId and are read/write restricted to associated patients and doctors.
- * - /emergencies/{emergencyId}: Stores logs of emergency button clicks. Only authenticated users are allowed to create emergency logs.
+ * - /patients/{patientId}: Patient profile information. `patientId` must match the authenticated user's UID.
+ * - /doctors/{doctorId}: Doctor profile information. `doctorId` must match the authenticated user's UID.
+ * - /reports/{reportId}: Medical reports, accessible to anyone for reading, but only creatable by patients
+ *                         and updatable/deletable by associated patients or doctors. Includes `patientId` and `doctorId` fields.
+ * - /emergencies/{emergencyId}: Emergency logs, creatable by any authenticated user.
  *
  * Key Security Decisions:
- * - Users can only read/write their own profile data.
- * - Reports are associated with a specific patient and doctor.
- * - Anyone can list reports.
- * - Users cannot be listed.
- *
- * Denormalization for Authorization:
- * - Reports denormalize the patientId and doctorId to enable efficient
- *   authorization rules without requiring extra `get()` calls.
+ * - Users cannot list all patients or doctors for privacy reasons.
+ * - Read access to medical reports is public.
+ * - Reports' writes are limited to associated users.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -123,6 +119,7 @@ service cloud.firestore {
       allow update: if isExistingAssociated(resource.data.patientId, resource.data.doctorId);
       allow delete: if isExistingAssociated(resource.data.patientId, resource.data.doctorId);
     }
+
     /**
      * @description Rules for emergency logs.
      * @path /emergencies/{emergencyId}
