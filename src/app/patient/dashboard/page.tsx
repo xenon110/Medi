@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
-import { collection, query, where, onSnapshot, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp, orderBy, Unsubscribe } from 'firebase/firestore';
 
 import { validateImageUpload } from '@/ai/flows/validate-image-upload';
 import { symptomChat } from '@/ai/flows/symptom-chat';
@@ -47,7 +47,9 @@ export default function PatientDashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged(async (firebaseUser) => {
+    let reportsUnsubscribe: Unsubscribe | undefined;
+  
+    const authUnsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await getUserProfile(firebaseUser.uid);
         if (profile) {
@@ -59,12 +61,10 @@ export default function PatientDashboard() {
 
           if (db) {
             const reportsRef = collection(db, 'reports');
-            // Simplified query, sorting will be done on the client
             const q = query(reportsRef, where('patientId', '==', firebaseUser.uid));
             
-            const unsubscribeSnap = onSnapshot(q, (querySnapshot) => {
+            reportsUnsubscribe = onSnapshot(q, (querySnapshot) => {
               let reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
-              // Sort reports by creation date client-side
               reports.sort((a, b) => {
                 const timeA = (a.createdAt as any)?.seconds || 0;
                 const timeB = (b.createdAt as any)?.seconds || 0;
@@ -75,8 +75,6 @@ export default function PatientDashboard() {
               console.error("Error fetching patient reports in real-time:", error);
               toast({ variant: "destructive", title: "Error", description: "Could not fetch your reports." });
             });
-            
-            return () => unsubscribeSnap();
           }
 
         } else {
@@ -99,7 +97,12 @@ export default function PatientDashboard() {
         }
     }, 1000);
 
-    return () => unsubscribeAuth();
+    return () => {
+      authUnsubscribe();
+      if (reportsUnsubscribe) {
+        reportsUnsubscribe();
+      }
+    };
   }, [router, toast]);
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -216,15 +219,12 @@ export default function PatientDashboard() {
     if (!createdAt) {
         return 'Date not available';
     }
-    // Check if it's a Firestore Timestamp object with a toDate method
     if (typeof createdAt.toDate === 'function') {
         return createdAt.toDate().toLocaleDateString();
     }
-    // Check if it's a plain object with seconds and nanoseconds (from JSON serialization)
     if (typeof createdAt.seconds === 'number') {
         return new Date(createdAt.seconds * 1000).toLocaleDateString();
     }
-    // Fallback for other unexpected formats
     try {
       const date = new Date(createdAt);
       if (!isNaN(date.getTime())) {

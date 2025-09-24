@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { Report, getUserProfile, PatientProfile, DoctorProfile, updateReportByDoctor } from '@/lib/firebase-services';
 import { formatDistanceToNow } from 'date-fns';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, Unsubscribe } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 
@@ -34,7 +34,7 @@ const statusMap: { [key in Report['status']]: { label: string; badgeClass: strin
 };
 
 
-export default function DoctorDashboard() {
+export default function DoctorDashboard({ handleSignOut }: { handleSignOut: () => Promise<void> }) {
   const { toast } = useToast();
   const router = useRouter();
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
@@ -49,27 +49,28 @@ export default function DoctorDashboard() {
   const [activeResponseTab, setActiveResponseTab] = useState<'customize' | 'approve'>('customize');
   
   useEffect(() => {
+    let unsubscribe: Unsubscribe | undefined;
+
     const currentUser = auth.currentUser;
 
     if (!currentUser || !db) {
-        toast({ title: 'Error', description: 'Could not authenticate user.', variant: 'destructive' });
-        router.push('/login?role=doctor');
-        return;
+      toast({ title: 'Error', description: 'Could not authenticate user.', variant: 'destructive' });
+      router.push('/login?role=doctor');
+      return;
     }
 
     setIsLoading(true);
 
-    // Fetch doctor's profile
     getUserProfile(currentUser.uid).then(profile => {
-        if (profile && profile.role === 'doctor') {
-            setDoctorProfile(profile as DoctorProfile);
-        }
+      if (profile && profile.role === 'doctor') {
+        setDoctorProfile(profile as DoctorProfile);
+      }
     });
-    
+
     const reportsRef = collection(db, 'reports');
     const q = query(reportsRef, where('doctorId', '==', currentUser.uid));
 
-    const unsubscribeSnap = onSnapshot(q, async (querySnapshot) => {
+    unsubscribe = onSnapshot(q, async (querySnapshot) => {
       const casesPromises = querySnapshot.docs.map(async (doc) => {
         const report = { id: doc.id, ...doc.data() } as Report;
         if (!report.patientId) return null;
@@ -127,8 +128,12 @@ export default function DoctorDashboard() {
       setIsLoading(false);
     });
 
-    return () => unsubscribeSnap();
-  }, [router, toast]);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [router, toast, selectedCase?.id]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -176,15 +181,6 @@ export default function DoctorDashboard() {
           setIsSubmitting(false);
       }
   };
-
-  const handleSignOut = async () => {
-    if (auth) {
-        await auth.signOut();
-        toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
-        router.push('/login?role=doctor');
-    }
-  };
-
 
   if (isLoading) {
     return (

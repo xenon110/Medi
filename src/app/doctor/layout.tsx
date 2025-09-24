@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
 import { useToast } from '@/hooks/use-toast';
+import DoctorDashboard from './dashboard/page';
 
 export default function DoctorLayout({
   children,
@@ -26,7 +27,6 @@ export default function DoctorLayout({
           if (userProfile && userProfile.role === 'doctor') {
             setIsAuthorized(true);
           } else {
-            // User is logged in but is not a doctor
             toast({
               variant: 'destructive',
               title: 'Access Denied',
@@ -48,15 +48,21 @@ export default function DoctorLayout({
             setIsLoading(false);
         }
       } else {
-        // No user is logged in
         router.push('/login?role=doctor');
         setIsLoading(false);
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [router, toast]);
+
+  const handleSignOut = async () => {
+    if (auth) {
+        await auth.signOut();
+        toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
+        router.push('/login?role=doctor');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -68,7 +74,6 @@ export default function DoctorLayout({
   }
 
   if (!isAuthorized) {
-    // This state is briefly hit before the redirect to login completes.
     return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -77,6 +82,19 @@ export default function DoctorLayout({
     );
   }
 
-  // If authorized, render the children (the actual doctor page)
-  return <>{children}</>;
+  // Pass handleSignOut to the specific page component that needs it.
+  // This example assumes `children` is `DoctorDashboard`. 
+  // A more complex setup might use React Context.
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child) && child.type === DoctorDashboard) {
+      return React.cloneElement(child, { handleSignOut } as any);
+    }
+    // For other pages like profile/settings, they won't get the prop
+    // unless explicitly handled, which is fine if they don't need it.
+    return child;
+  });
+
+  return <>{childrenWithProps}</>;
 }
+
+    
