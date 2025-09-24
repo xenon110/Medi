@@ -1,7 +1,8 @@
 
 import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp, orderBy } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, storage } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 
 // Type definitions based on your schema
@@ -13,6 +14,7 @@ export type UserProfile = {
   age: number;
   createdAt: FieldValue;
   gender: string;
+  photoURL?: string;
 };
 
 export type PatientProfile = UserProfile & {
@@ -57,6 +59,7 @@ export const createUserProfile = async (uid: string, data: CreateUserProfileData
     age: data.age,
     gender: data.gender,
     createdAt: serverTimestamp(),
+    photoURL: '',
   };
 
   if (data.role === 'doctor') {
@@ -217,6 +220,19 @@ export const updateDoctorProfile = async (uid: string, data: Partial<DoctorProfi
     const doctorRef = doc(db, 'doctors', uid);
     await updateDoc(doctorRef, data);
 };
+
+export const uploadProfilePicture = async (uid: string, file: File): Promise<string> => {
+    if (!storage || !db) throw new Error("Firebase services not initialized.");
+
+    const filePath = `profile-pictures/${uid}/${file.name}`;
+    const storageRef = ref(storage, filePath);
+
+    await uploadBytes(storageRef, file);
+    const photoURL = await getDownloadURL(storageRef);
+
+    await updateDoctorProfile(uid, { photoURL });
+    return photoURL;
+}
 
 export const logEmergency = async (patientId: string) => {
     if (!db) throw new Error("Firestore is not initialized.");

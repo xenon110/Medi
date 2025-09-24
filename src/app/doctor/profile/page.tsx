@@ -1,14 +1,14 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { User, ChevronLeft, Edit, Mail, Briefcase, Award, Gift, Camera, Loader2, BadgeCheck, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
-import { DoctorProfile, getUserProfile, updateDoctorProfile } from '@/lib/firebase-services';
+import { DoctorProfile, getUserProfile, updateDoctorProfile, uploadProfilePicture } from '@/lib/firebase-services';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Image from 'next/image';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -34,6 +35,9 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -72,6 +76,28 @@ export default function ProfilePage() {
 
     return () => unsubscribe();
   }, [router, toast, form]);
+  
+  const handlePictureChangeClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !doctorProfile) return;
+
+    setIsUploading(true);
+    toast({ title: 'Uploading...', description: 'Your new profile picture is being uploaded.' });
+    try {
+      const newPhotoURL = await uploadProfilePicture(doctorProfile.uid, file);
+      setDoctorProfile(prev => prev ? { ...prev, photoURL: newPhotoURL } : null);
+      toast({ title: 'Success!', description: 'Profile picture updated successfully.' });
+    } catch (error) {
+      console.error("Failed to upload profile picture:", error);
+      toast({ title: 'Upload Failed', description: 'Could not upload the image. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const getInitials = (name: string | undefined) => {
     if (!name) return '?';
@@ -136,15 +162,21 @@ export default function ProfilePage() {
             <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-10 mb-8 shadow-2xl border border-white/30 flex flex-col md:flex-row items-center gap-10 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#667eea] to-[#f093fb]"></div>
                 <div className="relative">
-                    <div className="w-36 h-36 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center shadow-lg pulse-animation">
-                         <span className="text-5xl font-bold text-white">{getInitials(doctorProfile.name)}</span>
+                    <div className="w-36 h-36 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center shadow-lg pulse-animation overflow-hidden">
+                         {doctorProfile.photoURL ? (
+                           <Image src={doctorProfile.photoURL} alt={doctorProfile.name} width={144} height={144} className="object-cover w-full h-full" />
+                         ) : (
+                           <span className="text-5xl font-bold text-white">{getInitials(doctorProfile.name)}</span>
+                         )}
                     </div>
                 </div>
                 <div className="text-center md:text-left">
                     <h1 className="text-4xl font-bold text-gray-800 mb-2">{doctorProfile.name}</h1>
                     <p className="text-lg font-medium text-primary mb-4">{doctorProfile.specialization || 'Dermatologist'}</p>
-                    <Button className="rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md hover:shadow-lg transition-all">
-                        <Camera className="mr-2 h-4 w-4" /> Change Picture
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                    <Button onClick={handlePictureChangeClick} disabled={isUploading} className="rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-md hover:shadow-lg transition-all">
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                        {isUploading ? 'Uploading...' : 'Change Picture'}
                     </Button>
                 </div>
             </div>
