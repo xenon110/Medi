@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, User, MessageSquare, LayoutGrid, Calendar, Settings, FileText, LogOut, Activity, BarChart, PieChartIcon, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, User, MessageSquare, LayoutGrid, Settings, FileText, LogOut, Activity, BarChart, PieChartIcon, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -32,8 +32,6 @@ export default function DoctorAnalytics() {
     const currentUser = auth.currentUser;
 
     if (!currentUser || !db) {
-       // This should be handled by the layout now, but as a fallback.
-      router.push('/login?role=doctor');
       return;
     }
 
@@ -102,7 +100,6 @@ export default function DoctorAnalytics() {
   const sidebarNavItems = [
     { href: '/doctor/dashboard', icon: MessageSquare, title: 'Patient Cases' },
     { href: '/doctor/analytics', icon: LayoutGrid, title: 'Analytics' },
-    { href: '/doctor/calendar', icon: Calendar, title: 'Calendar' },
     { href: '#', icon: FileText, title: 'Documents' },
     { href: '/doctor/settings', icon: Settings, title: 'Settings' },
   ];

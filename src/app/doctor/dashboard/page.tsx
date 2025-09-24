@@ -69,6 +69,7 @@ export default function DoctorDashboard() {
     });
 
     const reportsRef = collection(db, 'reports');
+    // Firestore security rules require that we can only query for reports where the doctorId is the current user's UID.
     const q = query(reportsRef, where('doctorId', '==', currentUser.uid));
 
     unsubscribe = onSnapshot(q, async (querySnapshot) => {
@@ -209,7 +210,6 @@ export default function DoctorDashboard() {
   const sidebarNavItems = [
     { href: '/doctor/dashboard', icon: MessageSquare, title: 'Patient Cases' },
     { href: '/doctor/analytics', icon: LayoutGrid, title: 'Analytics' },
-    { href: '/doctor/calendar', icon: Calendar, title: 'Calendar' },
     { href: '#', icon: FileText, title: 'Documents' },
     { href: '/doctor/settings', icon: Settings, title: 'Settings' },
   ];

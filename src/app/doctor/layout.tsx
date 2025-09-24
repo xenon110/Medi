@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
@@ -49,7 +49,7 @@ export default function DoctorLayout({
       } else {
         // No user is signed in.
         router.push('/login?role=doctor');
-        setIsLoading(false);
+        // No need to set loading to false, as the redirect will happen
       }
     });
 
@@ -67,8 +67,8 @@ export default function DoctorLayout({
   }
 
   if (!isAuthorized) {
-    // While loading is false, the useEffect hook might still be running or redirecting.
-    // Show a loading/redirecting state to prevent brief flashes of content.
+    // This state is hit if the user is not a doctor or an error occurred.
+    // The useEffect hook has already initiated a redirect.
     return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
