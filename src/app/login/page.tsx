@@ -16,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
+import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -129,7 +130,7 @@ export default function LoginPage() {
               />
             </CardContent>
             <CardFooter className="flex flex-col items-stretch gap-4">
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button type="submit" disabled={isLoading} className={cn("w-full", role === 'patient' ? 'patient-btn' : 'doctor-btn')}>
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Login'}
               </Button>
               <div className="text-center text-sm text-muted-foreground">
