@@ -118,7 +118,7 @@ export default function ConsultPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <div className="new-consult-bg min-h-screen">
                 <div className="container">
-                    <main className="main-content pb-24">
+                    <main className="main-content">
                         <button onClick={() => router.back()} className="back-button">
                             <ChevronLeft size={20} /> Back
                         </button>
@@ -176,26 +176,6 @@ export default function ConsultPage() {
                         </div>
                     </main>
                 </div>
-                 <nav className="bottom-nav">
-                    <div className="nav-container">
-                        <Link href="/patient/dashboard" className="nav-item">
-                            <div className="nav-icon"><Home size={24}/></div>
-                            <span>Home</span>
-                        </Link>
-                        <Link href="/patient/consult" className="nav-item active">
-                            <div className="nav-icon"><User size={24}/></div>
-                            <span>Doctors</span>
-                        </Link>
-                        <Link href="/patient/reports" className="nav-item">
-                            <div className="nav-icon"><FileDown size={24}/></div>
-                            <span>Reports</span>
-                        </Link>
-                         <Link href="/patient/settings" className="nav-item">
-                            <div className="nav-icon"><Settings size={24}/></div>
-                            <span>Settings</span>
-                        </Link>
-                    </div>
-                </nav>
             </div>
 
 
