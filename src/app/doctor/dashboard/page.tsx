@@ -37,6 +37,7 @@ const statusMap: { [key in Report['status']]: { label: string; badgeClass: strin
 export default function DoctorDashboard() {
   const { toast } = useToast();
   const router = useRouter();
+  const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [patientCases, setPatientCases] = useState<PatientCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [filter, setFilter] = useState('All');
@@ -52,6 +53,13 @@ export default function DoctorDashboard() {
     }
 
     setIsLoading(true);
+
+    // Fetch doctor's profile
+    getUserProfile(currentUser.uid).then(profile => {
+        if (profile && profile.role === 'doctor') {
+            setDoctorProfile(profile as DoctorProfile);
+        }
+    });
     
     const reportsRef = collection(db, 'reports');
     // Simplified query to only filter by doctorId. Sorting will be done client-side.
@@ -117,7 +125,7 @@ export default function DoctorDashboard() {
     });
 
     return () => unsubscribeSnap();
-  }, [router, toast]);
+  }, [router, toast, selectedCase?.id]);
 
 
   const handleSelectCase = (patientCase: PatientCase) => {
@@ -165,7 +173,7 @@ export default function DoctorDashboard() {
         {/* Patient List Panel */}
         <div className="patient-list">
             <div className="list-header">
-                <h2 className="text-xl font-bold text-gray-800">Patient Cases</h2>
+                <h2 className="text-xl font-bold text-gray-800">{doctorProfile ? `Dr. ${doctorProfile.name}'s Dashboard` : 'Doctor Dashboard'}</h2>
                 <p className="text-sm text-gray-500">{patientCases.filter(p => p.status === 'pending-doctor-review').length} pending reviews</p>
             </div>
 
@@ -351,3 +359,5 @@ export default function DoctorDashboard() {
     </div>
   );
 }
+
+    
