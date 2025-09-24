@@ -76,7 +76,6 @@ export default function LoginPage() {
         let description = 'An unexpected error occurred. Please try again.';
 
         if (error instanceof FirebaseError) {
-            console.error('Firebase Login Error:', error.code, error.message);
             switch (error.code) {
                 case 'auth/user-not-found':
                 case 'auth/invalid-email':
@@ -93,10 +92,7 @@ export default function LoginPage() {
                     description = 'An error occurred during login. Please check your credentials.';
             }
         } else if (error instanceof Error) {
-            console.error('Generic Login Error:', error.message);
             description = error.message;
-        } else {
-            console.error('Unknown Login Error:', error);
         }
 
         toast({
