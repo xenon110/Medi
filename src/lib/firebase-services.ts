@@ -1,5 +1,5 @@
 
-import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp, orderBy } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, query, where, FieldValue, serverTimestamp, addDoc, updateDoc, Timestamp, orderBy, startAt, endAt } from 'firebase/firestore';
 import { db, storage } from './firebase';
 import type { GenerateInitialReportOutput } from '@/ai/flows/generate-initial-report';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
@@ -230,7 +230,10 @@ export const uploadProfilePicture = async (uid: string, file: File): Promise<str
     await uploadBytes(storageRef, file);
     const photoURL = await getDownloadURL(storageRef);
 
-    await updateDoctorProfile(uid, { photoURL });
+    // After uploading, update the user's profile with the new photoURL.
+    // Use merge: true to avoid overwriting other fields.
+    await setDoc(doc(db, 'doctors', uid), { photoURL }, { merge: true });
+    
     return photoURL;
 }
 
@@ -241,4 +244,63 @@ export const logEmergency = async (patientId: string) => {
         patientId: patientId,
         timestamp: serverTimestamp()
     });
+};
+
+// Types for Doctor Notes
+export type DoctorNote = {
+  id?: string;
+  doctorId: string;
+  date: string; // YYYY-MM-DD
+  note: string;
+  createdAt: FieldValue;
+  updatedAt: FieldValue;
+};
+
+// Save or update a doctor's note for a specific date
+export const saveDoctorNote = async (doctorId: string, date: string, note: string) => {
+  if (!db) throw new Error("Firestore is not initialized.");
+  const notesCollection = collection(db, 'doctorNotes');
+  const q = query(notesCollection, where("doctorId", "==", doctorId), where("date", "==", date));
+  
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    // No note exists for this date, create a new one
+    await addDoc(notesCollection, {
+      doctorId,
+      date,
+      note,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } else {
+    // Note exists, update it
+    const docId = querySnapshot.docs[0].id;
+    const docRef = doc(db, 'doctorNotes', docId);
+    await updateDoc(docRef, {
+      note,
+      updatedAt: serverTimestamp(),
+    });
+  }
+};
+
+// Get all notes for a doctor for a given month
+export const getDoctorNotesForMonth = async (doctorId: string, year: number, month: number): Promise<DoctorNote[]> => {
+  if (!db) throw new Error("Firestore is not initialized.");
+
+  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const endDate = new Date(year, month + 1, 0);
+  const lastDay = endDate.getDate();
+  const endDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+  const notesCollection = collection(db, 'doctorNotes');
+  const q = query(
+    notesCollection,
+    where("doctorId", "==", doctorId),
+    where("date", ">=", startDate),
+    where("date", "<=", endDateStr)
+  );
+
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DoctorNote));
 };

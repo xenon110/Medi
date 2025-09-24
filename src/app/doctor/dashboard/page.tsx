@@ -209,7 +209,7 @@ export default function DoctorDashboard() {
   const sidebarNavItems = [
     { href: '/doctor/dashboard', icon: MessageSquare, title: 'Patient Cases' },
     { href: '/doctor/analytics', icon: LayoutGrid, title: 'Analytics' },
-    { href: '#', icon: Calendar, title: 'Calendar' },
+    { href: '/doctor/calendar', icon: Calendar, title: 'Calendar' },
     { href: '#', icon: FileText, title: 'Documents' },
     { href: '/doctor/settings', icon: Settings, title: 'Settings' },
   ];
@@ -432,6 +432,3 @@ export default function DoctorDashboard() {
     </div>
   );
 }
-
-    
-    

@@ -9,6 +9,7 @@ import { getUserProfile } from '@/lib/firebase-services';
 import { useToast } from '@/hooks/use-toast';
 import DoctorDashboard from './dashboard/page';
 import DoctorAnalytics from './analytics/page';
+import DoctorCalendar from './calendar/page';
 
 export default function DoctorLayout({
   children,
@@ -78,13 +79,15 @@ export default function DoctorLayout({
   }
 
   const isDashboardPage = pathname === '/doctor/dashboard';
+  const isCalendarPage = pathname === '/doctor/calendar';
 
-  // Render DoctorDashboard directly for its specific route and children for others
   if (isDashboardPage) {
     return <DoctorDashboard />;
   }
 
+  if (isCalendarPage) {
+    return <DoctorCalendar />;
+  }
+
   return <>{children}</>;
 }
-
-    
