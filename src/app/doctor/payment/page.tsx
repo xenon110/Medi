@@ -330,7 +330,7 @@ export default function DoctorPaymentPage() {
                             <div className="best-value-badge">Best Value</div>
                             <div className="plan-icon">👨‍⚕️</div>
                             <div className="plan-price">
-                                <span className="plan-currency">₹</span>3,999
+                                <span className="plan-currency">₹</span>3999
                             </div>
                             <div className="plan-duration">Full Year</div>
                             <div className="plan-title">Enterprise Practice</div>

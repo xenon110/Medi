@@ -273,7 +273,7 @@ export default function PaymentPage() {
                         <div className="plan-card" onClick={handlePlanSelection}>
                             <div className="plan-icon">🔬</div>
                             <div className="plan-price">
-                                <span className="plan-currency">₹</span>49
+                                <span className="plan-currency">₹</span>1
                             </div>
                             <div className="plan-duration">Single Analysis</div>
                             <div className="plan-title">One-Time Use</div>
