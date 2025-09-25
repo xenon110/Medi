@@ -16,7 +16,13 @@ export async function generateStaticParams() {
   return paths;
 }
 
-export default function KnowledgePage({ params }: { params: { category: string } }) {
+type KnowledgePageProps = {
+  params: {
+    category: string;
+  };
+};
+
+export default function KnowledgePage({ params }: KnowledgePageProps) {
   const article: KnowledgeBaseArticle | undefined = KNOWLEDGE_BASE.find(
     (item) => item.slug === params.category
   );
