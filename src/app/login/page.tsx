@@ -1,7 +1,5 @@
 
-'use client';
-
-import { useState } from 'react';
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,28 +15,28 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/firebase-services';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address.'),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const role = searchParams.get('role') === 'doctor' ? 'doctor' : 'patient';
 
-  const form = useForm<LoginForm>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     if (!auth) {
         toast({
@@ -159,5 +157,14 @@ export default function LoginPage() {
         </Form>
       </Card>
     </div>
+  );
+}
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
